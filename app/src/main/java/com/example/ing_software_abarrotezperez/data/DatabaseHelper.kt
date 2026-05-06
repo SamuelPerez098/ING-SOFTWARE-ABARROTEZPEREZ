@@ -13,13 +13,12 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         const val DATABASE_NAME = "tienda.db"
-        // Cambiamos a versión 2. Esto obligará al teléfono a borrar las tablas viejas
-        // y crear las nuevas correctamente, arreglando el bug del id_producto.
+        // Versión 2: Arregla el bug del id_producto y habilita nuevas tablas.
         const val DATABASE_VERSION = 2
 
         // --- Tablas ---
         const val TABLE_PRODUCTO       = "producto"
-        const val TABLE_LOTE           = "lote" // <-- NUEVA TABLA
+        const val TABLE_LOTE           = "lote"
         const val TABLE_VENTA          = "venta"
         const val TABLE_DETALLE_VENTA  = "detalle_venta"
         const val TABLE_CLIENTE        = "cliente"
@@ -54,7 +53,6 @@ class DatabaseHelper(context: Context) :
             )
         """.trimIndent())
 
-        // NUEVA TABLA DE LOTES
         db.execSQL("""
             CREATE TABLE lote (
                 id_lote         INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,7 +163,7 @@ class DatabaseHelper(context: Context) :
         db.execSQL("DROP TABLE IF EXISTS detalle_compra")
         db.execSQL("DROP TABLE IF EXISTS compra")
         db.execSQL("DROP TABLE IF EXISTS merma")
-        db.execSQL("DROP TABLE IF EXISTS lote") // Borrar Lotes también
+        db.execSQL("DROP TABLE IF EXISTS lote")
         db.execSQL("DROP TABLE IF EXISTS producto")
         db.execSQL("DROP TABLE IF EXISTS cliente")
         db.execSQL("DROP TABLE IF EXISTS proveedor_fisico")
@@ -214,7 +212,6 @@ class DatabaseHelper(context: Context) :
         }
     }
 
-    /** Inserta o actualiza un producto y administra los LOTES */
     fun upsertProducto(producto: Producto): Long {
         val db = writableDatabase
         val cv = ContentValues().apply {
@@ -222,8 +219,8 @@ class DatabaseHelper(context: Context) :
             put("nombre",          producto.nombre)
             put("descripcion",     producto.descripcion)
             put("precio_venta",    producto.precioVenta)
-            put("stock",           producto.stock) // Actualizamos el stock global
-            put("fecha_caducidad", producto.fechaCaducidad) // Guardamos la última registrada como referencia visual
+            put("stock",           producto.stock)
+            put("fecha_caducidad", producto.fechaCaducidad)
         }
 
         val existing = getProductoPorCodigo(producto.codigoBarras)
@@ -232,22 +229,19 @@ class DatabaseHelper(context: Context) :
         if (existing == null) {
             finalId = db.insert(TABLE_PRODUCTO, null, cv)
         } else {
-            db.update(TABLE_PRODUCTO, cv, "codigo_barras = ?", arrayOf(producto.codigoBarras))
+            db.update(TABLE_PRODUCTO, cv, "id_producto = ?", arrayOf(existing.idProducto.toString()))
             finalId = existing.idProducto.toLong()
         }
 
-        // ── LÓGICA DE LOTES (Si el producto es perecedero) ──
         if (producto.fechaCaducidad != null) {
             val cursorLote = db.rawQuery(
                 "SELECT id_lote FROM lote WHERE id_producto = ? AND fecha_caducidad = ?",
                 arrayOf(finalId.toString(), producto.fechaCaducidad)
             )
             if (cursorLote.moveToFirst()) {
-                // Si el lote ya existe, le sumamos 1 al stock de ese lote
                 val idLote = cursorLote.getInt(0)
                 db.execSQL("UPDATE lote SET cantidad = cantidad + 1 WHERE id_lote = ?", arrayOf(idLote))
             } else {
-                // Si no existe, creamos el lote con cantidad 1
                 val cvLote = ContentValues().apply {
                     put("id_producto", finalId)
                     put("fecha_caducidad", producto.fechaCaducidad)
@@ -257,7 +251,6 @@ class DatabaseHelper(context: Context) :
             }
             cursorLote.close()
         }
-
         return finalId
     }
 
@@ -284,26 +277,18 @@ class DatabaseHelper(context: Context) :
     }
 
     // ─────────────────────────────────────────────
-    //  VENTA
+    //  VENTAS Y FIFO
     // ─────────────────────────────────────────────
 
-    data class ItemVenta(
-        val producto: Producto,
-        var cantidad: Int = 1
-    ) {
+    data class ItemVenta(val producto: Producto, var cantidad: Int = 1) {
         val subtotal get() = producto.precioVenta * cantidad
     }
 
-    /**
-     * Registra la venta: Inserta venta, detalle_venta, reduce stock global y reduce LOTES en modo FIFO.
-     */
     fun registrarVenta(items: List<ItemVenta>): Long {
         val db = writableDatabase
         db.beginTransaction()
         return try {
             val total = items.sumOf { it.subtotal }
-
-            // AHORA GUARDA FECHA Y HORA (Ej: 2026-05-04 15:30:00)
             val fechaHora = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
             val cvVenta = ContentValues().apply {
@@ -315,50 +300,127 @@ class DatabaseHelper(context: Context) :
 
             for (item in items) {
                 val cvDetalle = ContentValues().apply {
-                    put("id_venta",        idVenta)
-                    put("id_producto",     item.producto.idProducto)
-                    put("cantidad",        item.cantidad)
+                    put("id_venta", idVenta)
+                    put("id_producto", item.producto.idProducto)
+                    put("cantidad", item.cantidad)
                     put("precio_unitario", item.producto.precioVenta)
                 }
                 db.insert(TABLE_DETALLE_VENTA, null, cvDetalle)
 
-                // 1. Reducir stock global en tabla producto
-                val stmt = db.compileStatement("UPDATE producto SET stock = stock - ? WHERE id_producto = ?")
-                stmt.bindLong(1, item.cantidad.toLong())
-                stmt.bindLong(2, item.producto.idProducto.toLong())
-                stmt.executeUpdateDelete()
+                db.execSQL("UPDATE producto SET stock = stock - ? WHERE id_producto = ?",
+                    arrayOf(item.cantidad, item.producto.idProducto))
 
-                // 2. Reducir stock de LOTES por fecha de caducidad (FIFO: El que caduca primero se va primero)
                 var restante = item.cantidad
                 val cursorLote = db.rawQuery(
                     "SELECT id_lote, cantidad FROM lote WHERE id_producto = ? AND cantidad > 0 ORDER BY fecha_caducidad ASC",
                     arrayOf(item.producto.idProducto.toString())
                 )
-
                 while (cursorLote.moveToNext() && restante > 0) {
                     val idLote = cursorLote.getInt(0)
                     val cantLote = cursorLote.getInt(1)
-
                     if (cantLote <= restante) {
-                        // Consumimos todo este lote
                         db.execSQL("UPDATE lote SET cantidad = 0 WHERE id_lote = ?", arrayOf(idLote))
                         restante -= cantLote
                     } else {
-                        // Consumimos solo una parte de este lote
                         db.execSQL("UPDATE lote SET cantidad = cantidad - ? WHERE id_lote = ?", arrayOf(restante, idLote))
                         restante = 0
                     }
                 }
                 cursorLote.close()
             }
-
             db.setTransactionSuccessful()
             idVenta
-        } catch (e: Exception) {
-            e.printStackTrace()
-            -1L
-        } finally {
-            db.endTransaction()
+        } catch (e: Exception) { -1L } finally { db.endTransaction() }
+    }
+
+    // ─────────────────────────────────────────────
+    //  SPRINT 3: ENTRADAS (Fiado y Merma)
+    // ─────────────────────────────────────────────
+
+    fun getSaldoPendienteCliente(idCliente: Int): Double {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT SUM(saldo_pendiente) FROM fiado WHERE id_cliente = ?", arrayOf(idCliente.toString()))
+        return cursor.use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun registrarPagoFiado(idFiado: Int, monto: Double): Boolean {
+        val db = writableDatabase
+        val fecha = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+        db.beginTransaction()
+        return try {
+            val cvPago = ContentValues().apply {
+                put("id_fiado", idFiado); put("fecha_pago", fecha); put("monto", monto)
+            }
+            db.insert(TABLE_PAGO_FIADO, null, cvPago)
+            db.execSQL("UPDATE fiado SET saldo_pendiente = saldo_pendiente - ? WHERE id_fiado = ?", arrayOf(monto, idFiado))
+            db.setTransactionSuccessful()
+            true
+        } catch (e: Exception) { false } finally { db.endTransaction() }
+    }
+
+    fun registrarMerma(idProducto: Int, cantidad: Int, motivo: String): Boolean {
+        val db = writableDatabase
+        val fecha = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+        db.beginTransaction()
+        return try {
+            val cv = ContentValues().apply {
+                put("id_producto", idProducto); put("cantidad", cantidad); put("motivo", motivo); put("fecha", fecha)
+            }
+            db.insert(TABLE_MERMA, null, cv)
+            db.execSQL("UPDATE producto SET stock = stock - ? WHERE id_producto = ?", arrayOf(cantidad, idProducto))
+            db.setTransactionSuccessful()
+            true
+        } catch (e: Exception) { false } finally { db.endTransaction() }
+    }
+
+    // ─────────────────────────────────────────────
+    //  SPRINT 3: SALIDAS (Reportes de Negocio)
+    // ─────────────────────────────────────────────
+
+    fun getHistorialMovimientos(): List<String> {
+        val db = readableDatabase
+        val historial = mutableListOf<String>()
+        val query = """
+            SELECT 'VENTA' as t, fecha, total FROM venta 
+            UNION SELECT 'COMPRA' as t, fecha, total FROM compra 
+            UNION SELECT 'MERMA' as t, fecha, cantidad FROM merma ORDER BY fecha DESC
+        """.trimIndent()
+        db.rawQuery(query, null).use {
+            while (it.moveToNext()) historial.add("${it.getString(0)} | ${it.getString(1)} | $${it.getDouble(2)}")
         }
+        return historial
+    }
+
+    fun getReporteGanancias(): Double {
+        val db = readableDatabase
+        val query = """
+            SELECT SUM((dv.precio_unitario - IFNULL(dc.precio_compra, 0)) * dv.cantidad)
+            FROM $TABLE_DETALLE_VENTA dv
+            LEFT JOIN $TABLE_DETALLE_COMPRA dc ON dv.id_producto = dc.id_producto
+        """.trimIndent()
+        return db.rawQuery(query, null).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun getTopVendidos(): List<Pair<String, Int>> {
+        val db = readableDatabase
+        val lista = mutableListOf<Pair<String, Int>>()
+        val query = "SELECT p.nombre, SUM(dv.cantidad) as tot FROM detalle_venta dv JOIN producto p ON dv.id_producto = p.id_producto GROUP BY p.id_producto ORDER BY tot DESC LIMIT 5"
+        db.rawQuery(query, null).use {
+            while (it.moveToNext()) lista.add(it.getString(0) to it.getInt(1))
+        }
+        return lista
+    }
+
+    fun getComparativaMargen(): List<String> {
+        val db = readableDatabase
+        val comparativa = mutableListOf<String>()
+        val query = "SELECT p.nombre, p.precio_venta, IFNULL(dc.precio_compra, 0) FROM producto p LEFT JOIN detalle_compra dc ON p.id_producto = dc.id_producto GROUP BY p.id_producto"
+        db.rawQuery(query, null).use {
+            while (it.moveToNext()) {
+                val margen = it.getDouble(1) - it.getDouble(2)
+                comparativa.add("${it.getString(0)} | Venta: $${it.getDouble(1)} | Margen: $${String.format("%.2f", margen)}")
+            }
+        }
+        return comparativa
     }
 }
