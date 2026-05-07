@@ -29,6 +29,15 @@
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:text="Punto de Venta"
-        android:textSize="18sp" />
+        android:textSize="18sp"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/btnVerReportes"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:text="Reportes de Negocio"
+        android:textSize="18sp"
+        android:backgroundTint="#4CAF50" />
 
 </LinearLayout>

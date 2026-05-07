@@ -29,6 +29,7 @@
 
         <activity android:name=".ui.InventarioActivity" />
         <activity android:name=".ui.VentaActivity" />
+        <activity android:name=".ui.ReportesActivity" />
 
     </application>
 
