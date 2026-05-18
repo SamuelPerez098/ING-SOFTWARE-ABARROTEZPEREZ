@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="$0.00 c/u"
-            android:textColor="#757575"
+            android:textColor="?android:attr/textColorSecondary"
             android:textSize="14sp" />
     </LinearLayout>
 

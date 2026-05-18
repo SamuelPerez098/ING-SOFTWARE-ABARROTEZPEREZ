@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <LinearLayout
@@ -71,7 +71,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="8dp"
-                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardBackgroundColor="?attr/colorSurface"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="0dp">
 
@@ -206,7 +206,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_margin="6dp"
-                    android:background="#FFFFFF"
+                    android:background="?android:attr/colorBackground"
                     android:orientation="vertical">
 
                     <TextView

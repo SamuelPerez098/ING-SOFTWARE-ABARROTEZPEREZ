@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?android:attr/colorBackground"
     android:fitsSystemWindows="true"
     android:orientation="vertical">
 
@@ -78,7 +78,7 @@
                             android:layout_height="match_parent"
                             android:layout_marginEnd="8dp"
                             android:layout_weight="1"
-                            app:cardBackgroundColor="#FFFFFF"
+                            app:cardBackgroundColor="?attr/colorSurface"
                             app:cardCornerRadius="16dp">
 
                             <LinearLayout
@@ -118,7 +118,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginBottom="16dp"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <Spinner
@@ -133,7 +133,7 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <LinearLayout
@@ -184,7 +184,7 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <TextView
@@ -223,7 +223,7 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <TextView
@@ -270,7 +270,7 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <TextView
@@ -308,7 +308,7 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardBackgroundColor="?attr/colorSurface"
                                 app:cardCornerRadius="12dp">
 
                                 <TextView
@@ -346,7 +346,7 @@
                         <androidx.cardview.widget.CardView
                             android:layout_width="160dp"
                             android:layout_height="wrap_content"
-                            app:cardBackgroundColor="#FFFFFF"
+                            app:cardBackgroundColor="?attr/colorSurface"
                             app:cardCornerRadius="12dp">
 
                             <TextView

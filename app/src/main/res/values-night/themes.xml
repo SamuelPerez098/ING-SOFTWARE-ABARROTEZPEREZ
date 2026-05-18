@@ -1,9 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!--
+        Tema OSCURO del proyecto.
+        Después de hacer los Find & Replace en los layouts (ver guía),
+        estos colores se aplicarán automáticamente en modo oscuro.
+    -->
     <style name="Base.Theme.INGSOFTWAREABARROTEZPEREZ" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#1A2F5A</item>
-        <item name="colorOnPrimary">#E0E0E0</item>
-        <item name="android:colorBackground">#121212</item>
-        <item name="android:windowBackground">#121212</item>
+
+        <!-- Color principal (barras de cabecera, botones primarios) -->
+        <item name="colorPrimary">#5C8AE6</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#1A2F5A</item>
+        <item name="colorOnPrimaryContainer">#D0DFFF</item>
+
+        <!-- Fondo general de pantallas (reemplaza los #FFFFFF hardcodeados) -->
+        <item name="android:colorBackground">#111318</item>
+        <item name="android:windowBackground">#111318</item>
+        <item name="android:colorBackground">#111318</item>
+
+        <!-- Superficie de cards y diálogos (reemplaza #FFFFFF en cards) -->
+        <item name="colorSurface">#1E2128</item>
+        <item name="colorOnSurface">#E2E2E9</item>
+        <item name="colorSurfaceVariant">#2A2D36</item>
+        <item name="colorOnSurfaceVariant">#C4C6D0</item>
+
+        <!-- Textos e iconos sobre fondos oscuros -->
+        <item name="android:textColorPrimary">#E2E2E9</item>
+        <item name="android:textColorSecondary">#A0A3AE</item>
+        <item name="android:textColorHint">#6E7180</item>
+
+        <!-- Contornos y divisores -->
+        <item name="colorOutline">#44474F</item>
+
+        <!-- Estado de error -->
+        <item name="colorError">#FFB4AB</item>
+        <item name="colorOnError">#690005</item>
+
     </style>
 </resources>

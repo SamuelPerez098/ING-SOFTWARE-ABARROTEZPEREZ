@@ -9,7 +9,7 @@
     android:layout_height="wrap_content"
     android:layout_marginBottom="20dp"
     android:text="Nuevo Cliente"
-    android:textColor="#212121"
+    android:textColor="?android:attr/textColorPrimary"
     android:textSize="20sp"
     android:textStyle="bold" />
 

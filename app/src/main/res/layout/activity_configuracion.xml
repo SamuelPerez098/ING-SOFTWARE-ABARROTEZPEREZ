@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <LinearLayout
@@ -41,7 +41,7 @@
                 android:layout_marginBottom="12dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -50,7 +50,7 @@
                     android:layout_height="wrap_content"
                     android:padding="20dp"
                     android:text="👤 Mi Perfil"
-                    android:textColor="#212121"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </com.google.android.material.card.MaterialCardView>
@@ -62,7 +62,7 @@
                 android:layout_marginBottom="12dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -71,7 +71,7 @@
                     android:layout_height="wrap_content"
                     android:padding="20dp"
                     android:text="💾 Almacenamiento"
-                    android:textColor="#212121"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
             </com.google.android.material.card.MaterialCardView>
@@ -80,7 +80,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
-                app:cardBackgroundColor="#FFFFFF"
+                app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -96,7 +96,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="🌙 Modo Oscuro"
-                        android:textColor="#212121"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 

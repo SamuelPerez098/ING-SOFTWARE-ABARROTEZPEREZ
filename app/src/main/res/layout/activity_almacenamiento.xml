@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
     <LinearLayout
@@ -29,7 +29,7 @@
         android:layout_height="0dp"
         android:layout_margin="16dp"
         android:layout_weight="1"
-        app:cardBackgroundColor="#FFFFFF"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="30dp"
         app:cardElevation="0dp"
         app:strokeColor="#5E17EB"
@@ -96,7 +96,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="En uso"
-                            android:textColor="#757575"
+                            android:textColor="?android:attr/textColorSecondary"
                             android:textSize="12sp" />
                     </LinearLayout>
                 </RelativeLayout>
@@ -105,7 +105,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    app:cardBackgroundColor="#F8F6FF"
+                    app:cardBackgroundColor="?attr/colorSurfaceVariant"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp">
 
@@ -121,7 +121,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
                             android:text=" App y Base de Datos: 124 MB"
-                            android:textColor="#212121"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp" />
 
                         <TextView
@@ -129,7 +129,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Espacio libre en teléfono: 12.4 GB"
-                            android:textColor="#212121"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:textSize="15sp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -140,7 +140,7 @@
                     android:layout_marginTop="32dp"
                     android:layout_marginBottom="12dp"
                     android:text="Seguridad de datos"
-                    android:textColor="#1B1B1B"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -150,7 +150,7 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:focusable="true"
-                    app:cardBackgroundColor="#FFFFFF"
+                    app:cardBackgroundColor="?attr/colorSurface"
                     app:cardCornerRadius="12dp"
                     app:strokeColor="#4CAF50"
                     app:strokeWidth="2dp">
@@ -179,7 +179,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Crear Respaldo en Drive"
-                                android:textColor="#212121"
+                                android:textColor="?android:attr/textColorPrimary"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
 
@@ -187,7 +187,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:text="Sube tu base de datos a la nube"
-                                android:textColor="#757575"
+                                android:textColor="?android:attr/textColorSecondary"
                                 android:textSize="12sp" />
                         </LinearLayout>
                     </LinearLayout>
