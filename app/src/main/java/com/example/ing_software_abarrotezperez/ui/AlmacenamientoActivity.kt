@@ -99,6 +99,7 @@ class AlmacenamientoActivity : AppCompatActivity() {
         // Se solicita el correo del usuario Y el permiso para crear/leer
         // archivos en su Google Drive (DriveScopes.DRIVE_FILE).
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("250606773637-er76nh8au1b8kcqdrdr6nj7a0mso7l1a.apps.googleusercontent.com")
             .requestEmail()
             .requestScopes(Scope(DriveScopes.DRIVE_FILE))
             .build()
