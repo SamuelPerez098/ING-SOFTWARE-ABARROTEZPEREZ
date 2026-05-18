@@ -14,7 +14,8 @@ android {
                     'META-INF/LICENSE',
                     'META-INF/NOTICE',
                     'META-INF/LICENSE.txt',
-                    'META-INF/NOTICE.txt'
+                    'META-INF/NOTICE.txt',
+                    'META-INF/INDEX.LIST'
             ]
         }
     }
@@ -65,9 +66,7 @@ dependencies {
     implementation "androidx.work:work-runtime-ktx:2.9.0"
 
     // Google Drive API
-    implementation 'com.google.api-client:google-api-client-android:1.33.0'
-    implementation 'com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0'
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+
 
     // GIFs
     implementation 'com.github.bumptech.glide:glide:4.16.0'
@@ -75,4 +74,22 @@ dependencies {
     testImplementation libs.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.junit
+
+    // ── NUEVAS DEPENDENCIAS PARA GOOGLE DRIVE ────────────────────
+
+    // Google Sign-In (autenticación OAuth con cuenta Google)
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Cliente HTTP de Google para Android (gestiona tokens OAuth)
+    implementation("com.google.api-client:google-api-client-android:2.2.0")
+
+    // Servicio de Drive API v3 (clases Drive, DriveFile, DriveScopes…)
+    implementation("com.google.apis:google-api-services-drive:v3-rev20240521-2.0.0")
+
+    // Parser JSON GSON (requerido por el cliente API de Google)
+    implementation("com.google.http-client:google-http-client-gson:1.44.1")
+
+    // Coroutines para ejecutar la subida en Dispatchers.IO
+    // (probablemente ya la tienes por WorkManager; verifica antes de duplicar)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 }
