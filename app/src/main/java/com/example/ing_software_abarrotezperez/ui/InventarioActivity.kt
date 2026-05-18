@@ -26,22 +26,22 @@ class InventarioActivity : AppCompatActivity() {
 
     // Vistas
     private lateinit var tvEstadoBt: TextView
-    private lateinit var etCodigoProducto: EditText
+    private lateinit var tvCodigoProducto: TextView
     private lateinit var actvNombre: AutoCompleteTextView
     private lateinit var etDescripcion: EditText
     private lateinit var etPrecioVenta: EditText
+    private lateinit var etPrecioCompra: EditText
     private lateinit var etStock: EditText
     private lateinit var etCaducidad: EditText
     private lateinit var spTipo: Spinner
     private lateinit var btnGuardar: Button
     private lateinit var btnLimpiar: Button
-    private lateinit var ivBarcode: ImageView // Nueva vista para la imagen del código
+    private lateinit var ivBarcode: ImageView
 
     private var codigoActual: String = ""
 
     // Variables para el interceptor HID
     private val barcodeBuffer = StringBuilder()
-    private var lastKeyTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,11 +51,12 @@ class InventarioActivity : AppCompatActivity() {
 
         // Bind vistas
         tvEstadoBt       = findViewById(R.id.tvEstadoBtInv)
-        etCodigoProducto = findViewById(R.id.etCodigoProducto)
+        tvCodigoProducto = findViewById(R.id.tvCodigoProducto)
         ivBarcode        = findViewById(R.id.ivBarcode)
         actvNombre       = findViewById(R.id.actvNombre)
         etDescripcion    = findViewById(R.id.etDescripcion)
         etPrecioVenta    = findViewById(R.id.etPrecioVenta)
+        etPrecioCompra   = findViewById(R.id.etPrecioCompra)
         etStock          = findViewById(R.id.etStock)
         etCaducidad      = findViewById(R.id.etCaducidad)
         spTipo           = findViewById(R.id.spTipo)
@@ -74,30 +75,41 @@ class InventarioActivity : AppCompatActivity() {
     }
 
     private fun configurarSpinnerTipo() {
-        // Opciones: Índice 0 = Perecedero, Índice 1 = No Perecedero
         val opciones = arrayOf("Perecedero", "No Perecedero")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opciones)
+
+        val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, opciones) {
+            override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
+                val view = super.getView(position, convertView, parent) as TextView
+                view.setTextColor(Color.BLACK)
+                return view
+            }
+
+            override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
+                val view = super.getDropDownView(position, convertView, parent) as TextView
+                view.setTextColor(Color.BLACK)
+                view.setBackgroundColor(Color.WHITE)
+                return view
+            }
+        }
+
         spTipo.adapter = adapter
 
         spTipo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position == 1) {
-                    // Es NO PERECEDERO
                     etCaducidad.isEnabled = false
                     etCaducidad.setText("")
-                    etStock.isEnabled = true // Liberamos el stock manual
+                    etStock.isEnabled = true
                     Toast.makeText(this@InventarioActivity, "Stock manual habilitado", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Es PERECEDERO
                     etCaducidad.isEnabled = true
-                    etStock.isEnabled = false // Bloqueamos el stock (solo aumenta por escáner)
+                    etStock.isEnabled = false
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
-    // --- GENERAR IMAGEN DEL CÓDIGO DE BARRAS ---
     private fun generarCodigoBarrasImagen(codigo: String) {
         try {
             val bitMatrix = MultiFormatWriter().encode(codigo, BarcodeFormat.CODE_128, 600, 200)
@@ -112,7 +124,6 @@ class InventarioActivity : AppCompatActivity() {
             ivBarcode.setImageBitmap(bitmap)
         } catch (e: Exception) {
             e.printStackTrace()
-            // Si falla, limpiar la imagen
             ivBarcode.setImageDrawable(null)
         }
     }
@@ -120,14 +131,40 @@ class InventarioActivity : AppCompatActivity() {
     private fun configurarFormatoFecha() {
         etCaducidad.addTextChangedListener(object : TextWatcher {
             private var isUpdating = false
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            private var oldText = ""
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                if (!isUpdating) oldText = s.toString()
+            }
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
 
             override fun afterTextChanged(s: Editable?) {
                 if (isUpdating) return
                 isUpdating = true
 
-                val cleanString = s.toString().replace(Regex("[^\\d]"), "")
+                val str = s.toString()
+                val isDeleting = str.length < oldText.length
+
+                var cleanString = str.replace(Regex("[^\\d]"), "")
+
+                if (!isDeleting) {
+                    var newClean = ""
+                    for (i in cleanString.indices) {
+                        val digit = cleanString[i]
+                        if (i == 0 && cleanString.length == 1) {
+                            if (digit >= '4') newClean += "0$digit"
+                            else newClean += digit
+                        } else if (i == 2 && cleanString.length == 3) {
+                            if (digit >= '2') newClean += "0$digit"
+                            else newClean += digit
+                        } else {
+                            newClean += digit
+                        }
+                    }
+                    cleanString = newClean
+                }
+
                 var formattedDate = ""
                 var isValidDate = true
 
@@ -155,14 +192,22 @@ class InventarioActivity : AppCompatActivity() {
                     }
                 }
 
+                if (!isDeleting) {
+                    if (cleanString.length == 2 && !formattedDate.endsWith("/")) {
+                        formattedDate += "/"
+                    } else if (cleanString.length == 4 && !formattedDate.endsWith("/")) {
+                        formattedDate += "/"
+                    }
+                }
+
                 etCaducidad.setText(formattedDate)
                 etCaducidad.setSelection(formattedDate.length)
 
                 if (!isValidDate) {
                     etCaducidad.setTextColor(Color.RED)
-                    vibrarError()
+                    if(formattedDate.length == 8) vibrarError()
                 } else {
-                    etCaducidad.setTextColor(Color.WHITE) // El texto original es blanco
+                    etCaducidad.setTextColor(Color.WHITE)
                 }
 
                 isUpdating = false
@@ -194,26 +239,25 @@ class InventarioActivity : AppCompatActivity() {
     private fun habilitarCamposModoNuevo(esNuevo: Boolean) {
         actvNombre.isEnabled = esNuevo
         etPrecioVenta.isEnabled = esNuevo
+        etPrecioCompra.isEnabled = esNuevo
         spTipo.isEnabled = esNuevo
-
         etDescripcion.isEnabled = true
-        // El stock y caducidad se gestionan en el OnItemSelected del Spinner
     }
 
     private fun procesarEscaneoInventario(codigo: String) {
         codigoActual = codigo
-        etCodigoProducto.setText(codigo)
-        generarCodigoBarrasImagen(codigo) // Dibuja la barra
+        tvCodigoProducto.text = codigo
+        generarCodigoBarrasImagen(codigo)
 
         val existente = vm.db.getProductoPorCodigo(codigo)
         if (existente != null) {
-            // EL PRODUCTO YA EXISTE
             val stockNuevo = existente.stock + 1
             etStock.setText(stockNuevo.toString())
 
             actvNombre.setText(existente.nombre)
             etDescripcion.setText(existente.descripcion)
             etPrecioVenta.setText(existente.precioVenta.toString())
+            etPrecioCompra.setText(existente.precioCompra.toString())
 
             if (existente.fechaCaducidad.isNullOrEmpty()) {
                 spTipo.setSelection(1) // No Perecedero
@@ -225,7 +269,6 @@ class InventarioActivity : AppCompatActivity() {
             habilitarCamposModoNuevo(false)
             Toast.makeText(this, "Producto conocido. Agregando lote (Stock: $stockNuevo)", Toast.LENGTH_SHORT).show()
         } else {
-            // ES UN PRODUCTO NUEVO
             limpiarSoloCampos()
             etStock.setText("1")
 
@@ -246,23 +289,49 @@ class InventarioActivity : AppCompatActivity() {
             return
         }
 
-        if (spTipo.selectedItemPosition == 0 && etCaducidad.currentTextColor == Color.RED) {
-            Toast.makeText(this, "Por favor, ingresa una fecha válida", Toast.LENGTH_SHORT).show()
-            vibrarError()
+        val precioV = etPrecioVenta.text.toString().toDoubleOrNull() ?: 0.0
+        if (precioV <= 0) {
+            etPrecioVenta.error = "Precio inválido"
             return
         }
 
-        val precio = etPrecioVenta.text.toString().toDoubleOrNull() ?: 0.0
-        val caducidad = if (spTipo.selectedItemPosition == 1) null else etCaducidad.text.toString().trim().ifEmpty { null }
+        val precioC = etPrecioCompra.text.toString().toDoubleOrNull() ?: 0.0
+        if (precioC <= 0) {
+            etPrecioCompra.error = "Precio de compra requerido"
+            return
+        }
+        if (precioC >= precioV) {
+            Toast.makeText(this, "Advertencia: El precio de compra es mayor o igual al de venta", Toast.LENGTH_LONG).show()
+        }
 
-        // Lee el stock actual (sea por autoincremento o manual)
-        val stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
+        val esPerecedero = spTipo.selectedItemPosition == 0
+        var caducidad: String? = null
+        var stockGuardar = 0
+
+        if (esPerecedero) {
+            val textoCaducidad = etCaducidad.text.toString().trim()
+            if (textoCaducidad.length != 8 || etCaducidad.currentTextColor == Color.RED) {
+                Toast.makeText(this, "Para Perecederos, caducidad obligatoria", Toast.LENGTH_SHORT).show()
+                vibrarError()
+                return
+            }
+            caducidad = textoCaducidad
+            stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
+        } else {
+            stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
+            if (stockGuardar <= 0) {
+                etStock.error = "Stock inicial requerido"
+                return
+            }
+            caducidad = null
+        }
 
         val producto = DatabaseHelper.Producto(
             codigoBarras   = codigoActual,
             nombre         = nombre,
             descripcion    = etDescripcion.text.toString().trim(),
-            precioVenta    = precio,
+            precioVenta    = precioV,
+            precioCompra   = precioC,
             stock          = stockGuardar,
             fechaCaducidad = caducidad
         )
@@ -279,8 +348,8 @@ class InventarioActivity : AppCompatActivity() {
 
     private fun limpiarFormulario() {
         codigoActual = ""
-        etCodigoProducto.setText("")
-        ivBarcode.setImageDrawable(null) // Borrar la imagen de las barras
+        tvCodigoProducto.text = "ESCANEAR..."
+        ivBarcode.setImageDrawable(null)
         limpiarSoloCampos()
         habilitarCamposModoNuevo(true)
     }
@@ -290,45 +359,38 @@ class InventarioActivity : AppCompatActivity() {
         actvNombre.setText("")
         etDescripcion.setText("")
         etPrecioVenta.setText("")
+        etPrecioCompra.setText("")
         etCaducidad.setText("")
         spTipo.setSelection(0)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  INTERCEPTOR MODO HID (Teclado del Escáner Bluetooth)
-    // ─────────────────────────────────────────────────────────────────────────
+    // SOLUCIÓN: Separar lógicamente teclado en pantalla vs Scanner Físico
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val isHardwareDevice = event.device != null && !event.device.isVirtual
+        // 1. Si la entrada viene del Teclado Virtual (en pantalla), dejamos que funcione normal.
+        if (event.deviceId == -1 || event.device?.isVirtual == true) {
+            return super.dispatchKeyEvent(event)
+        }
 
+        // 2. Si la entrada viene de Hardware (Escáner Bluetooth), la atrapamos.
         if (event.action == KeyEvent.ACTION_DOWN) {
-            val timeNow = System.currentTimeMillis()
-
+            // Cuando el lector manda el 'Enter' (fin del código de barras)
             if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
                 val codigoLeido = barcodeBuffer.toString().trim()
                 if (codigoLeido.isNotEmpty()) {
                     procesarEscaneoInventario(codigoLeido)
-                    barcodeBuffer.clear()
-                    return true
                 }
+                barcodeBuffer.setLength(0)
+                return true // Evita que el ENTER haga cosas extrañas en la pantalla
             }
 
-            val pressedChar = event.unicodeChar.toChar()
-            if (pressedChar.isDefined() && event.unicodeChar > 31) {
-                if (timeNow - lastKeyTime > 200) {
-                    barcodeBuffer.clear()
-                }
-                barcodeBuffer.append(pressedChar)
-                lastKeyTime = timeNow
-
-                if (isHardwareDevice) {
-                    return true
-                }
-            }
-        } else if (event.action == KeyEvent.ACTION_UP) {
-            if (isHardwareDevice && (event.unicodeChar > 31 || event.keyCode == KeyEvent.KEYCODE_ENTER)) {
-                return true
+            // Atrapamos cualquier letra o número del código
+            if (event.unicodeChar > 31) {
+                barcodeBuffer.append(event.unicodeChar.toChar())
+                return true // Esto EVITA que el número se escriba en los EditText
             }
         }
+
+        // Dejar pasar botones físicos nativos (Volumen, Retroceso, etc.)
         return super.dispatchKeyEvent(event)
     }
 }

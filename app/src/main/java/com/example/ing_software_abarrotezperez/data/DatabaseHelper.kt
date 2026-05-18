@@ -13,7 +13,8 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         const val DATABASE_NAME = "tienda.db"
-        const val DATABASE_VERSION = 2
+        // CAMBIO: Se aumenta la versión para que se vuelva a crear la BD con la nueva columna
+        const val DATABASE_VERSION = 3
 
         // --- Tablas ---
         const val TABLE_PRODUCTO       = "producto"
@@ -40,6 +41,7 @@ class DatabaseHelper(context: Context) :
             )
         """.trimIndent())
 
+        // CAMBIO: Se agregó precio_compra a la tabla
         db.execSQL("""
             CREATE TABLE producto (
                 id_producto     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,6 +49,7 @@ class DatabaseHelper(context: Context) :
                 nombre          TEXT NOT NULL,
                 descripcion     TEXT,
                 precio_venta    REAL,
+                precio_compra   REAL NOT NULL DEFAULT 0.0, 
                 stock           INTEGER DEFAULT 0,
                 fecha_caducidad TEXT 
             )
@@ -155,18 +158,21 @@ class DatabaseHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // Se eliminan las tablas existentes (el orden importa por las llaves foráneas)
         db.execSQL("DROP TABLE IF EXISTS pago_fiado")
         db.execSQL("DROP TABLE IF EXISTS fiado")
         db.execSQL("DROP TABLE IF EXISTS detalle_venta")
         db.execSQL("DROP TABLE IF EXISTS venta")
         db.execSQL("DROP TABLE IF EXISTS detalle_compra")
         db.execSQL("DROP TABLE IF EXISTS compra")
-        db.execSQL("DROP TABLE IF EXISTS merma")
+        db.execSQL("DROP TABLE IF EXISTS proveedor_digital")
+        db.execSQL("DROP TABLE IF EXISTS proveedor_fisico")
         db.execSQL("DROP TABLE IF EXISTS lote")
+        db.execSQL("DROP TABLE IF EXISTS merma")
         db.execSQL("DROP TABLE IF EXISTS producto")
         db.execSQL("DROP TABLE IF EXISTS cliente")
-        db.execSQL("DROP TABLE IF EXISTS proveedor_fisico")
-        db.execSQL("DROP TABLE IF EXISTS proveedor_digital")
+
+        // Se vuelve a crear la base de datos con la nueva estructura
         onCreate(db)
     }
 
@@ -179,12 +185,14 @@ class DatabaseHelper(context: Context) :
     //  PRODUCTO
     // ─────────────────────────────────────────────
 
+    // CAMBIO: Se agregó precioCompra al Data Class
     data class Producto(
         val idProducto: Int = 0,
         val codigoBarras: String = "",
         val nombre: String = "",
         val descripcion: String = "",
         val precioVenta: Double = 0.0,
+        val precioCompra: Double = 0.0,
         val stock: Int = 0,
         val fechaCaducidad: String? = null
     )
@@ -204,6 +212,7 @@ class DatabaseHelper(context: Context) :
                     nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
                     descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
                     precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
+                    precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
                     stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
                     fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
                 )
@@ -218,6 +227,7 @@ class DatabaseHelper(context: Context) :
             put("nombre",          producto.nombre)
             put("descripcion",     producto.descripcion)
             put("precio_venta",    producto.precioVenta)
+            put("precio_compra",   producto.precioCompra) // CAMBIO
             put("stock",           producto.stock)
             put("fecha_caducidad", producto.fechaCaducidad)
         }
@@ -266,6 +276,7 @@ class DatabaseHelper(context: Context) :
                         nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
                         descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
                         precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
+                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
                         stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
                         fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
                     )
@@ -376,6 +387,70 @@ class DatabaseHelper(context: Context) :
     //  SPRINT 3: SALIDAS (Reportes de Negocio)
     // ─────────────────────────────────────────────
 
+    // CAMBIO: Ganancia del Día ahora resta el precio_compra nativo del producto, es mucho más eficiente
+    fun getGananciaDelDia(): Double {
+        val db = readableDatabase
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val query = """
+            SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad)
+            FROM $TABLE_VENTA v
+            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+            WHERE v.fecha LIKE ?
+        """.trimIndent()
+        return db.rawQuery(query, arrayOf("$today%")).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun getVentaDelDia(): Double {
+        val db = readableDatabase
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
+        return db.rawQuery(query, arrayOf("$today%")).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun getProductosPorCaducar(): List<Producto> {
+        val db = readableDatabase
+        val lista = mutableListOf<Producto>()
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        val query = """
+            SELECT * FROM $TABLE_PRODUCTO 
+            WHERE fecha_caducidad IS NOT NULL 
+              AND fecha_caducidad != '' 
+              AND fecha_caducidad >= ? 
+            ORDER BY fecha_caducidad ASC
+        """.trimIndent()
+
+        db.rawQuery(query, arrayOf(today)).use {
+            while (it.moveToNext()) {
+                lista.add(
+                    Producto(
+                        idProducto     = it.getInt(it.getColumnIndexOrThrow("id_producto")),
+                        codigoBarras   = it.getString(it.getColumnIndexOrThrow("codigo_barras")),
+                        nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
+                        descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
+                        precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
+                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
+                        stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
+                        fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
+                    )
+                )
+            }
+        }
+        return lista
+    }
+
+    // CAMBIO: Reporte general de ganancias simplificado con la misma lógica
+    fun getReporteGanancias(): Double {
+        val db = readableDatabase
+        val query = """
+            SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad)
+            FROM $TABLE_DETALLE_VENTA dv
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+        """.trimIndent()
+        return db.rawQuery(query, null).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
     fun getHistorialMovimientos(): List<String> {
         val db = readableDatabase
         val historial = mutableListOf<String>()
@@ -390,16 +465,6 @@ class DatabaseHelper(context: Context) :
         return historial
     }
 
-    fun getReporteGanancias(): Double {
-        val db = readableDatabase
-        val query = """
-            SELECT SUM((dv.precio_unitario - IFNULL(dc.precio_compra, 0)) * dv.cantidad)
-            FROM $TABLE_DETALLE_VENTA dv
-            LEFT JOIN $TABLE_DETALLE_COMPRA dc ON dv.id_producto = dc.id_producto
-        """.trimIndent()
-        return db.rawQuery(query, null).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
-    }
-
     fun getTopVendidos(): List<Pair<String, Int>> {
         val db = readableDatabase
         val lista = mutableListOf<Pair<String, Int>>()
@@ -410,10 +475,11 @@ class DatabaseHelper(context: Context) :
         return lista
     }
 
+    // CAMBIO: Simplificada la comparativa de márgenes
     fun getComparativaMargen(): List<String> {
         val db = readableDatabase
         val comparativa = mutableListOf<String>()
-        val query = "SELECT p.nombre, p.precio_venta, IFNULL(dc.precio_compra, 0) FROM producto p LEFT JOIN detalle_compra dc ON p.id_producto = dc.id_producto GROUP BY p.id_producto"
+        val query = "SELECT nombre, precio_venta, precio_compra FROM $TABLE_PRODUCTO"
         db.rawQuery(query, null).use {
             while (it.moveToNext()) {
                 val margen = it.getDouble(1) - it.getDouble(2)
@@ -571,5 +637,127 @@ class DatabaseHelper(context: Context) :
             }
         }
         return lista
+    }
+
+    fun getTodosLosProductosConCaducidad(): List<Producto> {
+        val db = readableDatabase
+        val lista = mutableListOf<Producto>()
+        // Trae todos los que tengan fecha de caducidad, ordenados de más viejos a más nuevos
+        val query = """
+            SELECT * FROM $TABLE_PRODUCTO 
+            WHERE fecha_caducidad IS NOT NULL 
+              AND fecha_caducidad != '' 
+            ORDER BY fecha_caducidad ASC
+        """.trimIndent()
+
+        db.rawQuery(query, null).use {
+            while (it.moveToNext()) {
+                lista.add(
+                    Producto(
+                        idProducto     = it.getInt(it.getColumnIndexOrThrow("id_producto")),
+                        codigoBarras   = it.getString(it.getColumnIndexOrThrow("codigo_barras")),
+                        nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
+                        descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
+                        precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
+                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")),
+                        stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
+                        fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
+                    )
+                )
+            }
+        }
+        return lista
+    }
+
+    // 1. Ganancias por hora (actualizado para recibir fecha)
+    fun getGananciasPorHoraDelDia(fechaFiltro: String): Map<Int, Float> {
+        val db = readableDatabase
+        val mapaGanancias = mutableMapOf<Int, Float>()
+        val query = """
+            SELECT CAST(strftime('%H', v.fecha) AS INTEGER) as hora, 
+                   SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) as total_ganancia
+            FROM $TABLE_VENTA v
+            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+            WHERE v.fecha LIKE ?
+            GROUP BY hora
+        """.trimIndent()
+
+        // Usamos la fecha seleccionada en lugar de "hoy"
+        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
+            while (cursor.moveToNext()) {
+                val hora = cursor.getInt(cursor.getColumnIndexOrThrow("hora"))
+                val ganancia = cursor.getFloat(cursor.getColumnIndexOrThrow("total_ganancia"))
+                mapaGanancias[hora] = ganancia
+            }
+        }
+        return mapaGanancias
+    }
+
+    // 2. Ganancia Total del Día (asegúrate que la consulta coincida con la tuya)
+    fun getGananciaDelDia(fechaFiltro: String): Double {
+        val db = readableDatabase
+        var ganancia = 0.0
+        val query = """
+            SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) 
+            FROM $TABLE_VENTA v
+            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+            WHERE v.fecha LIKE ?
+        """.trimIndent()
+
+        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
+            if (cursor.moveToFirst()) { ganancia = cursor.getDouble(0) }
+        }
+        return ganancia
+    }
+
+    // 3. Venta Total del Día
+    fun getVentaDelDia(fechaFiltro: String): Double {
+        val db = readableDatabase
+        var venta = 0.0
+        val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
+
+        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
+            if (cursor.moveToFirst()) { venta = cursor.getDouble(0) }
+        }
+        return venta
+    }
+
+
+
+
+
+
+    // Agrega esto en tu DatabaseHelper
+    fun getGananciasPorHoraDelDia(): Map<Int, Float> {
+        val db = readableDatabase
+        val mapaGanancias = mutableMapOf<Int, Float>()
+
+        // Obtenemos la fecha de hoy en formato yyyy-MM-dd para filtrar
+        val hoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        // Consulta corregida:
+        // 1. Usa la constante TABLE_VENTA.
+        // 2. Hace JOIN con detalle y producto para calcular (Venta - Costo).
+        // 3. Filtra por el día actual usando LIKE.
+        val query = """
+        SELECT CAST(strftime('%H', v.fecha) AS INTEGER) as hora, 
+               SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) as total_ganancia
+        FROM $TABLE_VENTA v
+        JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+        JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+        WHERE v.fecha LIKE ?
+        GROUP BY hora
+    """.trimIndent()
+
+        db.rawQuery(query, arrayOf("$hoy%")).use { cursor ->
+            while (cursor.moveToNext()) {
+                val hora = cursor.getInt(0)
+                val total = cursor.getFloat(1)
+                mapaGanancias[hora] = total
+            }
+        }
+        return mapaGanancias
     }
 }

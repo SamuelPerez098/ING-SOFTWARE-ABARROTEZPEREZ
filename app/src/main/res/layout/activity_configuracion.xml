@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:text="Configuración"
             android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textSize="24sp"
             android:textStyle="bold" />
     </LinearLayout>
 
@@ -41,8 +41,9 @@
                 android:layout_marginBottom="12dp"
                 android:clickable="true"
                 android:focusable="true"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="4dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -61,8 +62,9 @@
                 android:layout_marginBottom="12dp"
                 android:clickable="true"
                 android:focusable="true"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="4dp">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -78,8 +80,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
+                app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -108,14 +111,12 @@
                 android:id="@+id/btnCerrarSesion"
                 android:layout_width="match_parent"
                 android:layout_height="55dp"
-                android:backgroundTint="#DEDEDE"
+                android:backgroundTint="#F44336"
                 android:text="Cerrar Sesión"
-                android:textColor="#1A1616"
+                android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp"
-                app:strokeColor="#818080"
-                app:strokeWidth="2dp" />
+                app:cornerRadius="12dp" />
 
         </LinearLayout>
     </ScrollView>

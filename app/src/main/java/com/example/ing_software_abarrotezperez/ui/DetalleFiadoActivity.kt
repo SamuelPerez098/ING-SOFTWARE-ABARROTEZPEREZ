@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 
 class DetalleFiadoActivity : AppCompatActivity() {
 
@@ -67,7 +68,6 @@ class DetalleFiadoActivity : AppCompatActivity() {
             rvFiados.visibility    = View.VISIBLE
             tvSinDeudas.visibility = View.GONE
 
-            // Numeración local por cliente
             val textos = fiados.mapIndexed { index, fiado ->
                 "Deuda #${index + 1} — Saldo: $${"%.2f".format(fiado.saldoPendiente)}"
             }
@@ -97,8 +97,10 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarFiado)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarFiado)
 
-        // FIX Problema 1: hint claro para no confundir
-        etDesc.hint = "Concepto del adeudo (ej: compra del dia, mandado...)"
+        // FIX VISUAL: Asignamos el hint al contenedor padre (TextInputLayout) y limpiamos el EditText
+        val tilDesc = etDesc.parent.parent as? TextInputLayout
+        tilDesc?.hint = "Descripción (ej: leche, pan...)"
+        etDesc.hint = ""
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -138,8 +140,6 @@ class DetalleFiadoActivity : AppCompatActivity() {
             return
         }
 
-        val fiadoActivo = fiados.first()
-
         val dialogView  = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_fiado, null)
         val etDesc      = dialogView.findViewById<TextInputEditText>(R.id.etDescripcion)
         val etMonto     = dialogView.findViewById<TextInputEditText>(R.id.etMonto)
@@ -147,8 +147,17 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarFiado)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarFiado)
 
+        // Ocultamos el contenedor completo de la descripción para que no ocupe espacio extra
+        val tilDesc = etDesc.parent.parent as? TextInputLayout
+        tilDesc?.visibility = View.GONE
         etDesc.visibility = View.GONE
-        etMonto.hint = "Monto a pagar (máx: $${"%.2f".format(fiadoActivo.saldoPendiente)})"
+
+        val saldoTotalMaximo = fiados.sumOf { it.saldoPendiente }
+
+        // FIX VISUAL: Asignamos el límite al contenedor padre (TextInputLayout) y limpiamos el EditText
+        val tilMonto = etMonto.parent.parent as? TextInputLayout
+        tilMonto?.hint = "Monto a pagar (máx: $${"%.2f".format(saldoTotalMaximo)})"
+        etMonto.hint = ""
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -166,24 +175,37 @@ class DetalleFiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // FIX Problema 2: redondear para evitar error de precisión con decimales
-            val montoPago   = "%.2f".format(monto).toDouble()
-            val saldoMaximo = "%.2f".format(fiadoActivo.saldoPendiente).toDouble()
+            var montoPago = "%.2f".format(monto).toDouble()
+            val saldoMaximo = "%.2f".format(saldoTotalMaximo).toDouble()
 
             if (montoPago > saldoMaximo) {
                 tvError.visibility = View.VISIBLE
-                tvError.text = "El monto no puede ser mayor al saldo ($${"%.2f".format(saldoMaximo)})"
+                tvError.text = "El monto no puede ser mayor al saldo total ($${"%.2f".format(saldoMaximo)})"
                 return@setOnClickListener
             }
 
-            val ok = db.registrarPagoFiado(fiadoActivo.idFiado, montoPago)
-            if (ok) {
+            var exitoEnPagos = true
+            for (fiado in fiados) {
+                if (montoPago <= 0.0) break
+
+                val aPagarEnEsteFiado = minOf(montoPago, fiado.saldoPendiente)
+
+                val ok = db.registrarPagoFiado(fiado.idFiado, aPagarEnEsteFiado)
+                if (ok) {
+                    montoPago = "%.2f".format(montoPago - aPagarEnEsteFiado).toDouble()
+                } else {
+                    exitoEnPagos = false
+                    break
+                }
+            }
+
+            if (exitoEnPagos) {
                 Toast.makeText(this, "Pago registrado ✅", Toast.LENGTH_SHORT).show()
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
                 tvError.visibility = View.VISIBLE
-                tvError.text = "Error al guardar, intenta de nuevo"
+                tvError.text = "Error al procesar parte del pago, intenta de nuevo"
             }
         }
 

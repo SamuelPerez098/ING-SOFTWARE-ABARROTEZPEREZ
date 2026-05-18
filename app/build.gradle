@@ -4,21 +4,25 @@ plugins {
 
 android {
     namespace 'com.example.ing_software_abarrotezperez'
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-        packaging {
-            resources {
-                excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/NOTICE', 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt']
-            }
+
+    compileSdk 34
+
+    packaging {
+        resources {
+            excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/NOTICE',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/NOTICE.txt'
+            ]
         }
     }
 
     defaultConfig {
         applicationId "com.example.ing_software_abarrotezperez"
         minSdk 30
-        targetSdk 36
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -28,9 +32,13 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            proguardFiles getDefaultProguardFile(
+                    'proguard-android-optimize.txt'
+            ), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -38,28 +46,33 @@ android {
 }
 
 dependencies {
+
     implementation libs.androidx.activity.ktx
     implementation libs.androidx.appcompat
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.core.ktx
     implementation libs.material
+
     implementation "androidx.cardview:cardview:1.0.0"
 
-    // Librería para código de barras
+    // Código de barras
     implementation 'com.google.zxing:core:3.4.1'
 
-    // LIBRERÍA PARA LAS GRÁFICAS (MPAndroidChart)
+    // Gráficas
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    // WorkManager
+    implementation "androidx.work:work-runtime-ktx:2.9.0"
+
+    // Google Drive API
+    implementation 'com.google.api-client:google-api-client-android:1.33.0'
+    implementation 'com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+
+    // GIFs
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
 
     testImplementation libs.junit
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.junit
-
-    // WorkManager para tareas en segundo plano
-    implementation "androidx.work:work-runtime-ktx:2.9.0"
-
-    // API de Google Drive
-    implementation('com.google.api-client:google-api-client-android:1.33.0')
-    implementation('com.google.apis:google-api-services-drive:v3-rev20220815-2.0.0')
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
 }

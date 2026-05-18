@@ -1,5 +1,6 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -25,14 +26,23 @@ class ConfiguracionActivity : AppCompatActivity() {
             startActivity(Intent(this, AlmacenamientoActivity::class.java))
         }
 
-        // 3. Botón "Cerrar Sesión" (Te regresa al Login de forma segura)
+        // 3. Botón "Cerrar Sesión" (Corregido para borrar la sesión antes de ir al Login)
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
         btnCerrarSesion.setOnClickListener {
+
+            // --- NUEVO: Cambiamos el estado del login a false ---
+            val sharedPref = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
+            sharedPref.edit().putBoolean("isLogged", false).apply()
+
+            // Ahora sí, abrimos el Login de forma limpia
             val intent = Intent(this, LoginActivity::class.java)
+
             // Estas banderas limpian el historial de pantallas para que no puedas regresar con el botón de atrás
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
-            finish()
+
+            // Cierra por completo todas las actividades anteriores que queden en segundo plano
+            finishAffinity()
         }
     }
 }

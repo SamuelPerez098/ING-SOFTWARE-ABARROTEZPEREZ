@@ -10,6 +10,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -34,10 +37,21 @@
         <activity android:name=".MainActivity" />
         <activity android:name=".ui.FiadoActivity" />
         <activity android:name=".ui.DetalleFiadoActivity" />
-
+        <activity android:name=".ui.MermasActivity" />
         <activity android:name=".ui.ConfiguracionActivity" />
         <activity android:name=".ui.PerfilActivity" />
         <activity android:name=".ui.AlmacenamientoActivity" />
+        <activity android:name=".ui.CompraActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

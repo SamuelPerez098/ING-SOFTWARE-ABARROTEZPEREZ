@@ -75,13 +75,11 @@
                 android:hint="Rol actual">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etRolUsuario"
+                    android:id="@+id/etRolPerfil"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:enabled="false"
-                    android:text="Administrador / Dueño"
-                    android:textColor="#757575"
-                    android:textStyle="bold" />
+                    android:text="Administrador" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -92,11 +90,10 @@
                 android:hint="Nombre completo">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etNombreUsuario"
+                    android:id="@+id/etNombrePerfil"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textPersonName"
-                    android:text="Juan Pérez" />
+                    android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <Button

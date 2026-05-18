@@ -3,10 +3,7 @@ package com.example.ing_software_abarrotezperez
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.text.InputType
-import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.work.*
@@ -48,47 +45,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         // ──────────────────────────────────────────
-        // 2. BOTÓN ONLINE (Popup interactivo para el Correo)
+        // 2. BOTÓN COMPRAS (Usando el ID btnIrFiados)
         // ──────────────────────────────────────────
         val btnOnline = findViewById<CardView>(R.id.btnIrFiados)
         btnOnline.setOnClickListener {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Respaldo Manual en la Nube")
-            builder.setMessage("Introduce el correo de Google Drive donde deseas enviar la base de datos:")
-
-            // Creamos la caja de texto dinámica para que el usuario escriba
-            val inputCorreo = EditText(this)
-            inputCorreo.hint = "ejemplo@gmail.com"
-            inputCorreo.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-            builder.setView(inputCorreo)
-
-            // Configurar botón de Aceptar
-            builder.setPositiveButton("Enviar Respaldo") { _, _ ->
-                val correoIntroducido = inputCorreo.text.toString().trim()
-
-                if (correoIntroducido.isNotEmpty() && correoIntroducido.contains("@")) {
-                    Toast.makeText(this, "Preparando respaldo para: $correoIntroducido", Toast.LENGTH_LONG).show()
-
-                    // Guardamos el correo en un paquete de datos para el Worker
-                    val datosDeEntrada = workDataOf("KEY_CORREO_DRIVE" to correoIntroducido)
-
-                    // Lanzamos la tarea de respaldo inmediato pasándole el correo
-                    val manualBackupRequest = OneTimeWorkRequestBuilder<com.example.ing_software_abarrotezperez.data.DriveBackupWorker>()
-                        .setInputData(datosDeEntrada)
-                        .build()
-
-                    WorkManager.getInstance(this).enqueue(manualBackupRequest)
-                } else {
-                    Toast.makeText(this, "Por favor, introduce un correo válido.", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            // Configurar botón de Cancelar
-            builder.setNegativeButton("Cancelar") { dialog, _ ->
-                dialog.cancel()
-            }
-
-            builder.show()
+            // Se quitó el popup de respaldo y ahora lanza directamente CompraActivity
+            val intent = Intent(this, CompraActivity::class.java)
+            startActivity(intent)
         }
 
         // ──────────────────────────────────────────

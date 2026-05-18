@@ -1,5 +1,6 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.inputmethod.EditorInfo
@@ -12,10 +13,6 @@ import com.google.android.material.textfield.TextInputEditText
 
 class LoginActivity : AppCompatActivity() {
 
-    // ─────────────────────────────────────────────
-    //  USUARIOS DEFINIDOS
-    //  Para agregar más: pon "usuario" to "contraseña"
-    // ─────────────────────────────────────────────
     private val usuarios = mapOf(
         "admin"  to "1234",
         "saul"   to "perez123"
@@ -23,6 +20,16 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val sharedPref = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
+        val estaLogueado = sharedPref.getBoolean("isLogged", false)
+
+        if (estaLogueado) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_login)
 
         val etUsuario  = findViewById<TextInputEditText>(R.id.etUsuario)
@@ -30,23 +37,13 @@ class LoginActivity : AppCompatActivity() {
         val btnEntrar  = findViewById<Button>(R.id.btnEntrar)
         val tvError    = findViewById<TextView>(R.id.tvError)
 
-        // Entrar con el botón
         btnEntrar.setOnClickListener {
-            validarLogin(
-                etUsuario.text.toString().trim(),
-                etPassword.text.toString(),
-                tvError
-            )
+            validarLogin(etUsuario.text.toString().trim(), etPassword.text.toString(), tvError)
         }
 
-        // Entrar presionando "Done" en el teclado
         etPassword.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                validarLogin(
-                    etUsuario.text.toString().trim(),
-                    etPassword.text.toString(),
-                    tvError
-                )
+                validarLogin(etUsuario.text.toString().trim(), etPassword.text.toString(), tvError)
                 true
             } else false
         }
@@ -56,12 +53,13 @@ class LoginActivity : AppCompatActivity() {
         val passwordEsperada = usuarios[usuario]
 
         if (passwordEsperada != null && passwordEsperada == password) {
-            // Credenciales correctas → ir al menú principal
+            val sharedPref = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
+            sharedPref.edit().putBoolean("isLogged", true).apply()
+
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-            finish() // Cierra el login para que no regrese con "atrás"
+            finish()
         } else {
-            // Credenciales incorrectas → mostrar error
             tvError.visibility = TextView.VISIBLE
         }
     }

@@ -6,7 +6,6 @@
     android:background="#F5F5F5"
     android:orientation="vertical">
 
-    <!-- 1. LA BARRA SUPERIOR AZUL OSCURA -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="85dp"
@@ -14,8 +13,6 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
-
-        <!-- PON AQUÍ TU PNG -->
 
         <ImageView
             android:id="@+id/btnMenu"
@@ -34,7 +31,6 @@
 
     </LinearLayout>
 
-    <!-- 2. TU FORMULARIO EXACTAMENTE COMO LO MANDASTE -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -42,8 +38,6 @@
         android:gravity="center"
         android:orientation="vertical"
         android:padding="32dp">
-
-        <!-- Campo usuario -->
 
         <ImageView
             android:id="@+id/imageView"
@@ -72,11 +66,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:imeOptions="actionNext"
-                android:inputType="text" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Campo contraseña -->
+                android:inputType="text"
+                android:textColor="#000000" /> </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -90,11 +81,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:imeOptions="actionDone"
-                android:inputType="textPassword" />
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <!-- Mensaje de error -->
+                android:inputType="textPassword"
+                android:textColor="#000000" /> </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
             android:id="@+id/tvError"
@@ -106,7 +94,6 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-        <!-- Botón entrar -->
         <Button
             android:id="@+id/btnEntrar"
             android:layout_width="match_parent"

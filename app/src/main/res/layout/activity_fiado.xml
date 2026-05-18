@@ -44,14 +44,16 @@
         app:strokeColor="#DDDDDD"
         app:strokeWidth="1dp">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etBuscar"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:background="@android:color/transparent"
             android:hint="Buscar cliente..."
+            android:inputType="textPersonName"
             android:paddingHorizontal="16dp"
             android:textSize="16sp" />
+
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
@@ -75,14 +77,16 @@
                 android:id="@+id/rvClientes"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipToPadding="false" />
+                android:clipToPadding="false"
+                android:scrollbars="vertical" />
 
             <TextView
                 android:id="@+id/tvVacio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:text="No hay clientes con fiado registrados"
+                android:gravity="center"
+                android:text="No hay clientes registrados"
                 android:textColor="#999999"
                 android:textSize="16sp"
                 android:visibility="gone" />

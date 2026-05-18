@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -34,9 +35,7 @@ class FiadoActivity : AppCompatActivity() {
         val btnNuevoCliente = findViewById<Button>(R.id.btnNuevoCliente)
         val tvVacio        = findViewById<TextView>(R.id.tvVacio)
 
-        // Configurar RecyclerView
         adapter = ClienteAdapter(emptyList(), emptyMap()) { cliente ->
-            // Al tocar "Ver" → abrir detalle del cliente
             val intent = Intent(this, DetalleFiadoActivity::class.java)
             intent.putExtra("id_cliente", cliente.idCliente)
             intent.putExtra("nombre_cliente", cliente.nombre)
@@ -45,25 +44,28 @@ class FiadoActivity : AppCompatActivity() {
         rvClientes.layoutManager = LinearLayoutManager(this)
         rvClientes.adapter = adapter
 
-        // Cargar clientes
         cargarClientes(rvClientes, tvVacio)
 
-        // Buscador
         etBuscar.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
-                val query = s.toString().lowercase()
+                val query = s.toString().lowercase().trim()
+                // Si el buscador está vacío, mostramos todos
+                if (query.isEmpty()) {
+                    cargarClientes(rvClientes, tvVacio)
+                    return
+                }
+                // Si hay texto, filtramos de la lista completa
                 val filtrados = todosLosClientes.filter {
                     it.nombre.lowercase().contains(query)
                 }
                 adapter.actualizar(filtrados, saldos)
-                tvVacio.visibility  = if (filtrados.isEmpty()) TextView.VISIBLE else TextView.GONE
-                rvClientes.visibility = if (filtrados.isEmpty()) RecyclerView.GONE else RecyclerView.VISIBLE
+
+                actualizarVisibilidad(filtrados.isEmpty(), rvClientes, tvVacio)
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        // Botón nuevo cliente
         btnNuevoCliente.setOnClickListener {
             mostrarDialogoNuevoCliente(rvClientes, tvVacio)
         }
@@ -71,7 +73,6 @@ class FiadoActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Recargar al regresar del detalle
         val rvClientes = findViewById<RecyclerView>(R.id.rvClientes)
         val tvVacio    = findViewById<TextView>(R.id.tvVacio)
         cargarClientes(rvClientes, tvVacio)
@@ -79,31 +80,32 @@ class FiadoActivity : AppCompatActivity() {
 
     private fun cargarClientes(rvClientes: RecyclerView, tvVacio: TextView) {
         todosLosClientes = db.getAllClientes()
+
         saldos = todosLosClientes.associate { it.idCliente to db.getSaldoPendienteCliente(it.idCliente) }
 
-        // Solo mostrar clientes que tengan saldo pendiente
-        val clientesConSaldo = todosLosClientes.filter { (saldos[it.idCliente] ?: 0.0) > 0.0 }
+        adapter.actualizar(todosLosClientes, saldos)
 
-        adapter.actualizar(clientesConSaldo, saldos)
+        actualizarVisibilidad(todosLosClientes.isEmpty(), rvClientes, tvVacio)
+    }
 
-        tvVacio.visibility    = if (clientesConSaldo.isEmpty()) TextView.VISIBLE else TextView.GONE
-        rvClientes.visibility = if (clientesConSaldo.isEmpty()) RecyclerView.GONE else RecyclerView.VISIBLE
+    private fun actualizarVisibilidad(isEmpty: Boolean, rv: RecyclerView, tv: TextView) {
+        if (isEmpty) {
+            tv.visibility = View.VISIBLE
+            rv.visibility = View.GONE
+        } else {
+            tv.visibility = View.GONE
+            rv.visibility = View.VISIBLE
+        }
     }
 
     private fun mostrarDialogoNuevoCliente(rvClientes: RecyclerView, tvVacio: TextView) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_fiado, null)
+        // AQUÍ ESTÁ LA MAGIA: Llamamos al NUEVO archivo XML (dialog_nuevo_cliente)
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_cliente, null)
 
-        // Reutilizamos el dialog pero adaptamos los textos
-        val tvTitulo   = dialogView.findViewById<TextView>(R.id.tvErrorFiado)
-        val etDesc     = dialogView.findViewById<TextInputEditText>(R.id.etDescripcion)
-        val etMonto    = dialogView.findViewById<TextInputEditText>(R.id.etMonto)
-        val tvError    = dialogView.findViewById<TextView>(R.id.tvErrorFiado)
-        val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarFiado)
-        val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarFiado)
-
-        // Ocultamos el campo monto, aquí solo necesitamos el nombre
-        etMonto.visibility = android.view.View.GONE
-        etDesc.hint        = "Nombre del cliente"
+        // Usamos los IDs del nuevo diseño
+        val etNombre    = dialogView.findViewById<TextInputEditText>(R.id.etNombreCliente)
+        val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
+        val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
 
         val dialog = AlertDialog.Builder(this)
             .setView(dialogView)
@@ -113,23 +115,23 @@ class FiadoActivity : AppCompatActivity() {
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
         btnGuardar.setOnClickListener {
-            val nombre = etDesc.text.toString().trim()
+            val nombre = etNombre.text.toString().trim()
+
             if (nombre.isEmpty()) {
-                tvError.visibility = TextView.VISIBLE
-                tvError.text = "Escribe el nombre del cliente"
+                // Mostramos el error directamente en el campo de texto (estilo Material Design)
+                etNombre.error = "El nombre es obligatorio"
                 return@setOnClickListener
             }
+
             val resultado = db.registrarCliente(nombre)
             if (resultado != -1L) {
-                Toast.makeText(this, "Cliente '$nombre' registrado ✅", Toast.LENGTH_SHORT).show()
-                cargarClientes(rvClientes, tvVacio)
+                Toast.makeText(this, "Cliente '$nombre' listo", Toast.LENGTH_SHORT).show()
+                cargarClientes(rvClientes, tvVacio) // Recarga la lista para que aparezca luego luego
                 dialog.dismiss()
             } else {
-                tvError.visibility = TextView.VISIBLE
-                tvError.text = "Error al guardar, intenta de nuevo"
+                Toast.makeText(this, "Este nombre ya existe", Toast.LENGTH_LONG).show()
             }
         }
-
         dialog.show()
     }
 }

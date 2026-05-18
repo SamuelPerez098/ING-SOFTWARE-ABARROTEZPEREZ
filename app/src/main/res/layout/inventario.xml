@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
     <LinearLayout
@@ -93,16 +94,13 @@
                                     android:layout_height="60dp"
                                     android:scaleType="fitCenter" />
 
-                                <EditText
-                                    android:id="@+id/etCodigoProducto"
+                                <TextView
+                                    android:id="@+id/tvCodigoProducto"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:background="@null"
-                                    android:cursorVisible="false"
-                                    android:focusable="false"
                                     android:gravity="center"
-                                    android:hint="ESCANEAR..."
-                                    android:longClickable="false"
+                                    android:text="ESCANEAR..."
                                     android:textColor="#000000"
                                     android:textSize="14sp"
                                     android:textStyle="bold" />
@@ -160,6 +158,8 @@
                                         android:gravity="start|center_vertical"
                                         android:hint="00"
                                         android:inputType="number"
+                                        android:singleLine="true"
+                                        android:imeOptions="actionNext"
                                         android:textColor="#000000"
                                         android:textStyle="bold" />
                                 </LinearLayout>
@@ -205,6 +205,8 @@
                                 android:hint="00/00/00"
                                 android:inputType="number"
                                 android:maxLength="8"
+                                android:singleLine="true"
+                                android:imeOptions="actionNext"
                                 android:textColor="#FFFFFF"
                                 android:textColorHint="#E0E0E0"
                                 android:textSize="22sp"
@@ -242,6 +244,8 @@
                                 android:gravity="center"
                                 android:hint="Ej. Sabritas"
                                 android:inputType="textCapWords"
+                                android:singleLine="true"
+                                android:imeOptions="actionNext"
                                 android:textColor="#FFFFFF"
                                 android:textColorHint="#E0E0E0"
                                 android:textSize="16sp"
@@ -274,19 +278,20 @@
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:paddingVertical="4dp"
-                                    android:text="DESCRIPCIÓN:"
+                                    android:text="PRECIO VENTA:"
                                     android:textColor="#000000"
                                     android:textStyle="bold" />
                             </androidx.cardview.widget.CardView>
 
                             <EditText
-                                android:id="@+id/etDescripcion"
+                                android:id="@+id/etPrecioVenta"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
-                                android:hint="Detalles..."
-                                android:inputType="textMultiLine"
-                                android:lines="2"
+                                android:hint="$0.00"
+                                android:inputType="numberDecimal"
+                                android:singleLine="true"
+                                android:imeOptions="actionNext"
                                 android:textColor="#FFFFFF"
                                 android:textColorHint="#E0E0E0"
                                 android:textSize="16sp"
@@ -311,18 +316,20 @@
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:paddingVertical="4dp"
-                                    android:text="PRECIO:"
+                                    android:text="PRECIO COMPRA:"
                                     android:textColor="#000000"
                                     android:textStyle="bold" />
                             </androidx.cardview.widget.CardView>
 
                             <EditText
-                                android:id="@+id/etPrecioVenta"
+                                android:id="@+id/etPrecioCompra"
                                 android:layout_width="match_parent"
-                                android:layout_height="60dp"
+                                android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:hint="$0.00"
                                 android:inputType="numberDecimal"
+                                android:singleLine="true"
+                                android:imeOptions="actionNext"
                                 android:textColor="#FFFFFF"
                                 android:textColorHint="#E0E0E0"
                                 android:textSize="16sp"
@@ -333,30 +340,68 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical">
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            app:cardBackgroundColor="#FFFFFF"
+                            app:cardCornerRadius="12dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center"
+                                android:paddingVertical="4dp"
+                                android:text="DESCRIPCION:"
+                                android:textColor="#000000"
+                                android:textStyle="bold" />
+                        </androidx.cardview.widget.CardView>
+
+                        <EditText
+                            android:id="@+id/etDescripcion"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="start|top"
+                            android:hint="Detalles..."
+                            android:inputType="textMultiLine"
+                            android:lines="2"
+                            android:imeOptions="actionDone"
+                            android:textColor="#FFFFFF"
+                            android:textColorHint="#E0E0E0"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
                         android:orientation="horizontal">
 
                         <Button
                             android:id="@+id/btnGuardarProducto"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
                             android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
                             android:backgroundTint="#FFFFFF"
-                            android:text="CONFIRMAR"
                             android:textColor="#000000"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:text="CONFIRMAR" />
 
                         <Button
                             android:id="@+id/btnLimpiar"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
                             android:layout_weight="1"
+                            android:layout_marginStart="8dp"
                             android:backgroundTint="#FFFFFF"
-                            android:text="LIMPIAR"
                             android:textColor="#000000"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:text="LIMPIAR" />
                     </LinearLayout>
 
                 </LinearLayout>
