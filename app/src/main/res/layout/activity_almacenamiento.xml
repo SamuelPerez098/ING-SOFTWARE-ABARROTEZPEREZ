@@ -88,7 +88,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="35%"
-                            android:textColor="#181717"
+                            android:textColor="?attr/colorOnSurface"
                             android:textSize="32sp"
                             android:textStyle="bold" />
 

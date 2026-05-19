@@ -87,7 +87,7 @@
                 android:layout_centerInParent="true"
                 android:gravity="center"
                 android:text="No hay clientes registrados"
-                android:textColor="#999999"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="16sp"
                 android:visibility="gone" />
 

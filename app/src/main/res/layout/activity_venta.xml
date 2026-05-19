@@ -41,7 +41,7 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="8dp"
         android:gravity="center_vertical"
-        android:background="#F0F0F0">
+        android:background="?attr/colorSurface">
 
         <TextView
             android:id="@+id/tvEstadoBt"
@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Escáner: Esperando..."
-            android:textColor="#555555"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -117,7 +117,7 @@
                     android:layout_weight="1"
                     android:backgroundTint="#FFFFFF"
                     android:text="CANCELAR"
-                    android:textColor="#000000"
+                    android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold" />
 
                 <Button
@@ -128,7 +128,7 @@
                     android:layout_weight="1"
                     android:backgroundTint="#FFFFFF"
                     android:text="COBRAR"
-                    android:textColor="#000000"
+                    android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
