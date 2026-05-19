@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id 'com.google.gms.google-services'
 }
 
 android {
@@ -65,9 +66,6 @@ dependencies {
     // WorkManager
     implementation "androidx.work:work-runtime-ktx:2.9.0"
 
-    // Google Drive API
-
-
     // GIFs
     implementation 'com.github.bumptech.glide:glide:4.16.0'
 
@@ -75,21 +73,26 @@ dependencies {
     androidTestImplementation libs.androidx.espresso.core
     androidTestImplementation libs.androidx.junit
 
-    // ── NUEVAS DEPENDENCIAS PARA GOOGLE DRIVE ────────────────────
+    // ── DEPENDENCIAS PARA GOOGLE DRIVE ───────────────────────────
 
-    // Google Sign-In (autenticación OAuth con cuenta Google)
+    // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // Cliente HTTP de Google para Android (gestiona tokens OAuth)
-    implementation("com.google.api-client:google-api-client-android:2.2.0")
+    // Cliente HTTP de Google para Android
+    implementation("com.google.api-client:google-api-client-android:2.2.0") {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
-    // Servicio de Drive API v3 (clases Drive, DriveFile, DriveScopes…)
-    implementation("com.google.apis:google-api-services-drive:v3-rev20240521-2.0.0")
+    // Servicio de Drive API v3
+    implementation("com.google.apis:google-api-services-drive:v3-rev20240521-2.0.0") {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
-    // Parser JSON GSON (requerido por el cliente API de Google)
-    implementation("com.google.http-client:google-http-client-gson:1.44.1")
+    // Parser JSON GSON
+    implementation("com.google.http-client:google-http-client-gson:1.44.1") {
+        exclude group: 'org.apache.httpcomponents'
+    }
 
-    // Coroutines para ejecutar la subida en Dispatchers.IO
-    // (probablemente ya la tienes por WorkManager; verifica antes de duplicar)
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 }

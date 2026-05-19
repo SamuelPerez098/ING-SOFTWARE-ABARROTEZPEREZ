@@ -234,7 +234,7 @@ class AlmacenamientoActivity : AppCompatActivity() {
         val tvEspacioLibre = findViewById<TextView>(R.id.tvEspacioLibre)
 
         // 1. Calcular el peso exacto de la App (APK + Base de datos + Caché + Archivos)
-        val dbFile   = getDatabasePath("Abarrotes.db")
+        val dbFile = getDatabasePath(DriveHelper.DB_NAME)
         val dbSize   = if (dbFile.exists()) dbFile.length() else 0L
 
         val apkFile  = File(applicationInfo.sourceDir)

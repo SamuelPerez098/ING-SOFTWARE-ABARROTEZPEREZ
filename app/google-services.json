@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "879616731095",
+    "project_id": "ing-software-abarrotezpe-e6908",
+    "storage_bucket": "ing-software-abarrotezpe-e6908.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:879616731095:android:3328fda10a5b07ed72cd92",
+        "android_client_info": {
+          "package_name": "com.example.ing_software_abarrotezperez"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "250606773637-78vokn6illkvu6bu4abd0n8v73j7m5pj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ing_software_abarrotezperez",
+            "certificate_hash": "7c56911b12aafa7aec6f6c0d2084a99ea5551474"
+          }
+        },
+        {
+          "client_id": "250606773637-er76nh8au1b8kcqdrdr6nj7a0mso7l1a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGIYTbjEvugTtBUG7hkMFG0V2V7Tf7hAI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

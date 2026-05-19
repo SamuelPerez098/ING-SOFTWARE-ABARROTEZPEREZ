@@ -2390,7 +2390,7 @@
       <list>
         <ColumnSorterState>
           <option name="column" value="Name" />
-          <option name="order" value="ASCENDING" />
+          <option name="order" value="DESCENDING" />
         </ColumnSorterState>
       </list>
     </option>
@@ -2491,8 +2491,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a9c0a827-550e-4f58-a029-234026f6b94c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-night/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-night/themes.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/deviceManager.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deviceManager.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/ing_software_abarrotezperez/ui/AlmacenamientoActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/ing_software_abarrotezperez/ui/AlmacenamientoActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/todo_mi_codigo.txt" beforeDir="false" afterPath="$PROJECT_DIR$/todo_mi_codigo.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -3135,9 +3136,9 @@ class DatabaseHelper(context: Context) :
         val codigoBarras: String = "",
         val nombre: String = "",
         val descripcion: String = "",
-        val precioVenta: Double = 0.0,
+        var precioVenta: Double = 0.0, // <--- CAMBIO AQUÃ (de val a var)
         val precioCompra: Double = 0.0,
-        val stock: Int = 0,
+        var stock: Int = 0,            // <--- CAMBIO AQUÃ (de val a var)
         val fechaCaducidad: String? = null
     )
 
@@ -3668,12 +3669,26 @@ class DatabaseHelper(context: Context) :
         return venta
     }
 
+    fun aplicarPromocion(codigo: String, nuevoPrecio: Double): Int {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("precioVenta", nuevoPrecio)
+        }
+        return db.update("productos", values, "codigoBarras = ?", arrayOf(codigo))
+    }
 
+    fun actualizarPrecioVenta(codigoBarras: String, nuevoPrecio: Double): Boolean {
+        val db = this.writableDatabase
+        val values = android.content.ContentValues().apply {
+            put("precioVenta", nuevoPrecio)
+        }
 
+        // Actualiza la fila donde el cÃ³digo de barras coincida
+        val filasAfectadas = db.update("productos", values, "codigoBarras = ?", arrayOf(codigoBarras))
+        db.close()
 
-
-
-    // Agrega esto en tu DatabaseHelper
+        return filasAfectadas > 0
+    }
     fun getGananciasPorHoraDelDia(): Map<Int, Float> {
         val db = readableDatabase
         val mapaGanancias = mutableMapOf<Int, Float>()
@@ -4098,6 +4113,7 @@ class AlmacenamientoActivity : AppCompatActivity() {
         // Se solicita el correo del usuario Y el permiso para crear/leer
         // archivos en su Google Drive (DriveScopes.DRIVE_FILE).
         val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("250606773637-er76nh8au1b8kcqdrdr6nj7a0mso7l1a.apps.googleusercontent.com")
             .requestEmail()
             .requestScopes(Scope(DriveScopes.DRIVE_FILE))
             .build()
@@ -4797,6 +4813,7 @@ class FiadoActivity : AppCompatActivity() {
 package com.example.ing_software_abarrotezperez.ui
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
@@ -4809,6 +4826,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
@@ -4833,6 +4851,7 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var btnGuardar: Button
     private lateinit var btnLimpiar: Button
     private lateinit var ivBarcode: ImageView
+    private lateinit var btnVerLista: CardView // NUEVA VARIABLE PARA EL BOTÃ“N
 
     private var codigoActual: String = ""
 
@@ -4858,6 +4877,7 @@ class InventarioActivity : AppCompatActivity() {
         spTipo           = findViewById(R.id.spTipo)
         btnGuardar       = findViewById(R.id.btnGuardarProducto)
         btnLimpiar       = findViewById(R.id.btnLimpiar)
+        btnVerLista      = findViewById(R.id.btnVerLista)
 
         configurarSugerenciasNombres()
         configurarFormatoFecha()
@@ -4866,8 +4886,22 @@ class InventarioActivity : AppCompatActivity() {
         btnGuardar.setOnClickListener { guardarProducto() }
         btnLimpiar.setOnClickListener { limpiarFormulario() }
 
+        // EVENTO DEL NUEVO BOTÃ“N
+        btnVerLista.setOnClickListener {
+            val intent = Intent(this, ListaInventarioActivity::class.java)
+            startActivity(intent)
+        }
+
         // Bloquear stock por defecto hasta que se elija "No Perecedero"
         etStock.isEnabled = false
+
+        // --- AQUÃ ES EL LUGAR CORRECTO ---
+        // Revisamos si venimos de la lista con la intenciÃ³n de editar
+        val codigoAEditar = intent.getStringExtra("CODIGO_A_EDITAR")
+        if (!codigoAEditar.isNullOrEmpty()) {
+            // Simulamos que el usuario escaneÃ³ este cÃ³digo para que se llene el formulario
+            procesarEscaneoInventario(codigoAEditar)
+        }
     }
 
     private fun configurarSpinnerTipo() {
@@ -5185,9 +5219,56 @@ class InventarioActivity : AppCompatActivity() {
                 return true // Esto EVITA que el nÃºmero se escriba en los EditText
             }
         }
-
         // Dejar pasar botones fÃ­sicos nativos (Volumen, Retroceso, etc.)
         return super.dispatchKeyEvent(event)
+    }
+
+    // --- PEGAR ESTO AL FINAL DEL onCreate EN InventarioActivity ---
+    // Revisamos si venimos de la lista con la intenciÃ³n de editar
+
+}
+
+=== FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\java\com\example\ing_software_abarrotezperez\ui\ListaInventarioActivity.kt ===
+package com.example.ing_software_abarrotezperez.ui
+
+import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.ing_software_abarrotezperez.R
+import com.example.ing_software_abarrotezperez.data.DatabaseHelper
+
+class ListaInventarioActivity : AppCompatActivity() {
+
+    private lateinit var rvInventario: RecyclerView
+    private lateinit var adapter: ProductoAdapter
+    private lateinit var dbHelper: DatabaseHelper
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_lista_inventario)
+
+        rvInventario = findViewById(R.id.rvInventario)
+        rvInventario.layoutManager = LinearLayoutManager(this)
+
+        dbHelper = DatabaseHelper(this) // Instancia de tu base de datos
+    }
+
+    // Usamos onResume para que la lista se refresque automÃ¡ticamente si editamos un producto y regresamos
+    override fun onResume() {
+        super.onResume()
+        cargarInventario()
+    }
+
+    private fun cargarInventario() {
+        val listaProductos = dbHelper.getAllProductos().toMutableList()
+
+        if (!::adapter.isInitialized) {
+            adapter = ProductoAdapter(this, listaProductos, dbHelper)
+            rvInventario.adapter = adapter
+        } else {
+            adapter.actualizarDatos(listaProductos)
+        }
     }
 }
 
@@ -5522,6 +5603,109 @@ class PerfilActivity : AppCompatActivity() {
         if (file.exists()) {
             ivFotoPerfil.setImageURI(Uri.fromFile(file))
         }
+    }
+}
+
+=== FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\java\com\example\ing_software_abarrotezperez\ui\ProductoAdapter.kt ===
+package com.example.ing_software_abarrotezperez.ui
+
+import android.content.Context
+import android.content.Intent
+import android.text.InputType
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.RecyclerView
+import com.example.ing_software_abarrotezperez.R
+import com.example.ing_software_abarrotezperez.data.DatabaseHelper
+
+class ProductoAdapter(
+    private val context: Context,
+    private var listaProductos: MutableList<DatabaseHelper.Producto>,
+    private val dbHelper: DatabaseHelper
+) : RecyclerView.Adapter<ProductoAdapter.ProductoViewHolder>() {
+
+    class ProductoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val tvNombre: TextView = view.findViewById(R.id.tvItemNombre)
+        val tvCodigo: TextView = view.findViewById(R.id.tvItemCodigo)
+        val tvPrecio: TextView = view.findViewById(R.id.tvItemPrecio)
+        val tvStock: TextView = view.findViewById(R.id.tvItemStock)
+        val btnEditar: Button = view.findViewById(R.id.btnItemEditar)
+        val btnPromo: Button = view.findViewById(R.id.btnItemPromo)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductoViewHolder {
+        // FÃ­jate muy bien aquÃ­: es R.layout (no R.id)
+        val view = LayoutInflater.from(context).inflate(R.layout.item_producto, parent, false)
+        return ProductoViewHolder(view)
+    }
+
+    override fun getItemCount(): Int = listaProductos.size
+
+    override fun onBindViewHolder(holder: ProductoViewHolder, position: Int) {
+        val producto = listaProductos[position]
+
+        holder.tvNombre.text = producto.nombre
+        holder.tvCodigo.text = "CÃ³digo: ${producto.codigoBarras}"
+        holder.tvPrecio.text = "Precio: $${producto.precioVenta}"
+        holder.tvStock.text = "Stock: ${producto.stock}"
+
+        // LÃ“GICA DEL BOTÃ“N EDITAR
+        holder.btnEditar.setOnClickListener {
+            val intent = Intent(context, InventarioActivity::class.java).apply {
+                putExtra("CODIGO_A_EDITAR", producto.codigoBarras)
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP // Limpia la pila para no abrir mil ventanas
+            }
+            context.startActivity(intent)
+        }
+
+        // LÃ“GICA DEL BOTÃ“N PROMOCIÃ“N
+        // LÃ“GICA DEL BOTÃ“N PROMOCIÃ“N / PRECIO EXACTO
+        holder.btnPromo.setOnClickListener {
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Modificar Precio / PromociÃ³n")
+            builder.setMessage("Ingresa el NUEVO PRECIO exacto para ${producto.nombre}.\n\n(Para quitar una promociÃ³n, simplemente ingresa el precio normal).")
+
+            // Campo de texto para el nuevo precio
+            val input = EditText(context)
+            input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            // Autocompletamos con el precio actual para que sea mÃ¡s fÃ¡cil de editar
+            input.setText(producto.precioVenta.toString())
+            builder.setView(input)
+
+            builder.setPositiveButton("Guardar Precio") { _, _ ->
+                val nuevoPrecioStr = input.text.toString()
+                if (nuevoPrecioStr.isNotEmpty()) {
+                    val nuevoPrecio = nuevoPrecioStr.toDouble()
+
+                    // Actualizar en Base de Datos
+                    val exito = dbHelper.actualizarPrecioVenta(producto.codigoBarras, nuevoPrecio)
+
+                    if (exito) {
+                        // Actualizar la lista visualmente
+                        producto.precioVenta = nuevoPrecio
+                        notifyItemChanged(position)
+                        Toast.makeText(context, "Precio actualizado a $${nuevoPrecio}", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Error al actualizar precio", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }
+            builder.show()
+        }
+    }
+
+    // FunciÃ³n para refrescar la lista completa si es necesario
+    fun actualizarDatos(nuevaLista: List<DatabaseHelper.Producto>) {
+        listaProductos.clear()
+        listaProductos.addAll(nuevaLista)
+        notifyDataSetChanged()
     }
 }
 
@@ -7050,6 +7234,39 @@ class MainActivity : AppCompatActivity() {
 
 </LinearLayout>
 
+=== FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\res\layout\activity_lista_inventario.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#C45B20"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="INVENTARIO ACTUAL"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvInventario"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="8dp"
+        android:clipToPadding="false" />
+</LinearLayout>
+
 === FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\res\layout\activity_login.xml ===
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -8192,6 +8409,33 @@ class MainActivity : AppCompatActivity() {
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnVerLista"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="LISTA DE\nINVENTARIO"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <ScrollView
@@ -8684,6 +8928,98 @@ class MainActivity : AppCompatActivity() {
         android:textStyle="bold" />
 </RelativeLayout>
 
+=== FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\res\layout\item_producto.xml ===
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="#333333"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#EBE9E9"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvItemNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del Producto"
+            android:textColor="#141313"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvItemCodigo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CÃ³digo: 123456789"
+            android:textColor="#4B4848"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvItemPrecio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Precio: $0.00"
+                android:textColor="#4CAF50"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvItemStock"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Stock: 0"
+                android:textColor="#FF9800"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnItemEditar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:backgroundTint="#2196F3"
+                android:text="EDITAR"
+                android:textColor="#FFFFFF" />
+
+            <Button
+                android:id="@+id/btnItemPromo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:backgroundTint="#E91E63"
+                android:text="PROMOCIÃ“N"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+
 === FILE: C:\Users\danim\StudioProjects\ING-SOFTWARE-ABARROTEZPEREZ\app\src\main\res\layout\item_venta.xml ===
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -8968,6 +9304,7 @@ class MainActivity : AppCompatActivity() {
         <activity android:name=".ui.PerfilActivity" />
         <activity android:name=".ui.AlmacenamientoActivity" />
         <activity android:name=".ui.CompraActivity" />
+        <activity android:name=".ui.ListaInventarioActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
