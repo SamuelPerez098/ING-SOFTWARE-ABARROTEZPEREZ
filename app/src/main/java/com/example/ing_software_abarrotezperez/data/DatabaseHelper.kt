@@ -191,9 +191,9 @@ class DatabaseHelper(context: Context) :
         val codigoBarras: String = "",
         val nombre: String = "",
         val descripcion: String = "",
-        val precioVenta: Double = 0.0,
+        var precioVenta: Double = 0.0, // <--- CAMBIO AQUÍ (de val a var)
         val precioCompra: Double = 0.0,
-        val stock: Int = 0,
+        var stock: Int = 0,            // <--- CAMBIO AQUÍ (de val a var)
         val fechaCaducidad: String? = null
     )
 
@@ -724,12 +724,26 @@ class DatabaseHelper(context: Context) :
         return venta
     }
 
+    fun aplicarPromocion(codigo: String, nuevoPrecio: Double): Int {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("precioVenta", nuevoPrecio)
+        }
+        return db.update("productos", values, "codigoBarras = ?", arrayOf(codigo))
+    }
 
+    fun actualizarPrecioVenta(codigoBarras: String, nuevoPrecio: Double): Boolean {
+        val db = this.writableDatabase
+        val values = android.content.ContentValues().apply {
+            put("precioVenta", nuevoPrecio)
+        }
 
+        // Actualiza la fila donde el código de barras coincida
+        val filasAfectadas = db.update("productos", values, "codigoBarras = ?", arrayOf(codigoBarras))
+        db.close()
 
-
-
-    // Agrega esto en tu DatabaseHelper
+        return filasAfectadas > 0
+    }
     fun getGananciasPorHoraDelDia(): Map<Int, Float> {
         val db = readableDatabase
         val mapaGanancias = mutableMapOf<Int, Float>()

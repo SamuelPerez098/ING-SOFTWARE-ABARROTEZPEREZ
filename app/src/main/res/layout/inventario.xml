@@ -31,6 +31,33 @@
             android:textColor="#FFFFFF"
             android:textSize="20sp"
             android:textStyle="bold" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnVerLista"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardCornerRadius="12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="LISTA DE\nINVENTARIO"
+                android:textAlignment="center"
+                android:textColor="#000000"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </androidx.cardview.widget.CardView>
     </LinearLayout>
 
     <ScrollView

@@ -1,6 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
@@ -13,6 +14,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
@@ -37,6 +39,7 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var btnGuardar: Button
     private lateinit var btnLimpiar: Button
     private lateinit var ivBarcode: ImageView
+    private lateinit var btnVerLista: CardView // NUEVA VARIABLE PARA EL BOTÓN
 
     private var codigoActual: String = ""
 
@@ -62,6 +65,7 @@ class InventarioActivity : AppCompatActivity() {
         spTipo           = findViewById(R.id.spTipo)
         btnGuardar       = findViewById(R.id.btnGuardarProducto)
         btnLimpiar       = findViewById(R.id.btnLimpiar)
+        btnVerLista      = findViewById(R.id.btnVerLista)
 
         configurarSugerenciasNombres()
         configurarFormatoFecha()
@@ -70,8 +74,22 @@ class InventarioActivity : AppCompatActivity() {
         btnGuardar.setOnClickListener { guardarProducto() }
         btnLimpiar.setOnClickListener { limpiarFormulario() }
 
+        // EVENTO DEL NUEVO BOTÓN
+        btnVerLista.setOnClickListener {
+            val intent = Intent(this, ListaInventarioActivity::class.java)
+            startActivity(intent)
+        }
+
         // Bloquear stock por defecto hasta que se elija "No Perecedero"
         etStock.isEnabled = false
+
+        // --- AQUÍ ES EL LUGAR CORRECTO ---
+        // Revisamos si venimos de la lista con la intención de editar
+        val codigoAEditar = intent.getStringExtra("CODIGO_A_EDITAR")
+        if (!codigoAEditar.isNullOrEmpty()) {
+            // Simulamos que el usuario escaneó este código para que se llene el formulario
+            procesarEscaneoInventario(codigoAEditar)
+        }
     }
 
     private fun configurarSpinnerTipo() {
@@ -389,8 +407,11 @@ class InventarioActivity : AppCompatActivity() {
                 return true // Esto EVITA que el número se escriba en los EditText
             }
         }
-
         // Dejar pasar botones físicos nativos (Volumen, Retroceso, etc.)
         return super.dispatchKeyEvent(event)
     }
+
+    // --- PEGAR ESTO AL FINAL DEL onCreate EN InventarioActivity ---
+    // Revisamos si venimos de la lista con la intención de editar
+
 }

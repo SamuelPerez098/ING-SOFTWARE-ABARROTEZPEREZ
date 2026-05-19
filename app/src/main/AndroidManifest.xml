@@ -46,6 +46,7 @@
         <activity android:name=".ui.PerfilActivity" />
         <activity android:name=".ui.AlmacenamientoActivity" />
         <activity android:name=".ui.CompraActivity" />
+        <activity android:name=".ui.ListaInventarioActivity" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
