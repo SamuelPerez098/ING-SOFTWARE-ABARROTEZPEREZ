@@ -22,9 +22,6 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
         // ── MODO OSCURO: restaurar ANTES de super.onCreate() ─────
-        // Esto garantiza que el tema correcto se aplica desde el
-        // primer fotograma, sin parpadeo, sin importar qué pantalla
-        // se vaya a mostrar después (Login o directamente el Menú).
         val modoOscuroGuardado = getSharedPreferences("prefs_tema", MODE_PRIVATE)
             .getBoolean("modo_oscuro", false)
         AppCompatDelegate.setDefaultNightMode(
@@ -35,9 +32,8 @@ class LoginActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
 
-        // ── Resto del código — SIN CAMBIOS ────────────────────────
-        val sharedPref    = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
-        val estaLogueado  = sharedPref.getBoolean("isLogged", false)
+        val sharedPref   = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
+        val estaLogueado = sharedPref.getBoolean("isLogged", false)
 
         if (estaLogueado) {
             startActivity(Intent(this, MainActivity::class.java))
@@ -47,10 +43,10 @@ class LoginActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_login)
 
-        val etUsuario = findViewById<TextInputEditText>(R.id.etUsuario)
+        val etUsuario  = findViewById<TextInputEditText>(R.id.etUsuario)
         val etPassword = findViewById<TextInputEditText>(R.id.etPassword)
-        val btnEntrar = findViewById<Button>(R.id.btnEntrar)
-        val tvError = findViewById<TextView>(R.id.tvError)
+        val btnEntrar  = findViewById<Button>(R.id.btnEntrar)
+        val tvError    = findViewById<TextView>(R.id.tvError)
 
         btnEntrar.setOnClickListener {
             validarLogin(etUsuario.text.toString().trim(), etPassword.text.toString(), tvError)
@@ -77,4 +73,10 @@ class LoginActivity : AppCompatActivity() {
             tvError.visibility = TextView.VISIBLE
         }
     }
+    // No permitir regresar al menú sin iniciar sesión
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finishAffinity()
+    }
+
 }

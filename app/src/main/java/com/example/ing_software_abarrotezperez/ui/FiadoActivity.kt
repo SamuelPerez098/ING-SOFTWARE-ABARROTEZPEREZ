@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 import com.google.android.material.textfield.TextInputEditText
+import java.text.Normalizer
 
 class FiadoActivity : AppCompatActivity() {
 
@@ -30,10 +31,10 @@ class FiadoActivity : AppCompatActivity() {
 
         db = DatabaseHelper(this)
 
-        val rvClientes     = findViewById<RecyclerView>(R.id.rvClientes)
-        val etBuscar       = findViewById<TextInputEditText>(R.id.etBuscar)
+        val rvClientes      = findViewById<RecyclerView>(R.id.rvClientes)
+        val etBuscar        = findViewById<TextInputEditText>(R.id.etBuscar)
         val btnNuevoCliente = findViewById<Button>(R.id.btnNuevoCliente)
-        val tvVacio        = findViewById<TextView>(R.id.tvVacio)
+        val tvVacio         = findViewById<TextView>(R.id.tvVacio)
 
         adapter = ClienteAdapter(emptyList(), emptyMap()) { cliente ->
             val intent = Intent(this, DetalleFiadoActivity::class.java)
@@ -49,17 +50,14 @@ class FiadoActivity : AppCompatActivity() {
         etBuscar.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString().lowercase().trim()
-                // Si el buscador está vacío, mostramos todos
                 if (query.isEmpty()) {
                     cargarClientes(rvClientes, tvVacio)
                     return
                 }
-                // Si hay texto, filtramos de la lista completa
                 val filtrados = todosLosClientes.filter {
                     it.nombre.lowercase().contains(query)
                 }
                 adapter.actualizar(filtrados, saldos)
-
                 actualizarVisibilidad(filtrados.isEmpty(), rvClientes, tvVacio)
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -80,11 +78,8 @@ class FiadoActivity : AppCompatActivity() {
 
     private fun cargarClientes(rvClientes: RecyclerView, tvVacio: TextView) {
         todosLosClientes = db.getAllClientes()
-
         saldos = todosLosClientes.associate { it.idCliente to db.getSaldoPendienteCliente(it.idCliente) }
-
         adapter.actualizar(todosLosClientes, saldos)
-
         actualizarVisibilidad(todosLosClientes.isEmpty(), rvClientes, tvVacio)
     }
 
@@ -98,11 +93,33 @@ class FiadoActivity : AppCompatActivity() {
         }
     }
 
+    // ─────────────────────────────────────────────
+    //  VALIDACIONES HELPER
+    // ─────────────────────────────────────────────
+
+    // Quita acentos y convierte a minúsculas para comparar nombres
+    private fun normalizarNombre(nombre: String): String {
+        val sinAcentos = Normalizer.normalize(nombre, Normalizer.Form.NFD)
+            .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+        return sinAcentos.lowercase().trim()
+    }
+
+    // Verifica si el nombre ya existe ignorando mayúsculas, minúsculas y acentos
+    private fun nombreYaExiste(nombre: String): Boolean {
+        val nombreNorm = normalizarNombre(nombre)
+        return todosLosClientes.any { normalizarNombre(it.nombre) == nombreNorm }
+    }
+    //Verifica que solo acepte letras en el nombre de el deudor
+    private fun nombreTieneLetras(nombre: String): Boolean {
+        return nombre.all { it.isLetter() || it.isWhitespace() }
+    }
+
+    // ─────────────────────────────────────────────
+    //  DIÁLOGO NUEVO CLIENTE
+    // ─────────────────────────────────────────────
     private fun mostrarDialogoNuevoCliente(rvClientes: RecyclerView, tvVacio: TextView) {
-        // AQUÍ ESTÁ LA MAGIA: Llamamos al NUEVO archivo XML (dialog_nuevo_cliente)
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_cliente, null)
 
-        // Usamos los IDs del nuevo diseño
         val etNombre    = dialogView.findViewById<TextInputEditText>(R.id.etNombreCliente)
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
@@ -117,19 +134,31 @@ class FiadoActivity : AppCompatActivity() {
         btnGuardar.setOnClickListener {
             val nombre = etNombre.text.toString().trim()
 
+            // Validación 1: campo vacío
             if (nombre.isEmpty()) {
-                // Mostramos el error directamente en el campo de texto (estilo Material Design)
                 etNombre.error = "El nombre es obligatorio"
+                return@setOnClickListener
+            }
+
+            // Validación 2: solo números o sin letras
+            if (!nombreTieneLetras(nombre)) {
+                etNombre.error = "El nombre debe contener letras"
+                return@setOnClickListener
+            }
+
+            // Validación 3: nombre duplicado (ignora mayúsculas, minúsculas y acentos)
+            if (nombreYaExiste(nombre)) {
+                etNombre.error = "Ya existe un cliente con ese nombre"
                 return@setOnClickListener
             }
 
             val resultado = db.registrarCliente(nombre)
             if (resultado != -1L) {
-                Toast.makeText(this, "Cliente '$nombre' listo", Toast.LENGTH_SHORT).show()
-                cargarClientes(rvClientes, tvVacio) // Recarga la lista para que aparezca luego luego
+                Toast.makeText(this, "Cliente '$nombre' registrado ✅", Toast.LENGTH_SHORT).show()
+                cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
-                Toast.makeText(this, "Este nombre ya existe", Toast.LENGTH_LONG).show()
+                etNombre.error = "Error al guardar, intenta de nuevo"
             }
         }
         dialog.show()
