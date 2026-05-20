@@ -187,7 +187,7 @@ class VentaActivity : AppCompatActivity() {
         if (event.action == KeyEvent.ACTION_DOWN) {
             val timeNow = System.currentTimeMillis()
 
-            if (timeNow - lastKeyTime > 200) {
+            if (timeNow - lastKeyTime > 500) {
                 barcodeBuffer.clear()
             }
             lastKeyTime = timeNow
