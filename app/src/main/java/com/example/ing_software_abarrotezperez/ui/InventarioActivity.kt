@@ -1,5 +1,4 @@
 package com.example.ing_software_abarrotezperez.ui
-
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -255,11 +254,17 @@ class InventarioActivity : AppCompatActivity() {
     }
 
     private fun habilitarCamposModoNuevo(esNuevo: Boolean) {
-        actvNombre.isEnabled = esNuevo
-        etPrecioVenta.isEnabled = esNuevo
-        etPrecioCompra.isEnabled = esNuevo
-        spTipo.isEnabled = esNuevo
+        // En tu nueva lógica, quieres que todo se pueda editar SIEMPRE,
+        // sin importar si es un producto nuevo o si lo estás editando.
+        actvNombre.isEnabled = true
+        etPrecioVenta.isEnabled = true
+        etPrecioCompra.isEnabled = true
+        spTipo.isEnabled = true
         etDescripcion.isEnabled = true
+
+        // Si quieres que el código de barras NUNCA sea editable por el usuario
+        // (lo cual es correcto), asegúrate de que tvCodigoProducto sea un TextView
+        // y no un EditText, cosa que ya tienes bien estructurada.
     }
 
     private fun procesarEscaneoInventario(codigo: String) {
@@ -318,8 +323,13 @@ class InventarioActivity : AppCompatActivity() {
             etPrecioCompra.error = "Precio de compra requerido"
             return
         }
+
+        // --- AQUÍ ESTÁ LA CORRECCIÓN ---
         if (precioC >= precioV) {
-            Toast.makeText(this, "Advertencia: El precio de compra es mayor o igual al de venta", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Error: El precio de compra no puede ser mayor o igual al de venta", Toast.LENGTH_LONG).show()
+            etPrecioCompra.error = "Revisa los precios" // Pinta el campo de rojo
+            vibrarError() // Llama a tu función de vibración
+            return // <--- ESTO ES LO QUE FRENA LA EJECUCIÓN Y EVITA QUE SE GUARDE
         }
 
         val esPerecedero = spTipo.selectedItemPosition == 0
