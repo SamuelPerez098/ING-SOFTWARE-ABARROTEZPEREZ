@@ -266,7 +266,19 @@ class DatabaseHelper(context: Context) :
     fun getAllProductos(): List<Producto> {
         val db = readableDatabase
         val lista = mutableListOf<Producto>()
-        val cursor = db.query(TABLE_PRODUCTO, null, null, null, null, null, "nombre ASC")
+
+        // Ordena primero por largo del texto y luego por el texto.
+        // Esto hace que: "Prueba 2" (8 chars) vaya antes que "Prueba 10" (9 chars)
+        val cursor = db.query(
+            TABLE_PRODUCTO,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "LENGTH(nombre) ASC, nombre ASC"
+        )
+
         cursor.use {
             while (it.moveToNext()) {
                 lista.add(
@@ -276,7 +288,7 @@ class DatabaseHelper(context: Context) :
                         nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
                         descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
                         precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
-                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
+                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")),
                         stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
                         fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
                     )
@@ -774,4 +786,39 @@ class DatabaseHelper(context: Context) :
         }
         return mapaGanancias
     }
+
+    fun insertar300ProductosDePrueba() {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for (i in 1..300) {
+                val producto = Producto(
+                    codigoBarras = "PRUEBA-$i",
+                    nombre = "Prueba $i",
+                    descripcion = "Producto de carga inicial",
+                    precioVenta = 50.0,
+                    precioCompra = 30.0,
+                    stock = 100, // Stock inicial de prueba
+                    fechaCaducidad = null
+                )
+
+                // Insertamos directamente. Si el código ya existe por algún error,
+                // el 'IGNORE' evitará que truene o que resetee el stock.
+                val cv = ContentValues().apply {
+                    put("codigo_barras",   producto.codigoBarras)
+                    put("nombre",          producto.nombre)
+                    put("descripcion",     producto.descripcion)
+                    put("precio_venta",    producto.precioVenta)
+                    put("precio_compra",   producto.precioCompra)
+                    put("stock",           producto.stock)
+                    put("fecha_caducidad", producto.fechaCaducidad)
+                }
+                db.insertWithOnConflict("producto", null, cv, SQLiteDatabase.CONFLICT_IGNORE)
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
 }
