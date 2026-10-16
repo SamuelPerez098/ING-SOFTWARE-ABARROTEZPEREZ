@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView // <-- Importante para el icono de basura
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -28,10 +29,10 @@ class ProductoAdapter(
         val tvStock: TextView = view.findViewById(R.id.tvItemStock)
         val btnEditar: Button = view.findViewById(R.id.btnItemEditar)
         val btnPromo: Button = view.findViewById(R.id.btnItemPromo)
+        val btnEliminar: ImageView = view.findViewById(R.id.btnItemEliminar) // <-- Cambiado a ImageView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductoViewHolder {
-        // Fíjate muy bien aquí: es R.layout (no R.id)
         val view = LayoutInflater.from(context).inflate(R.layout.item_producto, parent, false)
         return ProductoViewHolder(view)
     }
@@ -48,14 +49,23 @@ class ProductoAdapter(
 
         // LÓGICA DEL BOTÓN EDITAR
         holder.btnEditar.setOnClickListener {
+
             val intent = Intent(context, InventarioActivity::class.java).apply {
+
+                // Código del producto a editar
                 putExtra("CODIGO_A_EDITAR", producto.codigoBarras)
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP // Limpia la pila para no abrir mil ventanas
+
+                // IMPORTANTE:
+                // Esto evita que se sume +1 al stock automáticamente
+                putExtra("SOLO_EDITAR", true)
+
+                // Opcional
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
+
             context.startActivity(intent)
         }
 
-        // LÓGICA DEL BOTÓN PROMOCIÓN
         // LÓGICA DEL BOTÓN PROMOCIÓN / PRECIO EXACTO
         holder.btnPromo.setOnClickListener {
             val builder = AlertDialog.Builder(context)
@@ -74,6 +84,17 @@ class ProductoAdapter(
                 if (nuevoPrecioStr.isNotEmpty()) {
                     val nuevoPrecio = nuevoPrecioStr.toDouble()
 
+                    // --- NUEVA VALIDACIÓN: PRECIO DE COMPRA ---
+                    if (nuevoPrecio < producto.precioCompra) {
+                        Toast.makeText(
+                            context,
+                            "⚠ Error: El precio no puede ser menor al de compra ($${producto.precioCompra})",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@setPositiveButton // Detiene la ejecución aquí, no guarda en BD
+                    }
+                    // ------------------------------------------
+
                     // Actualizar en Base de Datos
                     val exito = dbHelper.actualizarPrecioVenta(producto.codigoBarras, nuevoPrecio)
 
@@ -85,6 +106,31 @@ class ProductoAdapter(
                     } else {
                         Toast.makeText(context, "Error al actualizar precio", Toast.LENGTH_SHORT).show()
                     }
+                }
+            }
+            builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }
+            builder.show()
+        }
+
+        // LÓGICA DEL BOTÓN ELIMINAR (BASURERO)
+        holder.btnEliminar.setOnClickListener {
+            val builder = AlertDialog.Builder(context)
+            builder.setTitle("Eliminar Producto")
+            builder.setMessage("¿Estás seguro de que quieres eliminar '${producto.nombre}' definitivamente del inventario?")
+
+            builder.setPositiveButton("Sí, eliminar") { _, _ ->
+                // Borrar de la base de datos
+                val exito = dbHelper.eliminarProducto(producto.codigoBarras)
+
+                if (exito) {
+                    // Borrar de la lista visual
+                    listaProductos.removeAt(position)
+                    notifyItemRemoved(position)
+                    // Notificar el cambio de posiciones para evitar crasheos de la lista
+                    notifyItemRangeChanged(position, listaProductos.size)
+                    Toast.makeText(context, "Producto eliminado", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Error al eliminar el producto", Toast.LENGTH_SHORT).show()
                 }
             }
             builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }

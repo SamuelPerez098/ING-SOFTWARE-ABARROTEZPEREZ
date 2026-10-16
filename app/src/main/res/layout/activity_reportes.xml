@@ -5,12 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
+    android:backgroundTint="#FFFFFF"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:background="?attr/colorPrimaryContainer"
+        android:backgroundTint="#2C55A6"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
@@ -19,9 +21,9 @@
             android:id="@+id/btnRegresarReportes"
             android:layout_width="32dp"
             android:layout_height="32dp"
+            android:rotation="-90"
             android:src="@android:drawable/ic_menu_sort_by_size"
-            app:tint="#FFFFFF"
-            android:rotation="-90"/>
+            app:tint="#FFFFFF" />
 
         <TextView
             android:id="@+id/tvTituloReportes"
@@ -62,10 +64,10 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#2C55A6"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardElevation="4dp">
 
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
@@ -84,11 +86,11 @@
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginBottom="8dp"
                             android:text="Ganancias"
                             android:textAlignment="center"
                             android:textColor="?attr/colorOnSurface"
-                            android:textSize="18sp"
-                            android:layout_marginBottom="8dp"/>
+                            android:textSize="18sp" />
 
                         <FrameLayout
                             android:layout_width="match_parent"
@@ -107,7 +109,7 @@
                             android:text="Tiempo"
                             android:textAlignment="center"
                             android:textColor="?attr/colorOnSurface"
-                            android:textSize="12sp"/>
+                            android:textSize="12sp" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
             </androidx.cardview.widget.CardView>
@@ -115,15 +117,15 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginBottom="24dp"
                 android:baselineAligned="false"
-                android:layout_marginBottom="24dp">
+                android:orientation="horizontal">
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -152,15 +154,15 @@
                             android:text="$00.00"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="20sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
@@ -189,7 +191,7 @@
                             android:text="$00.00"
                             android:textColor="?attr/colorPrimary"
                             android:textSize="20sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
             </LinearLayout>
@@ -197,10 +199,10 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="300dp"
-                app:cardBackgroundColor="?attr/colorPrimaryContainer"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="#2C55A6"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                android:layout_marginBottom="16dp">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -217,19 +219,19 @@
                         android:textAlignment="center"
                         android:textColor="?attr/colorPrimary"
                         android:textSize="20sp"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="2dp"
-                        android:background="?attr/colorPrimaryContainer"/>
+                        android:background="?attr/colorPrimaryContainer" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/rvCaducidad"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:clipToPadding="false"
-                        android:padding="8dp"/>
+                        android:padding="8dp" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>

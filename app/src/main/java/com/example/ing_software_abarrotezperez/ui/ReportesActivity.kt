@@ -60,7 +60,7 @@ class ReportesActivity : AppCompatActivity() {
 
         rvCaducidad.layoutManager = LinearLayoutManager(this)
 
-        // Definir la fecha de hoy al iniciar
+        // Definir la fecha de hoy al iniciar (Formato: YYYY-MM-DD)
         fechaFiltro = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
         btnRegresar.setOnClickListener { finish() }
@@ -93,7 +93,6 @@ class ReportesActivity : AppCompatActivity() {
         val datePickerDialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
-                // Darle formato a los números (Ejemplo: 9 -> 09)
                 val mesFormat = String.format("%02d", month + 1)
                 val diaFormat = String.format("%02d", dayOfMonth)
 
@@ -113,9 +112,6 @@ class ReportesActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 
-    // =========================================================================
-    // CONFIGURACIÓN VISUAL DE LA GRÁFICA
-    // =========================================================================
     private fun configurarGrafico() {
         lineChart.description.isEnabled = false
         lineChart.setDrawGridBackground(false)
@@ -123,12 +119,22 @@ class ReportesActivity : AppCompatActivity() {
 
         val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.axisMinimum = 8f
+
+        // 1. Definir los límites estrictos
+        xAxis.axisMinimum = 7f
         xAxis.axisMaximum = 18f
+
+        // 2. Obligar a que salte de 1 en 1
         xAxis.granularity = 1f
+        xAxis.isGranularityEnabled = true
+
+        // 3. LA CLAVE: Forzar exactamente 12 etiquetas (las 12 horas de 7 a 18)
+        xAxis.setLabelCount(12, true)
+
         xAxis.setDrawGridLines(false)
         xAxis.valueFormatter = object : ValueFormatter() {
             override fun getAxisLabel(value: Float, axis: AxisBase?): String {
+                if (value < 7f || value > 18f) return ""
                 return "${value.toInt()}:00"
             }
         }
@@ -140,27 +146,39 @@ class ReportesActivity : AppCompatActivity() {
         lineChart.axisRight.isEnabled = false
     }
 
-    // =========================================================================
-    // CARGAR DATOS
-    // =========================================================================
     private fun cargarDatosDeReportes() {
-        // 1. Cargar textos PASÁNDOLE LA FECHA SELECCIONADA
         val gananciaDia = dbHelper.getGananciaDelDia(fechaFiltro)
         tvGananciaDia.text = "$${String.format("%.2f", gananciaDia)}"
 
         val ventaDia = dbHelper.getVentaDelDia(fechaFiltro)
         tvVentaDia.text = "$${String.format("%.2f", ventaDia)}"
 
-        // 2. Cargar Gráfica
         cargarDatosGrafico()
 
-        // 3. Caducidades y merma automática (Esto NO cambia con el calendario, siempre muestra actuales)
-        val listaCompleta = dbHelper.getTodosLosProductosConCaducidad()
-        val listaProcesada = mutableListOf<DatabaseHelper.Producto>()
+        // =========================================================================
+        // NUEVA LÓGICA DE ORDENAMIENTO DE CADUCIDADES
+        // =========================================================================
+
+        // 1. Obtenemos TODOS los productos y filtramos solo los que tienen fecha de caducidad
+        val todosLosProductos = dbHelper.getAllProductos()
+        val productosConCaducidad = todosLosProductos.filter { !it.fechaCaducidad.isNullOrEmpty() }
+
         val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
         val hoy = Date()
 
-        for (prod in listaCompleta) {
+        // 2. Los ordenamos cronológicamente (del pasado al futuro)
+        val listaOrdenada = productosConCaducidad.sortedBy { producto ->
+            try {
+                sdf.parse(producto.fechaCaducidad!!)
+            } catch (e: Exception) {
+                Date(Long.MAX_VALUE) // Si alguna fecha está corrupta, la manda hasta el final
+            }
+        }
+
+        val listaProcesada = mutableListOf<DatabaseHelper.Producto>()
+
+        // 3. Aplicamos la lógica de merma (Mandar a 0 el stock si ya caducó)
+        for (prod in listaOrdenada) {
             var productoProcesado = prod
             try {
                 val fechaCad = sdf.parse(prod.fechaCaducidad!!)
@@ -178,11 +196,10 @@ class ReportesActivity : AppCompatActivity() {
     }
 
     private fun cargarDatosGrafico() {
-        // Obtenemos las ganancias usando LA FECHA SELECCIONADA
         val gananciasPorHora = dbHelper.getGananciasPorHoraDelDia(fechaFiltro)
         val entries = ArrayList<Entry>()
 
-        for (hora in 8..18) {
+        for (hora in 7..18) {
             val ganancia = gananciasPorHora[hora] ?: 0f
             entries.add(Entry(hora.toFloat(), ganancia))
         }
@@ -203,9 +220,6 @@ class ReportesActivity : AppCompatActivity() {
         lineChart.invalidate()
     }
 
-    // =========================================================================
-    // ADAPTADOR INTERNO (Sin Cambios)
-    // =========================================================================
     inner class CaducidadAdapter(private var productos: MutableList<DatabaseHelper.Producto>) :
         RecyclerView.Adapter<CaducidadAdapter.CaducidadViewHolder>() {
 

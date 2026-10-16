@@ -22,10 +22,23 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <EditText
+        android:id="@+id/etBuscar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="12dp"
+        android:background="@android:drawable/editbox_background"
+        android:drawableStart="@android:drawable/ic_menu_search"
+        android:drawablePadding="8dp"
+        android:hint="Buscar por nombre o código..."
+        android:padding="12dp"
+        android:singleLine="true"
+        android:imeOptions="actionSearch"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvInventario"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="8dp"
+        android:paddingTop="4dp"
         android:clipToPadding="false" />
 </LinearLayout>

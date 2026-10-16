@@ -79,7 +79,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="58dp"
                 android:imeOptions="actionDone"
                 android:inputType="textPassword"
                 android:textColor="?attr/colorOnSurface" /> </com.google.android.material.textfield.TextInputLayout>
@@ -97,7 +97,7 @@
         <Button
             android:id="@+id/btnEntrar"
             android:layout_width="match_parent"
-            android:layout_height="65dp"
+            android:layout_height="75dp"
             android:backgroundTint="#001845"
             android:text="Entrar"
             android:textSize="24sp" />

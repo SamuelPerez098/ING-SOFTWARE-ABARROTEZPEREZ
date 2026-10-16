@@ -302,6 +302,14 @@ class DatabaseHelper(context: Context) :
     //  VENTAS Y FIFO
     // ─────────────────────────────────────────────
 
+
+    fun eliminarProducto(codigoBarras: String): Boolean {
+        val db = writableDatabase
+        // Borramos el registro de la tabla producto donde coincida el código
+        val filasBorradas = db.delete("producto", "codigo_barras = ?", arrayOf(codigoBarras))
+        return filasBorradas > 0 // Retorna true si se borró con éxito
+    }
+
     data class ItemVenta(val producto: Producto, var cantidad: Int = 1) {
         val subtotal get() = producto.precioVenta * cantidad
     }
@@ -396,7 +404,7 @@ class DatabaseHelper(context: Context) :
     }
 
     // ─────────────────────────────────────────────
-    //  SPRINT 3: SALIDAS (Reportes de Negocio)
+    //  SPRINT 4: SALIDAS (Reportes de Negocio)
     // ─────────────────────────────────────────────
 
     // CAMBIO: Ganancia del Día ahora resta el precio_compra nativo del producto, es mucho más eficiente
@@ -419,6 +427,7 @@ class DatabaseHelper(context: Context) :
         val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
         return db.rawQuery(query, arrayOf("$today%")).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
+
 
     fun getProductosPorCaducar(): List<Producto> {
         val db = readableDatabase
@@ -477,16 +486,6 @@ class DatabaseHelper(context: Context) :
         return historial
     }
 
-    fun getTopVendidos(): List<Pair<String, Int>> {
-        val db = readableDatabase
-        val lista = mutableListOf<Pair<String, Int>>()
-        val query = "SELECT p.nombre, SUM(dv.cantidad) as tot FROM detalle_venta dv JOIN producto p ON dv.id_producto = p.id_producto GROUP BY p.id_producto ORDER BY tot DESC LIMIT 5"
-        db.rawQuery(query, null).use {
-            while (it.moveToNext()) lista.add(it.getString(0) to it.getInt(1))
-        }
-        return lista
-    }
-
     // CAMBIO: Simplificada la comparativa de márgenes
     fun getComparativaMargen(): List<String> {
         val db = readableDatabase
@@ -526,23 +525,6 @@ class DatabaseHelper(context: Context) :
         val cursor = readableDatabase.rawQuery(
             "SELECT SUM(saldo_pendiente) FROM fiado WHERE saldo_pendiente > 0", null)
         return cursor.use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
-    }
-
-    fun getClientesConDeuda(): List<Triple<Int, String, Double>> {
-        val lista = mutableListOf<Triple<Int, String, Double>>()
-        val query = """
-            SELECT c.id_cliente, c.nombre, SUM(f.saldo_pendiente) as deuda
-            FROM fiado f
-            JOIN cliente c ON f.id_cliente = c.id_cliente
-            WHERE f.saldo_pendiente > 0
-            GROUP BY c.id_cliente
-            ORDER BY deuda DESC
-        """.trimIndent()
-        readableDatabase.rawQuery(query, null).use {
-            while (it.moveToNext())
-                lista.add(Triple(it.getInt(0), it.getString(1), it.getDouble(2)))
-        }
-        return lista
     }
 
     // ─────────────────────────────────────────────
@@ -647,6 +629,22 @@ class DatabaseHelper(context: Context) :
                     monto     = it.getDouble(it.getColumnIndexOrThrow("monto"))
                 ))
             }
+        }
+        return lista
+    }
+    fun getClientesConDeuda(): List<Triple<Int, String, Double>> {
+        val lista = mutableListOf<Triple<Int, String, Double>>()
+        val query = """
+            SELECT c.id_cliente, c.nombre, SUM(f.saldo_pendiente) as deuda
+            FROM fiado f
+            JOIN cliente c ON f.id_cliente = c.id_cliente
+            WHERE f.saldo_pendiente > 0
+            GROUP BY c.id_cliente
+            ORDER BY deuda DESC
+        """.trimIndent()
+        readableDatabase.rawQuery(query, null).use {
+            while (it.moveToNext())
+                lista.add(Triple(it.getInt(0), it.getString(1), it.getDouble(2)))
         }
         return lista
     }

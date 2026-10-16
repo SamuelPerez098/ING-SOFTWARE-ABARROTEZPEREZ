@@ -16,19 +16,41 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/tvItemNombre"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Nombre del Producto"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/tvItemNombre"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="12dp"
+                android:layout_toStartOf="@+id/btnItemEliminar"
+                android:text="Nombre del Producto"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/btnItemEliminar"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@android:drawable/ic_menu_delete"
+                app:tint="#F44336" />
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/tvItemCodigo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="Código: 123456789"
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp" />
@@ -74,7 +96,8 @@
                 android:layout_weight="1"
                 android:backgroundTint="#2196F3"
                 android:text="EDITAR"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/btnItemPromo"
@@ -84,7 +107,9 @@
                 android:layout_weight="1"
                 android:backgroundTint="#E91E63"
                 android:text="PROMOCIÓN"
-                android:textColor="#FFFFFF" />
+                android:textColor="#FFFFFF"
+                android:textSize="12sp" />
+
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>
