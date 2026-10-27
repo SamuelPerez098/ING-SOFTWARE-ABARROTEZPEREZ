@@ -17,15 +17,15 @@
         android:padding="12dp">
 
         <ImageView
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:src="@android:drawable/ic_menu_myplaces"
-            app:tint="#1A73E8" />
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/clientes_logo"
+            app:tint="#5E17EB" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="20dp"
             android:layout_weight="1"
             android:orientation="vertical">
 

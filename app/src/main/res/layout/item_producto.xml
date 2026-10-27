@@ -77,7 +77,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Stock: 0"
-                android:textColor="#FF9800"
+                android:textColor="#E42566"
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -105,7 +105,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:layout_weight="1"
-                android:backgroundTint="#E91E63"
+                android:backgroundTint="#D1004C"
                 android:text="PROMOCIÓN"
                 android:textColor="#FFFFFF"
                 android:textSize="12sp" />

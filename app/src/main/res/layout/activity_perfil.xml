@@ -6,21 +6,29 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
+    <!-- Encabezado superior con imagen y título -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="75dp"
+        android:layout_height="52dp"
         android:background="#959595"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
 
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/configuracion_logo"
+            app:tint="#FFFFFF" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Mi Perfil"
+            android:text="PERFIL"
             android:textColor="#FFFFFF"
-            android:textSize="28sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
     </LinearLayout>
 

@@ -6,6 +6,7 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
+    <!-- Encabezado superior con imagen y título -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="75dp"
@@ -14,13 +15,20 @@
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
 
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/clientes_logo"
+            app:tint="#FFFFFF" />
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="ADEUDOS"
             android:textColor="#FFFFFF"
-            android:textSize="32sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <Button
@@ -56,6 +64,7 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Card principal sin borde morado (strokeWidth = 0dp) -->
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -65,8 +74,7 @@
         app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="30dp"
         app:cardElevation="0dp"
-        app:strokeColor="#5E17EB"
-        app:strokeWidth="5dp">
+        app:strokeWidth="0dp">
 
         <RelativeLayout
             android:layout_width="match_parent"

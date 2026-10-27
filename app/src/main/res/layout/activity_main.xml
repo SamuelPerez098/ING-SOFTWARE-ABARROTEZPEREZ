@@ -20,9 +20,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="#141313"
-            android:backgroundTint="#F0E4E4"
+            android:backgroundTint="#FFFFFF"
             android:text="Menu"
-            android:textColor="#FFFFFF"
+            android:textColor="#000000"
             android:textSize="30sp"
             android:textStyle="bold" />
 
@@ -188,6 +188,48 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- Tarjeta Online ahora en la posición anterior de Configuración -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/btnIrFiados"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_rowWeight="1"
+            android:layout_columnWeight="1"
+            android:layout_margin="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
+            app:cardBackgroundColor="#FFCA28"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:id="@+id/back"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#7A513E"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_marginBottom="12dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/online_logo" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Asistente"
+                    android:textColor="#FFFFFF"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Tarjeta Configuración ahora al final -->
         <androidx.cardview.widget.CardView
             android:id="@+id/btnConfiguracionExtra"
             android:layout_width="0dp"
@@ -222,46 +264,6 @@
                     android:text="Configuración"
                     android:textColor="#FFFFFF"
                     android:textSize="21sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/btnIrFiados"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_rowWeight="1"
-            android:layout_columnWeight="1"
-            android:layout_margin="8dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            app:cardBackgroundColor="#FFCA28"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:id="@+id/back"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="#DB9A62"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <ImageView
-                    android:layout_width="70dp"
-                    android:layout_height="70dp"
-                    android:layout_marginBottom="12dp"
-                    android:scaleType="fitCenter"
-                    android:src="@drawable/online_logo" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Online"
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>

@@ -21,8 +21,8 @@
             android:id="@+id/btnRegresarReportes"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:rotation="-90"
-            android:src="@android:drawable/ic_menu_sort_by_size"
+
+            android:src="@drawable/reporte_logo"
             app:tint="#FFFFFF" />
 
         <TextView
@@ -33,7 +33,7 @@
             android:gravity="center"
             android:text="REPORTES"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <Button

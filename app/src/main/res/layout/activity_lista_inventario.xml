@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -13,13 +14,21 @@
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
 
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/inventario_logo"
+            app:tint="#FFFFFF" />
+
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="INVENTARIO ACTUAL"
+            android:layout_marginStart="12dp"
+            android:text="INVENTARIO "
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
+
     </LinearLayout>
 
     <EditText
@@ -31,14 +40,14 @@
         android:drawableStart="@android:drawable/ic_menu_search"
         android:drawablePadding="8dp"
         android:hint="Buscar por nombre o código..."
+        android:imeOptions="actionSearch"
         android:padding="12dp"
-        android:singleLine="true"
-        android:imeOptions="actionSearch"/>
+        android:singleLine="true" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvInventario"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingTop="4dp"
-        android:clipToPadding="false" />
+        android:clipToPadding="false"
+        android:paddingTop="4dp" />
 </LinearLayout>
