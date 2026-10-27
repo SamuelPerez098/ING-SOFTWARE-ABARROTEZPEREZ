@@ -37,7 +37,7 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var btnGuardar: Button
     private lateinit var btnLimpiar: Button
     private lateinit var ivBarcode: ImageView
-    private lateinit var btnVerLista: CardView
+    private lateinit var btnVerLista: LinearLayout
 
     private var codigoActual: String = ""
 
@@ -65,7 +65,7 @@ class InventarioActivity : AppCompatActivity() {
         spTipo           = findViewById(R.id.spTipo)
         btnGuardar       = findViewById(R.id.btnGuardarProducto)
         btnLimpiar       = findViewById(R.id.btnLimpiar)
-        btnVerLista      = findViewById(R.id.btnVerLista)
+        btnVerLista = findViewById<LinearLayout>(R.id.btnVerLista)
 
         configurarSugerenciasNombres()
         configurarFormatoFecha()

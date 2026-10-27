@@ -33,18 +33,17 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val tvSaldoTotal     = findViewById<TextView>(R.id.tvSaldoTotal)
         val btnNuevoFiado    = findViewById<Button>(R.id.btnNuevoFiado)
         val btnRegistrarPago = findViewById<Button>(R.id.btnRegistrarPago)
-        val btnRegresar      = findViewById<Button>(R.id.btnRegresar)
+
         val rvFiados         = findViewById<RecyclerView>(R.id.rvDeudasCliente)
         val tvSinDeudas      = findViewById<TextView>(R.id.tvSinDeudas)
 
-        tvTitulo.text = "👤 $nombreCliente"
+        // Se asigna únicamente el nombre sin el emoji de la persona
+        //tvTitulo.text = nombreCliente
 
         val layoutManager = LinearLayoutManager(this)
         rvFiados.layoutManager = layoutManager
 
         cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
-
-        btnRegresar.setOnClickListener { finish() }
 
         btnNuevoFiado.setOnClickListener {
             mostrarDialogoNuevoFiado(tvSaldoTotal, rvFiados, tvSinDeudas)
@@ -97,7 +96,6 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarFiado)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarFiado)
 
-        // FIX VISUAL: Asignamos el hint al contenedor padre (TextInputLayout) y limpiamos el EditText
         val tilDesc = etDesc.parent.parent as? TextInputLayout
         tilDesc?.hint = "Descripción (ej: leche, pan...)"
         etDesc.hint = ""
@@ -121,7 +119,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
 
             val ok = db.registrarFiado(idCliente, monto)
             if (ok) {
-                Toast.makeText(this, "Deuda registrada ✅", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Deuda registrada", Toast.LENGTH_SHORT).show()
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
@@ -147,14 +145,12 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarFiado)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarFiado)
 
-        // Ocultamos el contenedor completo de la descripción para que no ocupe espacio extra
         val tilDesc = etDesc.parent.parent as? TextInputLayout
         tilDesc?.visibility = View.GONE
         etDesc.visibility = View.GONE
 
         val saldoTotalMaximo = fiados.sumOf { it.saldoPendiente }
 
-        // FIX VISUAL: Asignamos el límite al contenedor padre (TextInputLayout) y limpiamos el EditText
         val tilMonto = etMonto.parent.parent as? TextInputLayout
         tilMonto?.hint = "Monto a pagar (máx: $${"%.2f".format(saldoTotalMaximo)})"
         etMonto.hint = ""
@@ -200,7 +196,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
             }
 
             if (exitoEnPagos) {
-                Toast.makeText(this, "Pago registrado ✅", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Pago registrado", Toast.LENGTH_SHORT).show()
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {

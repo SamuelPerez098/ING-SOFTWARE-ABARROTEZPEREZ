@@ -131,7 +131,6 @@
                 android:id="@+id/rvDeudasCliente"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@id/btnRegresar"
                 android:layout_below="@id/llContenidoSuperior"
                 android:layout_marginBottom="8dp"
                 android:clipToPadding="false" />
@@ -144,7 +143,7 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="40dp"
                 android:gravity="center"
-                android:text="Este cliente no tiene deudas activas 🎉"
+                android:text="Este cliente no tiene deudas activas"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="15sp"
                 android:visibility="gone" />
