@@ -62,6 +62,52 @@
             android:minHeight="36dp" />
     </LinearLayout>
 
+    <!-- ══ SELECTOR DE MODO DE ESCANEO (Bluetooth / Cámara) ══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModoBluetooth"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:text="BLUETOOTH"
+            android:textSize="12sp"
+            app:strokeColor="#00B259" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModoCamara"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:text="CÁMARA"
+            android:textSize="12sp"
+            app:strokeColor="#00B259" />
+    </LinearLayout>
+
+    <!-- ══ VISTA PREVIA DE LA CÁMARA (solo visible en modo Cámara) ══ -->
+    <FrameLayout
+        android:id="@+id/panelCamara"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:background="#000000"
+        android:visibility="gone">
+
+        <com.journeyapps.barcodescanner.DecoratedBarcodeView
+            android:id="@+id/dbvVenta"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvItems"
         android:layout_width="match_parent"

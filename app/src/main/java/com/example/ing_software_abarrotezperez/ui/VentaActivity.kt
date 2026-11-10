@@ -1,20 +1,28 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
+import com.example.ing_software_abarrotezperez.scanner.CamaraScanner
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
+import com.google.android.material.button.MaterialButton
+import com.journeyapps.barcodescanner.DecoratedBarcodeView
 
 class VentaActivity : AppCompatActivity() {
 
@@ -33,6 +41,25 @@ class VentaActivity : AppCompatActivity() {
     // Variables para el interceptor HID
     private val barcodeBuffer = StringBuilder()
     private var lastKeyTime = 0L
+
+    // ── Modo de escaneo por cámara (nuevo) ──────────────────────────────────
+    private lateinit var btnModoBluetooth: MaterialButton
+    private lateinit var btnModoCamara: MaterialButton
+    private lateinit var panelCamara: FrameLayout
+    private lateinit var dbvVenta: DecoratedBarcodeView
+    private lateinit var camara: CamaraScanner
+    private var modoCamara = false
+    private var dialogoNoEncontradoVisible = false
+
+    private val pedirPermisoCamara =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
+            if (concedido) {
+                seleccionarModo(true)
+            } else {
+                Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
+                seleccionarModo(false)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +82,20 @@ class VentaActivity : AppCompatActivity() {
         rvItems.layoutManager = LinearLayoutManager(this)
         rvItems.adapter = adapter
 
+        // ── Selector de modo: Bluetooth (HID) / Cámara ──
+        btnModoBluetooth = findViewById(R.id.btnModoBluetooth)
+        btnModoCamara    = findViewById(R.id.btnModoCamara)
+        panelCamara      = findViewById(R.id.panelCamara)
+        dbvVenta         = findViewById(R.id.dbvVenta)
+        camara = CamaraScanner(this, dbvVenta) { codigo -> procesarEscaneoVenta(codigo) }
+
+        btnModoBluetooth.setOnClickListener { seleccionarModo(false) }
+        btnModoCamara.setOnClickListener {
+            if (tienePermisoCamara()) seleccionarModo(true)
+            else pedirPermisoCamara.launch(Manifest.permission.CAMERA)
+        }
+        seleccionarModo(false)   // por defecto: el comportamiento de siempre
+
         btnCobrar.setOnClickListener {
             if (itemsVenta.isEmpty()) {
                 Toast.makeText(this, "No hay productos escaneados", Toast.LENGTH_SHORT).show()
@@ -66,9 +107,52 @@ class VentaActivity : AppCompatActivity() {
         btnCancelar.setOnClickListener { finish() }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  MODO DE ESCANEO (Bluetooth / Cámara)
+    // ─────────────────────────────────────────────────────────────────────────
+    private fun tienePermisoCamara() =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED
+
+    private fun seleccionarModo(usarCamara: Boolean) {
+        modoCamara = usarCamara
+        if (usarCamara) {
+            panelCamara.visibility = View.VISIBLE
+            tvEstadoBt.text = "Modo: Cámara del teléfono"
+            camara.iniciar()
+        } else {
+            camara.pausar()
+            panelCamara.visibility = View.GONE
+            tvEstadoBt.text = "Modo: Lector (HID)"
+        }
+        pintarBotonModo(btnModoBluetooth, !usarCamara)
+        pintarBotonModo(btnModoCamara, usarCamara)
+    }
+
+    private fun pintarBotonModo(boton: MaterialButton, activo: Boolean) {
+        val verde = Color.parseColor("#00B259")
+        boton.backgroundTintList = android.content.res.ColorStateList.valueOf(
+            if (activo) verde else Color.TRANSPARENT
+        )
+        boton.setTextColor(if (activo) Color.WHITE else verde)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (modoCamara && tienePermisoCamara()) camara.iniciar()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        camara.pausar()
+    }
+
     private fun procesarEscaneoVenta(codigo: String) {
         val producto = vm.db.getProductoPorCodigo(codigo)
         if (producto == null) {
+            // Evita apilar varios diálogos si la cámara sigue viendo el mismo código
+            if (dialogoNoEncontradoVisible) return
+            dialogoNoEncontradoVisible = true
             AlertDialog.Builder(this)
                 .setTitle("Producto no encontrado")
                 .setMessage("Código: $codigo\n¿Deseas registrarlo primero en inventario?")
@@ -76,6 +160,7 @@ class VentaActivity : AppCompatActivity() {
                     startActivity(android.content.Intent(this, InventarioActivity::class.java))
                 }
                 .setNegativeButton("Cancelar", null)
+                .setOnDismissListener { dialogoNoEncontradoVisible = false }
                 .show()
             return
         }

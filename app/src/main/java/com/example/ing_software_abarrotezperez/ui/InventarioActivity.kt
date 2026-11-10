@@ -13,11 +13,13 @@ import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
+import com.example.ing_software_abarrotezperez.scanner.CamaraScannerActivity
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
@@ -38,8 +40,20 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var btnLimpiar: Button
     private lateinit var ivBarcode: ImageView
     private lateinit var btnVerLista: LinearLayout
+    private lateinit var btnCamaraScanner: ImageView
 
     private var codigoActual: String = ""
+
+    // Resultado del escáner por cámara → misma lógica que el lector físico (suma 1 al stock)
+    private val lanzadorCamara =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultado ->
+            if (resultado.resultCode == RESULT_OK) {
+                val codigo = resultado.data
+                    ?.getStringExtra(CamaraScannerActivity.EXTRA_CODIGO)
+                    ?.trim()
+                if (!codigo.isNullOrEmpty()) procesarEscaneoInventario(codigo, false)
+            }
+        }
 
     // --- VARIABLES NUEVAS PARA EL ESCÁNER POR VELOCIDAD ---
     private val barcodeBuffer = StringBuilder()
@@ -66,6 +80,7 @@ class InventarioActivity : AppCompatActivity() {
         btnGuardar       = findViewById(R.id.btnGuardarProducto)
         btnLimpiar       = findViewById(R.id.btnLimpiar)
         btnVerLista = findViewById<LinearLayout>(R.id.btnVerLista)
+        btnCamaraScanner = findViewById(R.id.btnCamaraScanner)
 
         configurarSugerenciasNombres()
         configurarFormatoFecha()
@@ -73,6 +88,11 @@ class InventarioActivity : AppCompatActivity() {
 
         btnGuardar.setOnClickListener { guardarProducto() }
         btnLimpiar.setOnClickListener { limpiarFormulario() }
+
+        // Modo cámara: abre el escáner con la cámara del teléfono
+        btnCamaraScanner.setOnClickListener {
+            lanzadorCamara.launch(Intent(this, CamaraScannerActivity::class.java))
+        }
 
         btnVerLista.setOnClickListener {
             val intent = Intent(this, ListaInventarioActivity::class.java)
