@@ -1,5 +1,6 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -8,14 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.lifecycle.ViewModelProvider
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
@@ -23,9 +21,12 @@ import com.example.ing_software_abarrotezperez.scanner.CamaraScannerActivity
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
+import java.util.Calendar
+import java.util.Locale
 
 class InventarioActivity : AppCompatActivity() {
     private lateinit var vm: ScannerViewModel
+
     // Vistas
     private lateinit var tvEstadoBt: TextView
     private lateinit var tvCodigoProducto: TextView
@@ -35,16 +36,18 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var etPrecioCompra: EditText
     private lateinit var etStock: EditText
     private lateinit var etCaducidad: EditText
-    private lateinit var spTipo: Spinner
+    private lateinit var layoutCaducidad: LinearLayout
+    private lateinit var rgTipo: RadioGroup
+    private lateinit var rbPerecedero: RadioButton
+    private lateinit var rbNoPerecedero: RadioButton
     private lateinit var btnGuardar: Button
-    private lateinit var btnLimpiar: Button
+    private lateinit var btnLimpiar: ImageButton
     private lateinit var ivBarcode: ImageView
     private lateinit var btnVerLista: LinearLayout
     private lateinit var btnCamaraScanner: ImageView
 
     private var codigoActual: String = ""
 
-    // Resultado del escáner por cámara → misma lógica que el lector físico (suma 1 al stock)
     private val lanzadorCamara =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { resultado ->
             if (resultado.resultCode == RESULT_OK) {
@@ -55,7 +58,7 @@ class InventarioActivity : AppCompatActivity() {
             }
         }
 
-    // --- VARIABLES NUEVAS PARA EL ESCÁNER POR VELOCIDAD ---
+    // Variables para el escáner físico por velocidad
     private val barcodeBuffer = StringBuilder()
     private var lastKeyTime: Long = 0
     private val MAX_DELAY_SCANNER = 150L
@@ -76,20 +79,22 @@ class InventarioActivity : AppCompatActivity() {
         etPrecioCompra   = findViewById(R.id.etPrecioCompra)
         etStock          = findViewById(R.id.etStock)
         etCaducidad      = findViewById(R.id.etCaducidad)
-        spTipo           = findViewById(R.id.spTipo)
+        layoutCaducidad  = findViewById(R.id.layoutCaducidad)
+        rgTipo           = findViewById(R.id.rgTipo)
+        rbPerecedero     = findViewById(R.id.rbPerecedero)
+        rbNoPerecedero   = findViewById(R.id.rbNoPerecedero)
         btnGuardar       = findViewById(R.id.btnGuardarProducto)
         btnLimpiar       = findViewById(R.id.btnLimpiar)
-        btnVerLista = findViewById<LinearLayout>(R.id.btnVerLista)
+        btnVerLista      = findViewById(R.id.btnVerLista)
         btnCamaraScanner = findViewById(R.id.btnCamaraScanner)
 
         configurarSugerenciasNombres()
         configurarFormatoFecha()
-        configurarSpinnerTipo()
+        configurarRadioTipo()
 
         btnGuardar.setOnClickListener { guardarProducto() }
         btnLimpiar.setOnClickListener { limpiarFormulario() }
 
-        // Modo cámara: abre el escáner con la cámara del teléfono
         btnCamaraScanner.setOnClickListener {
             lanzadorCamara.launch(Intent(this, CamaraScannerActivity::class.java))
         }
@@ -99,46 +104,25 @@ class InventarioActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        etStock.isEnabled = false
-
-        // --- CAMBIO AQUÍ: RECUPERAR LA BANDERA DE SOLO EDITAR ---
         val codigoAEditar = intent.getStringExtra("CODIGO_A_EDITAR")
         val soloEditar = intent.getBooleanExtra("SOLO_EDITAR", false)
 
         if (!codigoAEditar.isNullOrEmpty()) {
-            // Pasamos el código y la bandera
             procesarEscaneoInventario(codigoAEditar, soloEditar)
         }
     }
 
-    private fun configurarSpinnerTipo() {
-        val opciones = arrayOf("Perecedero", "No Perecedero")
-        val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, opciones) {
-            override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                val view = super.getView(position, convertView, parent) as TextView
-                view.setTextColor(Color.BLACK)
-                return view
+    private fun configurarRadioTipo() {
+        rgTipo.setOnCheckedChangeListener { _, checkedId ->
+            etStock.isEnabled = true
+
+            if (checkedId == R.id.rbNoPerecedero) {
+                layoutCaducidad.visibility = View.GONE
+                etCaducidad.setText("")
+            } else {
+                layoutCaducidad.visibility = View.VISIBLE
+                etCaducidad.isEnabled = true
             }
-            override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View {
-                val view = super.getDropDownView(position, convertView, parent) as TextView
-                view.setTextColor(Color.BLACK)
-                view.setBackgroundColor(Color.WHITE)
-                return view
-            }
-        }
-        spTipo.adapter = adapter
-        spTipo.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position == 1) {
-                    etCaducidad.isEnabled = false
-                    etCaducidad.setText("")
-                    etStock.isEnabled = true
-                } else {
-                    etCaducidad.isEnabled = true
-                    etStock.isEnabled = false
-                }
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
@@ -161,74 +145,40 @@ class InventarioActivity : AppCompatActivity() {
     }
 
     private fun configurarFormatoFecha() {
-        etCaducidad.addTextChangedListener(object : TextWatcher {
-            private var isUpdating = false
-            private var oldText = ""
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                if (!isUpdating) oldText = s.toString()
-            }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: Editable?) {
-                if (isUpdating) return
-                isUpdating = true
-                val str = s.toString()
-                val isDeleting = str.length < oldText.length
-                var cleanString = str.replace(Regex("[^\\d]"), "")
-                if (!isDeleting) {
-                    var newClean = ""
-                    for (i in cleanString.indices) {
-                        val digit = cleanString[i]
-                        if (i == 0 && cleanString.length == 1) {
-                            if (digit >= '4') newClean += "0$digit" else newClean += digit
-                        } else if (i == 2 && cleanString.length == 3) {
-                            if (digit >= '2') newClean += "0$digit" else newClean += digit
-                        } else newClean += digit
-                    }
-                    cleanString = newClean
-                }
-                var formattedDate = ""
-                var isValidDate = true
-                if (cleanString.isNotEmpty()) {
-                    val dayStr = cleanString.take(2)
-                    formattedDate += dayStr
-                    if (dayStr.length == 2) {
-                        val day = dayStr.toInt()
-                        if (day < 1 || day > 31) isValidDate = false
-                    }
-                    if (cleanString.length > 2) {
-                        formattedDate += "/"
-                        val monthStr = cleanString.substring(2, minOf(4, cleanString.length))
-                        formattedDate += monthStr
-                        if (monthStr.length == 2) {
-                            val month = monthStr.toInt()
-                            if (month < 1 || month > 12) isValidDate = false
-                        }
-                        if (cleanString.length > 4) {
-                            formattedDate += "/"
-                            formattedDate += cleanString.substring(4, minOf(6, cleanString.length))
-                        }
-                    }
-                }
-                if (!isDeleting) {
-                    if (cleanString.length == 2 && !formattedDate.endsWith("/")) formattedDate += "/"
-                    else if (cleanString.length == 4 && !formattedDate.endsWith("/")) formattedDate += "/"
-                }
-                etCaducidad.setText(formattedDate)
-                etCaducidad.setSelection(formattedDate.length)
-                if (!isValidDate) {
-                    etCaducidad.setTextColor(Color.RED)
-                    if(formattedDate.length == 8) vibrarError()
-                } else etCaducidad.setTextColor(Color.WHITE)
-                isUpdating = false
-            }
-        })
+        etCaducidad.setOnClickListener {
+            val calendario = Calendar.getInstance()
+            val anioActual = calendario.get(Calendar.YEAR)
+            val mesActual = calendario.get(Calendar.MONTH)
+            val diaActual = calendario.get(Calendar.DAY_OF_MONTH)
+
+            val datePicker = DatePickerDialog(
+                this,
+                { _, year, month, dayOfMonth ->
+                    val diaFormateado = String.format(Locale.getDefault(), "%02d", dayOfMonth)
+                    val mesFormateado = String.format(Locale.getDefault(), "%02d", month + 1)
+                    val anioCorto = String.format(Locale.getDefault(), "%02d", year % 100)
+
+                    etCaducidad.setText("$diaFormateado/$mesFormateado/$anioCorto")
+                    etCaducidad.setTextColor(Color.WHITE)
+                },
+                anioActual,
+                mesActual,
+                diaActual
+            )
+
+            datePicker.datePicker.minDate = calendario.timeInMillis
+            datePicker.show()
+        }
     }
 
     private fun vibrarError() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else vibrator.vibrate(300)
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(300)
+        }
     }
 
     private fun configurarSugerenciasNombres() {
@@ -242,11 +192,12 @@ class InventarioActivity : AppCompatActivity() {
         actvNombre.isEnabled = true
         etPrecioVenta.isEnabled = true
         etPrecioCompra.isEnabled = true
-        spTipo.isEnabled = true
+        rbPerecedero.isEnabled = true
+        rbNoPerecedero.isEnabled = true
         etDescripcion.isEnabled = true
+        etStock.isEnabled = true
     }
 
-    // --- MODIFICACIÓN CLAVE: Agregamos el parámetro 'esSoloEdicion' ---
     private fun procesarEscaneoInventario(codigo: String, esSoloEdicion: Boolean) {
         codigoActual = codigo
         tvCodigoProducto.text = codigo
@@ -254,8 +205,6 @@ class InventarioActivity : AppCompatActivity() {
 
         val existente = vm.db.getProductoPorCodigo(codigo)
         if (existente != null) {
-
-            // Si es edición, mantenemos el stock. Si es escaneo, sumamos 1.
             val stockAMostrar = if (esSoloEdicion) existente.stock else existente.stock + 1
             etStock.setText(stockAMostrar.toString())
 
@@ -265,9 +214,11 @@ class InventarioActivity : AppCompatActivity() {
             etPrecioCompra.setText(existente.precioCompra.toString())
 
             if (existente.fechaCaducidad.isNullOrEmpty()) {
-                spTipo.setSelection(1) // No Perecedero
+                rbNoPerecedero.isChecked = true
+                layoutCaducidad.visibility = View.GONE
             } else {
-                spTipo.setSelection(0) // Perecedero
+                rbPerecedero.isChecked = true
+                layoutCaducidad.visibility = View.VISIBLE
                 etCaducidad.setText(existente.fechaCaducidad)
             }
 
@@ -307,9 +258,9 @@ class InventarioActivity : AppCompatActivity() {
             return
         }
 
-        val esPerecedero = spTipo.selectedItemPosition == 0
+        val esPerecedero = rbPerecedero.isChecked
         var caducidad: String? = null
-        var stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
+        val stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
 
         if (esPerecedero) {
             val textoCaducidad = etCaducidad.text.toString().trim()
@@ -343,7 +294,7 @@ class InventarioActivity : AppCompatActivity() {
 
     private fun limpiarFormulario() {
         codigoActual = ""
-        tvCodigoProducto.text = "ESCANEAR..."
+        tvCodigoProducto.text = ""
         ivBarcode.setImageDrawable(null)
         limpiarSoloCampos()
         habilitarCamposModoNuevo(true)
@@ -356,7 +307,8 @@ class InventarioActivity : AppCompatActivity() {
         etPrecioVenta.setText("")
         etPrecioCompra.setText("")
         etCaducidad.setText("")
-        spTipo.setSelection(0)
+        rbPerecedero.isChecked = true
+        layoutCaducidad.visibility = View.VISIBLE
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -373,10 +325,7 @@ class InventarioActivity : AppCompatActivity() {
                 val codigoLeido = barcodeBuffer.toString().trim()
                 if (codigoLeido.isNotEmpty()) {
                     removerBasuraDelFoco(codigoLeido)
-
-                    // --- AQUÍ: Al ser escáner físico, mandamos 'false' en soloEditar para que SÍ sume 1 ---
                     procesarEscaneoInventario(codigoLeido, false)
-
                     barcodeBuffer.setLength(0)
                     return true
                 }

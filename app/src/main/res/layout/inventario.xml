@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
@@ -30,7 +29,7 @@
             android:layout_weight="1"
             android:text="REGISTRO DE INVENTARIO"
             android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
         <!-- Botón Lista de Inventario -->
@@ -66,7 +65,6 @@
         android:fillViewport="true"
         android:padding="16dp">
 
-        <!-- Agregado gravity center_vertical para centrar el modulo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,7 +80,7 @@
                 android:textStyle="bold"
                 android:visibility="gone" />
 
-            <!-- Card principal del formulario sin sombreado -->
+            <!-- Card principal del formulario -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -93,22 +91,26 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:animateLayoutChanges="true"
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- FILA 1: Código de barras (izq) | RadioButtons Conservación + Nombre (der) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:baselineAligned="false"
                         android:orientation="horizontal">
 
+                        <!-- Cuadro Código de Barras y Cámara -->
                         <androidx.cardview.widget.CardView
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            app:cardBackgroundColor="?attr/colorSurface"
-                            app:cardCornerRadius="16dp">
+                            android:layout_weight="0.9"
+                            app:cardBackgroundColor="#FFFFFF"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp">
 
                             <LinearLayout
                                 android:layout_width="match_parent"
@@ -116,28 +118,26 @@
                                 android:gravity="center"
                                 android:orientation="vertical"
                                 android:paddingHorizontal="8dp"
-                                android:paddingTop="26dp"
+                                android:paddingTop="28dp"
                                 android:paddingBottom="8dp">
 
                                 <ImageView
                                     android:id="@+id/ivBarcode"
                                     android:layout_width="match_parent"
-                                    android:layout_height="60dp"
+                                    android:layout_height="56dp"
                                     android:scaleType="fitCenter" />
 
                                 <TextView
                                     android:id="@+id/tvCodigoProducto"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:background="@null"
                                     android:gravity="center"
-                                    android:text="ESCANEAR..."
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textSize="14sp"
+                                    android:text=""
+                                    android:textColor="#000000"
+                                    android:textSize="13sp"
                                     android:textStyle="bold" />
                             </LinearLayout>
 
-                            <!-- Botón: activar escáner con la cámara del teléfono -->
                             <ImageView
                                 android:id="@+id/btnCamaraScanner"
                                 android:layout_width="32dp"
@@ -150,135 +150,72 @@
                                 android:focusable="true"
                                 android:padding="4dp"
                                 android:src="@drawable/camara_logo"
-                                app:tint="?attr/colorOnSurface" />
+                                app:tint="#000000" />
                         </androidx.cardview.widget.CardView>
 
+                        <!-- Columna Derecha: RadioGroup (Perecedero / No Perecedero) y Nombre -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:layout_weight="1"
+                            android:layout_weight="1.1"
                             android:orientation="vertical">
 
+                            <!-- Tarjeta blanca con los RadioButtons -->
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginBottom="16dp"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
+                                android:layout_marginBottom="10dp"
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
 
-                                <Spinner
-                                    android:id="@+id/spTipo"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="32dp"
-                                    android:gravity="center"
-                                    android:prompt="@string/perecedero_prompt"
-                                    android:textAlignment="center" />
-                            </androidx.cardview.widget.CardView>
-
-                            <androidx.cardview.widget.CardView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
-
-                                <LinearLayout
+                                <RadioGroup
+                                    android:id="@+id/rgTipo"
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
-                                    android:gravity="center_vertical"
-                                    android:orientation="horizontal"
-                                    android:paddingHorizontal="8dp">
+                                    android:orientation="vertical"
+                                    android:paddingHorizontal="8dp"
+                                    android:paddingVertical="4dp">
 
-                                    <TextView
-                                        android:layout_width="wrap_content"
-                                        android:layout_height="wrap_content"
-                                        android:text="STOCK: "
-                                        android:textColor="?attr/colorOnSurface"
-                                        android:textStyle="bold" />
-
-                                    <EditText
-                                        android:id="@+id/etStock"
+                                    <RadioButton
+                                        android:id="@+id/rbPerecedero"
                                         android:layout_width="match_parent"
-                                        android:layout_height="wrap_content"
-                                        android:background="@null"
-                                        android:gravity="start|center_vertical"
-                                        android:hint="00"
-                                        android:imeOptions="actionNext"
-                                        android:inputType="number"
-                                        android:singleLine="true"
-                                        android:textColor="?attr/colorOnSurface"
+                                        android:layout_height="30dp"
+                                        android:buttonTint="#C45B20"
+                                        android:checked="true"
+                                        android:text="Perecedero"
+                                        android:textColor="#000000"
+                                        android:textSize="13sp"
                                         android:textStyle="bold" />
-                                </LinearLayout>
+
+                                    <RadioButton
+                                        android:id="@+id/rbNoPerecedero"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="30dp"
+                                        android:buttonTint="#C45B20"
+                                        android:text="No perecedero"
+                                        android:textColor="#000000"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold" />
+                                </RadioGroup>
                             </androidx.cardview.widget.CardView>
-                        </LinearLayout>
-                    </LinearLayout>
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:baselineAligned="false"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
+                            <!-- Etiqueta Nombre -->
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
 
                                 <TextView
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:paddingVertical="4dp"
-                                    android:text="CADUCIDAD:"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textStyle="bold" />
-                            </androidx.cardview.widget.CardView>
-
-                            <EditText
-                                android:id="@+id/etCaducidad"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:hint="00/00/00"
-                                android:imeOptions="actionNext"
-                                android:inputType="number"
-                                android:maxLength="8"
-                                android:singleLine="true"
-                                android:textColor="#FFFFFF"
-                                android:textColorHint="#E0E0E0"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <androidx.cardview.widget.CardView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center"
-                                    android:paddingVertical="4dp"
-                                    android:text="NOMBRE:"
-                                    android:textColor="?attr/colorOnSurface"
+                                    android:text="Nombre:"
+                                    android:textColor="#000000"
                                     android:textStyle="bold" />
                             </androidx.cardview.widget.CardView>
 
@@ -286,26 +223,114 @@
                                 android:id="@+id/actvNombre"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:backgroundTint="#FFFFFF"
                                 android:completionThreshold="1"
                                 android:gravity="center"
-                                android:hint="Ej. Sabritas"
                                 android:imeOptions="actionNext"
                                 android:inputType="textCapWords"
                                 android:singleLine="true"
                                 android:textColor="#FFFFFF"
-                                android:textColorHint="#E0E0E0"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!-- FILA 2: Descripción más ancha (izq) | Stock más compacto (der) -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
                         android:baselineAligned="false"
                         android:orientation="horizontal">
 
+                        <!-- Descripción (weight 2.1 para darle más espacio) -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="2.1"
+                            android:orientation="vertical">
+
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:paddingVertical="4dp"
+                                    android:text="Descripción:"
+                                    android:textColor="#000000"
+                                    android:textStyle="bold" />
+                            </androidx.cardview.widget.CardView>
+
+                            <EditText
+                                android:id="@+id/etDescripcion"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:backgroundTint="#FFFFFF"
+                                android:gravity="center"
+                                android:imeOptions="actionNext"
+                                android:inputType="textCapSentences"
+                                android:singleLine="true"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Stock (weight 0.9 para que no ocupe tanto espacio) -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="0.9"
+                            android:orientation="vertical">
+
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:paddingVertical="4dp"
+                                    android:text="Stock:"
+                                    android:textColor="#000000"
+                                    android:textStyle="bold" />
+                            </androidx.cardview.widget.CardView>
+
+                            <EditText
+                                android:id="@+id/etStock"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:backgroundTint="#FFFFFF"
+                                android:gravity="center"
+                                android:imeOptions="actionNext"
+                                android:inputType="number"
+                                android:singleLine="true"
+                                android:textColor="#FFFFFF"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- FILA 3: Precio Compra (izq) | Precio Venta (der) -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <!-- Precio Compra -->
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
@@ -316,54 +341,17 @@
                             <androidx.cardview.widget.CardView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
 
                                 <TextView
                                     android:layout_width="match_parent"
                                     android:layout_height="wrap_content"
                                     android:gravity="center"
                                     android:paddingVertical="4dp"
-                                    android:text="PRECIO VENTA:"
-                                    android:textColor="?attr/colorOnSurface"
-                                    android:textStyle="bold" />
-                            </androidx.cardview.widget.CardView>
-
-                            <EditText
-                                android:id="@+id/etPrecioVenta"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:hint="$0.00"
-                                android:imeOptions="actionNext"
-                                android:inputType="numberDecimal"
-                                android:singleLine="true"
-                                android:textColor="#FFFFFF"
-                                android:textColorHint="#E0E0E0"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <androidx.cardview.widget.CardView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                app:cardBackgroundColor="?attr/colorSurface"
-                                app:cardCornerRadius="12dp">
-
-                                <TextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:gravity="center"
-                                    android:paddingVertical="4dp"
-                                    android:text="PRECIO COMPRA:"
-                                    android:textColor="?attr/colorOnSurface"
+                                    android:text="Precio Compra:"
+                                    android:textColor="#000000"
                                     android:textStyle="bold" />
                             </androidx.cardview.widget.CardView>
 
@@ -371,84 +359,129 @@
                                 android:id="@+id/etPrecioCompra"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
+                                android:backgroundTint="#FFFFFF"
                                 android:gravity="center"
-                                android:hint="$0.00"
                                 android:imeOptions="actionNext"
                                 android:inputType="numberDecimal"
                                 android:singleLine="true"
                                 android:textColor="#FFFFFF"
-                                android:textColorHint="#E0E0E0"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Precio Venta -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <androidx.cardview.widget.CardView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:cardBackgroundColor="#FFFFFF"
+                                app:cardCornerRadius="12dp"
+                                app:cardElevation="0dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:gravity="center"
+                                    android:paddingVertical="4dp"
+                                    android:text="Precio Venta:"
+                                    android:textColor="#000000"
+                                    android:textStyle="bold" />
+                            </androidx.cardview.widget.CardView>
+
+                            <EditText
+                                android:id="@+id/etPrecioVenta"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:backgroundTint="#FFFFFF"
+                                android:gravity="center"
+                                android:imeOptions="actionNext"
+                                android:inputType="numberDecimal"
+                                android:singleLine="true"
+                                android:textColor="#FFFFFF"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
 
+                    <!-- FILA 4: Caducidad (Solo visible si es Perecedero) -->
                     <LinearLayout
+                        android:id="@+id/layoutCaducidad"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="vertical">
+                        android:layout_marginTop="12dp"
+                        android:orientation="vertical"
+                        android:visibility="visible">
 
                         <androidx.cardview.widget.CardView
-                            android:layout_width="160dp"
+                            android:layout_width="170dp"
                             android:layout_height="wrap_content"
-                            app:cardBackgroundColor="?attr/colorSurface"
-                            app:cardCornerRadius="12dp">
+                            app:cardBackgroundColor="#FFFFFF"
+                            app:cardCornerRadius="12dp"
+                            app:cardElevation="0dp">
 
                             <TextView
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:gravity="center"
                                 android:paddingVertical="4dp"
-                                android:text="DESCRIPCION:"
-                                android:textColor="?attr/colorOnSurface"
+                                android:text="Caducidad:"
+                                android:textColor="#000000"
                                 android:textStyle="bold" />
                         </androidx.cardview.widget.CardView>
 
                         <EditText
-                            android:id="@+id/etDescripcion"
+                            android:id="@+id/etCaducidad"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:gravity="start|top"
-                            android:hint="Detalles..."
-                            android:imeOptions="actionDone"
-                            android:inputType="textMultiLine"
-                            android:lines="2"
+                            android:backgroundTint="#FFFFFF"
+                            android:clickable="true"
+                            android:focusable="false"
+                            android:gravity="center"
+                            android:hint="dd/mm/aa"
+                            android:inputType="none"
+                            android:singleLine="true"
                             android:textColor="#FFFFFF"
-                            android:textColorHint="#E0E0E0"
-                            android:textSize="16sp"
+                            android:textColorHint="#80FFFFFF"
+                            android:textSize="18sp"
                             android:textStyle="bold" />
                     </LinearLayout>
 
-                    <LinearLayout
+                    <!-- FILA 5: Confirmar centrado + Icono bote de basura a la derecha -->
+                    <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="24dp"
-                        android:orientation="horizontal">
+                        android:layout_marginTop="20dp">
 
                         <Button
                             android:id="@+id/btnGuardarProducto"
-                            android:layout_width="0dp"
+                            android:layout_width="170dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
-                            android:layout_weight="1"
+                            android:layout_centerInParent="true"
                             android:backgroundTint="#FFFFFF"
                             android:text="CONFIRMAR"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="#000000"
                             android:textStyle="bold" />
 
-                        <Button
+                        <ImageButton
                             android:id="@+id/btnLimpiar"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:layout_weight="1"
+                            android:layout_width="46dp"
+                            android:layout_height="46dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:background="@drawable/abc_btn_default_mtrl_shape"
                             android:backgroundTint="#FFFFFF"
-                            android:text="LIMPIAR"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                            android:contentDescription="Limpiar formulario"
+                            android:padding="10dp"
+                            android:scaleType="fitCenter"
+                            android:src="@android:drawable/ic_menu_delete"
+                            app:tint="#C45B20" />
+                    </RelativeLayout>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
