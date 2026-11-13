@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Lector por cable USB (adaptador OTG): opcional, la app funciona sin él -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <queries>
@@ -36,8 +38,14 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.InventarioActivity" />
-        <activity android:name=".ui.VentaActivity" />
+        <!-- configChanges: al conectar/desconectar el lector (Bluetooth o USB) Android cambia la
+             configuración del teclado. Sin esto la pantalla se recrea y se pierde la venta en curso. -->
+        <activity
+            android:name=".ui.InventarioActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation" />
+        <activity
+            android:name=".ui.VentaActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation" />
         <activity android:name=".ui.ReportesActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ui.FiadoActivity" />

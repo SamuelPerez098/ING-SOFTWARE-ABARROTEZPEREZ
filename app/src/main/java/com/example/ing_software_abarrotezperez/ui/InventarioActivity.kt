@@ -20,6 +20,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 import com.example.ing_software_abarrotezperez.scanner.CamaraScannerActivity
+import com.example.ing_software_abarrotezperez.scanner.HidCapturador
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
@@ -55,10 +56,14 @@ class InventarioActivity : AppCompatActivity() {
             }
         }
 
-    // --- VARIABLES NUEVAS PARA EL ESCÁNER POR VELOCIDAD ---
-    private val barcodeBuffer = StringBuilder()
-    private var lastKeyTime: Long = 0
-    private val MAX_DELAY_SCANNER = 150L
+    // --- Lector en modo teclado (HID): Bluetooth o cable USB, misma lógica ---
+    // Aquí hay campos de texto, por eso se ignora el teclado en pantalla y solo se
+    // consumen las teclas que llegan a velocidad de lector.
+    private val hid = HidCapturador(consumirTodo = false, ignorarTecladoVirtual = true) { codigo ->
+        removerBasuraDelFoco(codigo)
+        // Al ser escáner físico, mandamos 'false' en soloEditar para que SÍ sume 1
+        procesarEscaneoInventario(codigo, false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -360,33 +365,13 @@ class InventarioActivity : AppCompatActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.deviceId == -1 || event.device?.isVirtual == true) {
-            return super.dispatchKeyEvent(event)
-        }
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            val currentTime = System.currentTimeMillis()
-            val timeDiff = currentTime - lastKeyTime
-            if (timeDiff > MAX_DELAY_SCANNER) barcodeBuffer.setLength(0)
-            lastKeyTime = currentTime
-
-            if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
-                val codigoLeido = barcodeBuffer.toString().trim()
-                if (codigoLeido.isNotEmpty()) {
-                    removerBasuraDelFoco(codigoLeido)
-
-                    // --- AQUÍ: Al ser escáner físico, mandamos 'false' en soloEditar para que SÍ sume 1 ---
-                    procesarEscaneoInventario(codigoLeido, false)
-
-                    barcodeBuffer.setLength(0)
-                    return true
-                }
-            }
-            if (event.unicodeChar > 31) {
-                barcodeBuffer.append(event.unicodeChar.toChar())
-                if (barcodeBuffer.length >= 3 && timeDiff <= MAX_DELAY_SCANNER) return true
-            }
-        }
+        if (hid.onKeyEvent(event)) return true
         return super.dispatchKeyEvent(event)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        hid.detener()
     }
 
     private fun removerBasuraDelFoco(codigoLeido: String) {

@@ -62,7 +62,7 @@
             android:minHeight="36dp" />
     </LinearLayout>
 
-    <!-- ══ SELECTOR DE MODO DE ESCANEO (Bluetooth / Cámara) ══ -->
+    <!-- ══ SELECTOR DE MODO DE ESCANEO (Bluetooth / Cable USB / Cámara) ══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -76,10 +76,27 @@
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="0dp"
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
+            android:maxLines="1"
+            android:paddingHorizontal="4dp"
             android:text="BLUETOOTH"
-            android:textSize="12sp"
+            android:textSize="11sp"
+            app:strokeColor="#00B259" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnModoCable"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:paddingHorizontal="4dp"
+            android:text="CABLE USB"
+            android:textSize="11sp"
             app:strokeColor="#00B259" />
 
         <com.google.android.material.button.MaterialButton
@@ -88,9 +105,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
+            android:layout_marginEnd="0dp"
             android:layout_weight="1"
+            android:maxLines="1"
+            android:paddingHorizontal="4dp"
             android:text="CÁMARA"
-            android:textSize="12sp"
+            android:textSize="11sp"
             app:strokeColor="#00B259" />
     </LinearLayout>
 

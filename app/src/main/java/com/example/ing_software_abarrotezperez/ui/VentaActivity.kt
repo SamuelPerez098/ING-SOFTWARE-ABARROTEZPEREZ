@@ -20,11 +20,19 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 import com.example.ing_software_abarrotezperez.scanner.CamaraScanner
+import com.example.ing_software_abarrotezperez.scanner.HidCapturador
+import com.example.ing_software_abarrotezperez.scanner.LectoresConectados
+import com.example.ing_software_abarrotezperez.scanner.VigilanteLectores
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.android.material.button.MaterialButton
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 
 class VentaActivity : AppCompatActivity() {
+
+    private companion object {
+        const val PREFS_SCANNER = "scanner_prefs"
+        const val CLAVE_MODO_VENTA = "modo_venta"
+    }
 
     private lateinit var vm: ScannerViewModel
     private lateinit var adapter: VentaAdapter
@@ -38,26 +46,35 @@ class VentaActivity : AppCompatActivity() {
 
     private val itemsVenta = mutableListOf<DatabaseHelper.ItemVenta>()
 
-    // Variables para el interceptor HID
-    private val barcodeBuffer = StringBuilder()
-    private var lastKeyTime = 0L
+    // ── Lector en modo teclado (HID) ────────────────────────────────────────
+    // Sirve igual para el lector por Bluetooth (HID) y por cable USB: en ambos casos
+    // Android lo ve como un teclado externo y entrega las teclas como KeyEvent.
+    private val hid = HidCapturador(consumirTodo = true, ignorarTecladoVirtual = false) { codigo ->
+        procesarEscaneoVenta(codigo)
+    }
+    private lateinit var vigilante: VigilanteLectores
+    private var ultimoCodigo = ""
 
-    // ── Modo de escaneo por cámara (nuevo) ──────────────────────────────────
+    // ── Modo de escaneo: Bluetooth / Cable USB / Cámara ─────────────────────
+    private enum class Modo { BLUETOOTH, CABLE, CAMARA }
+
     private lateinit var btnModoBluetooth: MaterialButton
+    private lateinit var btnModoCable: MaterialButton
     private lateinit var btnModoCamara: MaterialButton
     private lateinit var panelCamara: FrameLayout
     private lateinit var dbvVenta: DecoratedBarcodeView
     private lateinit var camara: CamaraScanner
-    private var modoCamara = false
+    private var modo = Modo.BLUETOOTH
+    private var enPrimerPlano = false
     private var dialogoNoEncontradoVisible = false
 
     private val pedirPermisoCamara =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
             if (concedido) {
-                seleccionarModo(true)
+                seleccionarModo(Modo.CAMARA)
             } else {
                 Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
-                seleccionarModo(false)
+                seleccionarModo(Modo.BLUETOOTH)
             }
         }
 
@@ -82,19 +99,33 @@ class VentaActivity : AppCompatActivity() {
         rvItems.layoutManager = LinearLayoutManager(this)
         rvItems.adapter = adapter
 
-        // ── Selector de modo: Bluetooth (HID) / Cámara ──
+        // ── Selector de modo: Bluetooth (HID) / Cable USB / Cámara ──
         btnModoBluetooth = findViewById(R.id.btnModoBluetooth)
+        btnModoCable     = findViewById(R.id.btnModoCable)
         btnModoCamara    = findViewById(R.id.btnModoCamara)
         panelCamara      = findViewById(R.id.panelCamara)
         dbvVenta         = findViewById(R.id.dbvVenta)
         camara = CamaraScanner(this, dbvVenta) { codigo -> procesarEscaneoVenta(codigo) }
+        vigilante = VigilanteLectores(this) { actualizarEstado() }
 
-        btnModoBluetooth.setOnClickListener { seleccionarModo(false) }
+        btnModoBluetooth.setOnClickListener { seleccionarModo(Modo.BLUETOOTH) }
+        btnModoCable.setOnClickListener { seleccionarModo(Modo.CABLE) }
         btnModoCamara.setOnClickListener {
-            if (tienePermisoCamara()) seleccionarModo(true)
+            if (tienePermisoCamara()) seleccionarModo(Modo.CAMARA)
             else pedirPermisoCamara.launch(Manifest.permission.CAMERA)
         }
-        seleccionarModo(false)   // por defecto: el comportamiento de siempre
+
+        // Mantener presionado el texto de estado abre el diagnóstico del lector
+        tvEstadoBt.setOnLongClickListener { mostrarDiagnostico(); true }
+
+        // Recuerda el último modo usado (si era cámara y ya no hay permiso, vuelve a Bluetooth)
+        val guardado = runCatching {
+            Modo.valueOf(
+                getSharedPreferences(PREFS_SCANNER, MODE_PRIVATE)
+                    .getString(CLAVE_MODO_VENTA, Modo.BLUETOOTH.name) ?: Modo.BLUETOOTH.name
+            )
+        }.getOrDefault(Modo.BLUETOOTH)
+        seleccionarModo(if (guardado == Modo.CAMARA && !tienePermisoCamara()) Modo.BLUETOOTH else guardado)
 
         btnCobrar.setOnClickListener {
             if (itemsVenta.isEmpty()) {
@@ -108,25 +139,28 @@ class VentaActivity : AppCompatActivity() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  MODO DE ESCANEO (Bluetooth / Cámara)
+    //  MODO DE ESCANEO (Bluetooth / Cable USB / Cámara)
     // ─────────────────────────────────────────────────────────────────────────
     private fun tienePermisoCamara() =
         ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
                 PackageManager.PERMISSION_GRANTED
 
-    private fun seleccionarModo(usarCamara: Boolean) {
-        modoCamara = usarCamara
-        if (usarCamara) {
+    private fun seleccionarModo(nuevo: Modo) {
+        modo = nuevo
+        if (nuevo == Modo.CAMARA) {
             panelCamara.visibility = View.VISIBLE
-            tvEstadoBt.text = "Modo: Cámara del teléfono"
-            camara.iniciar()
+            if (enPrimerPlano) camara.iniciar()      // si no, lo inicia onResume
         } else {
             camara.pausar()
             panelCamara.visibility = View.GONE
-            tvEstadoBt.text = "Modo: Lector (HID)"
         }
-        pintarBotonModo(btnModoBluetooth, !usarCamara)
-        pintarBotonModo(btnModoCamara, usarCamara)
+        pintarBotonModo(btnModoBluetooth, nuevo == Modo.BLUETOOTH)
+        pintarBotonModo(btnModoCable, nuevo == Modo.CABLE)
+        pintarBotonModo(btnModoCamara, nuevo == Modo.CAMARA)
+
+        getSharedPreferences(PREFS_SCANNER, MODE_PRIVATE)
+            .edit().putString(CLAVE_MODO_VENTA, nuevo.name).apply()
+        actualizarEstado()
     }
 
     private fun pintarBotonModo(boton: MaterialButton, activo: Boolean) {
@@ -137,17 +171,79 @@ class VentaActivity : AppCompatActivity() {
         boton.setTextColor(if (activo) Color.WHITE else verde)
     }
 
+    /** Texto de estado: modo activo, si Android ve el lector y el último código leído. */
+    private fun actualizarEstado() {
+        val lectores = LectoresConectados.listar(this)
+        val base = when (modo) {
+            Modo.BLUETOOTH -> {
+                val bt = lectores.firstOrNull { !it.porUsb }
+                if (bt != null) "Modo: Bluetooth ✓ ${bt.nombre}"
+                else "Modo: Bluetooth ⚠ lector no detectado"
+            }
+            Modo.CABLE -> {
+                val usb = lectores.firstOrNull { it.porUsb }
+                when {
+                    !packageManager.hasSystemFeature(PackageManager.FEATURE_USB_HOST) ->
+                        "Modo: Cable ⚠ este teléfono no admite USB-OTG"
+                    usb != null -> "Modo: Cable USB ✓ ${usb.nombre}"
+                    else -> "Modo: Cable USB ⚠ conecta el lector (adaptador OTG)"
+                }
+            }
+            Modo.CAMARA -> "Modo: Cámara del teléfono"
+        }
+        tvEstadoBt.text = if (ultimoCodigo.isEmpty()) base else "$base\nÚltimo: $ultimoCodigo"
+    }
+
+    /** Se abre manteniendo presionado el texto de estado. Muestra las teclas que llegan del lector. */
+    private fun mostrarDiagnostico() {
+        val tv = TextView(this).apply {
+            typeface = android.graphics.Typeface.MONOSPACE
+            textSize = 11f
+            setPadding(32, 16, 32, 16)
+        }
+        fun refrescar() {
+            tv.text = "LECTORES DETECTADOS\n" + LectoresConectados.descripcion(this) +
+                    "\n\nTECLAS RECIBIDAS (la más reciente arriba)\n" + hid.textoDiagnostico() +
+                    "\n\nEscanea un código con el lector: si no aparece ninguna línea, Android no está " +
+                    "entregando las teclas a la app (revisa el modo HID / la conexión del lector)."
+        }
+        refrescar()
+        AlertDialog.Builder(this)
+            .setTitle("Diagnóstico del lector")
+            .setView(ScrollView(this).apply { addView(tv) })
+            .setNeutralButton("Cerrar", null)
+            .setOnKeyListener { _, keyCode, event ->
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    false
+                } else {
+                    // El diálogo recibe las teclas en lugar de la pantalla: se anotan y se consumen
+                    hid.observar(event)
+                    refrescar()
+                    true
+                }
+            }
+            .show()
+    }
+
     override fun onResume() {
         super.onResume()
-        if (modoCamara && tienePermisoCamara()) camara.iniciar()
+        enPrimerPlano = true
+        vigilante.iniciar()
+        actualizarEstado()
+        if (modo == Modo.CAMARA && tienePermisoCamara()) camara.iniciar()
     }
 
     override fun onPause() {
         super.onPause()
+        enPrimerPlano = false
         camara.pausar()
+        vigilante.detener()
+        hid.detener()
     }
 
     private fun procesarEscaneoVenta(codigo: String) {
+        ultimoCodigo = codigo
+        actualizarEstado()
         val producto = vm.db.getProductoPorCodigo(codigo)
         if (producto == null) {
             // Evita apilar varios diálogos si la cámara sigue viendo el mismo código
@@ -269,28 +365,7 @@ class VentaActivity : AppCompatActivity() {
     //  INTERCEPTOR MODO HID (Teclado)
     // ─────────────────────────────────────────────────────────────────────────
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            val timeNow = System.currentTimeMillis()
-
-            if (timeNow - lastKeyTime > 500) {
-                barcodeBuffer.clear()
-            }
-            lastKeyTime = timeNow
-
-            if (event.keyCode == KeyEvent.KEYCODE_ENTER) {
-                val codigoLeido = barcodeBuffer.toString().trim()
-                if (codigoLeido.isNotEmpty()) {
-                    procesarEscaneoVenta(codigoLeido)
-                    barcodeBuffer.clear()
-                    return true
-                }
-            }
-
-            val pressedChar = event.unicodeChar.toChar()
-            if (pressedChar.isDefined() && event.unicodeChar > 31) {
-                barcodeBuffer.append(pressedChar)
-            }
-        }
+        if (hid.onKeyEvent(event)) return true
         return super.dispatchKeyEvent(event)
     }
 
