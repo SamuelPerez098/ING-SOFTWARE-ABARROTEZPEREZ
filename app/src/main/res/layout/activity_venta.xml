@@ -7,6 +7,7 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
+    <!-- HEADER -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -14,13 +15,11 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
-
         <ImageView
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:src="@drawable/ventas_logo"
             app:tint="#FFFFFF" />
-
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -33,6 +32,7 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- ESTADO DEL LECTOR -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -41,7 +41,6 @@
         android:paddingVertical="8dp"
         android:gravity="center_vertical"
         android:background="?attr/colorSurface">
-
         <TextView
             android:id="@+id/tvEstadoBt"
             android:layout_width="0dp"
@@ -51,7 +50,6 @@
             android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:textStyle="bold" />
-
         <Button
             android:id="@+id/btnConectarBt"
             android:layout_width="wrap_content"
@@ -62,7 +60,7 @@
             android:minHeight="36dp" />
     </LinearLayout>
 
-    <!-- ══ SELECTOR DE MODO DE ESCANEO (Bluetooth / Cable USB / Cámara) ══ -->
+    <!-- SELECTOR DE MODO: BLUETOOTH / CABLE USB / CÁMARA -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -114,14 +112,13 @@
             app:strokeColor="#00B259" />
     </LinearLayout>
 
-    <!-- ══ VISTA PREVIA DE LA CÁMARA (solo visible en modo Cámara) ══ -->
+    <!-- VISTA PREVIA CÁMARA -->
     <FrameLayout
         android:id="@+id/panelCamara"
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:background="#000000"
         android:visibility="gone">
-
         <com.journeyapps.barcodescanner.DecoratedBarcodeView
             android:id="@+id/dbvVenta"
             android:layout_width="match_parent"
@@ -161,19 +158,44 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
+        <!-- RECIBIDO (de fix-modulo-ventas) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RECIBIDO: $"
+                android:textColor="#00B259"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <EditText
+                android:id="@+id/etRecibido"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:backgroundTint="#00B259"
+                android:hint="0.00"
+                android:inputType="numberDecimal"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:cardBackgroundColor="#00B259"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="16dp">
-
                 <Button
                     android:id="@+id/btnCancelar"
                     android:layout_width="0dp"
@@ -184,7 +206,6 @@
                     android:text="CANCELAR"
                     android:textColor="?attr/colorOnSurface"
                     android:textStyle="bold" />
-
                 <Button
                     android:id="@+id/btnCobrar"
                     android:layout_width="0dp"
@@ -198,5 +219,4 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
     </LinearLayout>
-
 </LinearLayout>

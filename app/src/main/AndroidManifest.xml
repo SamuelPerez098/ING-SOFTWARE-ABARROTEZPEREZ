@@ -17,6 +17,8 @@
 
     <queries>
         <package android:name="com.google.android.gms" />
+        <!-- Para que el Intent SEND de PDF/WhatsApp encuentre la app -->
+        <package android:name="com.whatsapp" />
     </queries>
 
     <application
@@ -29,6 +31,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.INGSOFTWAREABARROTEZPEREZ" >
+
+        <!-- FileProvider para compartir el ticket PDF por WhatsApp -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider_pdf"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_archivos_pdf" />
+        </provider>
 
         <activity android:name=".ui.LoginActivity"
             android:exported="true">
@@ -78,5 +91,4 @@
             android:value="@integer/google_play_services_version" />
 
     </application>
-
 </manifest>

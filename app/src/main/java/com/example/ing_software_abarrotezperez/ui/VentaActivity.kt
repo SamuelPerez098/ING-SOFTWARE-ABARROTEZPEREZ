@@ -1,8 +1,13 @@
 package com.example.ing_software_abarrotezperez.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.pdf.PdfDocument
+import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -13,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +32,11 @@ import com.example.ing_software_abarrotezperez.scanner.VigilanteLectores
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.android.material.button.MaterialButton
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class VentaActivity : AppCompatActivity() {
 
@@ -43,13 +54,15 @@ class VentaActivity : AppCompatActivity() {
     private lateinit var tvTotal: TextView
     private lateinit var btnCobrar: Button
     private lateinit var btnCancelar: Button
+    private lateinit var etRecibido: EditText
 
     private val itemsVenta = mutableListOf<DatabaseHelper.ItemVenta>()
 
     // ── Lector en modo teclado (HID) ────────────────────────────────────────
-    // Sirve igual para el lector por Bluetooth (HID) y por cable USB: en ambos casos
-    // Android lo ve como un teclado externo y entrega las teclas como KeyEvent.
-    private val hid = HidCapturador(consumirTodo = true, ignorarTecladoVirtual = false) { codigo ->
+    // consumirTodo = false e ignorarTecladoVirtual = true → deja pasar las teclas del
+    // teclado en pantalla al EditText, pero sigue capturando los escaneos rápidos del lector.
+    private val hid = HidCapturador(consumirTodo = false, ignorarTecladoVirtual = true) { codigo ->
+        removerBasuraDelFoco(codigo)
         procesarEscaneoVenta(codigo)
     }
     private lateinit var vigilante: VigilanteLectores
@@ -70,9 +83,8 @@ class VentaActivity : AppCompatActivity() {
 
     private val pedirPermisoCamara =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
-            if (concedido) {
-                seleccionarModo(Modo.CAMARA)
-            } else {
+            if (concedido) seleccionarModo(Modo.CAMARA)
+            else {
                 Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
                 seleccionarModo(Modo.BLUETOOTH)
             }
@@ -90,35 +102,34 @@ class VentaActivity : AppCompatActivity() {
         tvTotal       = findViewById(R.id.tvTotal)
         btnCobrar     = findViewById(R.id.btnCobrar)
         btnCancelar   = findViewById(R.id.btnCancelar)
+        etRecibido    = findViewById(R.id.etRecibido)
 
-        // Ocultar botón y ajustar estado para HID
+        // HID: ocultamos el botón CONECTAR
         btnConectarBt.visibility = View.GONE
-        tvEstadoBt.text = "Modo: Lector (HID)"
 
         adapter = VentaAdapter(itemsVenta) { actualizarTotal() }
         rvItems.layoutManager = LinearLayoutManager(this)
         rvItems.adapter = adapter
 
-        // ── Selector de modo: Bluetooth (HID) / Cable USB / Cámara ──
+        // Selector de modo
         btnModoBluetooth = findViewById(R.id.btnModoBluetooth)
         btnModoCable     = findViewById(R.id.btnModoCable)
         btnModoCamara    = findViewById(R.id.btnModoCamara)
         panelCamara      = findViewById(R.id.panelCamara)
         dbvVenta         = findViewById(R.id.dbvVenta)
-        camara = CamaraScanner(this, dbvVenta) { codigo -> procesarEscaneoVenta(codigo) }
+        camara    = CamaraScanner(this, dbvVenta) { codigo -> procesarEscaneoVenta(codigo) }
         vigilante = VigilanteLectores(this) { actualizarEstado() }
 
         btnModoBluetooth.setOnClickListener { seleccionarModo(Modo.BLUETOOTH) }
-        btnModoCable.setOnClickListener { seleccionarModo(Modo.CABLE) }
+        btnModoCable.setOnClickListener     { seleccionarModo(Modo.CABLE) }
         btnModoCamara.setOnClickListener {
             if (tienePermisoCamara()) seleccionarModo(Modo.CAMARA)
             else pedirPermisoCamara.launch(Manifest.permission.CAMERA)
         }
 
-        // Mantener presionado el texto de estado abre el diagnóstico del lector
+        // Mantener presionado el estado → diagnóstico
         tvEstadoBt.setOnLongClickListener { mostrarDiagnostico(); true }
 
-        // Recuerda el último modo usado (si era cámara y ya no hay permiso, vuelve a Bluetooth)
         val guardado = runCatching {
             Modo.valueOf(
                 getSharedPreferences(PREFS_SCANNER, MODE_PRIVATE)
@@ -139,7 +150,7 @@ class VentaActivity : AppCompatActivity() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  MODO DE ESCANEO (Bluetooth / Cable USB / Cámara)
+    //  MODOS DE ESCANEO
     // ─────────────────────────────────────────────────────────────────────────
     private fun tienePermisoCamara() =
         ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
@@ -149,7 +160,7 @@ class VentaActivity : AppCompatActivity() {
         modo = nuevo
         if (nuevo == Modo.CAMARA) {
             panelCamara.visibility = View.VISIBLE
-            if (enPrimerPlano) camara.iniciar()      // si no, lo inicia onResume
+            if (enPrimerPlano) camara.iniciar()
         } else {
             camara.pausar()
             panelCamara.visibility = View.GONE
@@ -171,7 +182,6 @@ class VentaActivity : AppCompatActivity() {
         boton.setTextColor(if (activo) Color.WHITE else verde)
     }
 
-    /** Texto de estado: modo activo, si Android ve el lector y el último código leído. */
     private fun actualizarEstado() {
         val lectores = LectoresConectados.listar(this)
         val base = when (modo) {
@@ -194,7 +204,6 @@ class VentaActivity : AppCompatActivity() {
         tvEstadoBt.text = if (ultimoCodigo.isEmpty()) base else "$base\nÚltimo: $ultimoCodigo"
     }
 
-    /** Se abre manteniendo presionado el texto de estado. Muestra las teclas que llegan del lector. */
     private fun mostrarDiagnostico() {
         val tv = TextView(this).apply {
             typeface = android.graphics.Typeface.MONOSPACE
@@ -213,14 +222,8 @@ class VentaActivity : AppCompatActivity() {
             .setView(ScrollView(this).apply { addView(tv) })
             .setNeutralButton("Cerrar", null)
             .setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    false
-                } else {
-                    // El diálogo recibe las teclas en lugar de la pantalla: se anotan y se consumen
-                    hid.observar(event)
-                    refrescar()
-                    true
-                }
+                if (keyCode == KeyEvent.KEYCODE_BACK) false
+                else { hid.observar(event); refrescar(); true }
             }
             .show()
     }
@@ -241,19 +244,21 @@ class VentaActivity : AppCompatActivity() {
         hid.detener()
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  ESCANEO
+    // ─────────────────────────────────────────────────────────────────────────
     private fun procesarEscaneoVenta(codigo: String) {
         ultimoCodigo = codigo
         actualizarEstado()
         val producto = vm.db.getProductoPorCodigo(codigo)
         if (producto == null) {
-            // Evita apilar varios diálogos si la cámara sigue viendo el mismo código
             if (dialogoNoEncontradoVisible) return
             dialogoNoEncontradoVisible = true
             AlertDialog.Builder(this)
                 .setTitle("Producto no encontrado")
                 .setMessage("Código: $codigo\n¿Deseas registrarlo primero en inventario?")
                 .setPositiveButton("Ir a Inventario") { _, _ ->
-                    startActivity(android.content.Intent(this, InventarioActivity::class.java))
+                    startActivity(Intent(this, InventarioActivity::class.java))
                 }
                 .setNegativeButton("Cancelar", null)
                 .setOnDismissListener { dialogoNoEncontradoVisible = false }
@@ -287,12 +292,54 @@ class VentaActivity : AppCompatActivity() {
         btnCobrar.isEnabled = itemsVenta.isNotEmpty()
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  COBRO / TICKET
+    // ─────────────────────────────────────────────────────────────────────────
     private fun confirmarVenta() {
         val total = itemsVenta.sumOf { it.subtotal }
+        val recibidoStr = etRecibido.text.toString().trim()
+        val recibido = if (recibidoStr.isEmpty()) total else recibidoStr.toDoubleOrNull()
+
+        if (recibido == null) {
+            Toast.makeText(this, "Ingresa un monto válido", Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (recibido < total) {
+            Toast.makeText(this, "El monto recibido es menor al TOTAL", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val cambio = recibido - total
+
+        val ticketView = layoutInflater.inflate(R.layout.dialog_ticket, null)
+        val tvFechaHora      = ticketView.findViewById<TextView>(R.id.tvTicketFechaHora)
+        val llProductos      = ticketView.findViewById<LinearLayout>(R.id.llTicketProductos)
+        val tvTicketTotal    = ticketView.findViewById<TextView>(R.id.tvTicketTotal)
+        val tvTicketRecibido = ticketView.findViewById<TextView>(R.id.tvTicketRecibido)
+        val tvTicketCambio   = ticketView.findViewById<TextView>(R.id.tvTicketCambio)
+        val btnGenerarPdfWhatsApp =
+            ticketView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerarPdfWhatsApp)
+
+        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
+        tvFechaHora.text = sdf.format(Date())
+
+        llProductos.removeAllViews()
+        for (item in itemsVenta) {
+            val tv = TextView(this)
+            tv.text = "${item.cantidad}x ${item.producto.nombre}\n$${"%.2f".format(item.subtotal)}"
+            tv.textSize = 14f
+            tv.setPadding(0, 8, 0, 8)
+            llProductos.addView(tv)
+        }
+
+        tvTicketTotal.text    = "TOTAL: $%.2f".format(total)
+        tvTicketRecibido.text = "RECIBIDO: $%.2f".format(recibido)
+        tvTicketCambio.text   = "CAMBIO: $%.2f".format(cambio)
+
+        btnGenerarPdfWhatsApp.setOnClickListener { solicitarNumeroParaPdf(ticketView) }
+
         AlertDialog.Builder(this)
-            .setTitle("Confirmar venta")
-            .setMessage("Total: \$%.2f\n\n¿Completar venta?".format(total))
-            .setPositiveButton("Cobrar") { _, _ -> ejecutarVenta() }
+            .setView(ticketView)
+            .setPositiveButton("Confirmar") { _, _ -> ejecutarVenta() }
             .setNeutralButton("Fiado") { _, _ -> mostrarDialogoFiado() }
             .setNegativeButton("Cancelar", null)
             .show()
@@ -303,6 +350,7 @@ class VentaActivity : AppCompatActivity() {
         if (idVenta > 0) {
             Toast.makeText(this, "✓ Venta registrada #$idVenta", Toast.LENGTH_LONG).show()
             itemsVenta.clear()
+            etRecibido.text.clear()
             adapter.notifyDataSetChanged()
             actualizarTotal()
         } else {
@@ -329,12 +377,11 @@ class VentaActivity : AppCompatActivity() {
 
     private fun registrarFiado(nombreCliente: String) {
         val db = vm.db.writableDatabase
-        var idCliente: Long
+        val idCliente: Long
         val cursorCliente = db.rawQuery(
             "SELECT id_cliente FROM cliente WHERE nombre = ? LIMIT 1", arrayOf(nombreCliente)
         )
-        idCliente = if (cursorCliente.moveToFirst())
-            cursorCliente.getLong(0)
+        idCliente = if (cursorCliente.moveToFirst()) cursorCliente.getLong(0)
         else {
             val cv = android.content.ContentValues().apply { put("nombre", nombreCliente) }
             db.insert("cliente", null, cv)
@@ -357,35 +404,137 @@ class VentaActivity : AppCompatActivity() {
 
         Toast.makeText(this, "✓ Fiado guardado para $nombreCliente", Toast.LENGTH_LONG).show()
         itemsVenta.clear()
+        etRecibido.text.clear()
         adapter.notifyDataSetChanged()
         actualizarTotal()
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    //  INTERCEPTOR MODO HID (Teclado)
+    //  PDF / WHATSAPP
+    // ─────────────────────────────────────────────────────────────────────────
+    private fun solicitarNumeroParaPdf(ticketCapturado: View) {
+        val campoTelefono = EditText(this).apply {
+            hint = "Ej. 521234567890"
+            inputType = android.text.InputType.TYPE_CLASS_PHONE
+        }
+        val contenedorDialogo = FrameLayout(this)
+        val margen = (16 * resources.displayMetrics.density).toInt()
+        contenedorDialogo.setPadding(margen, margen, margen, margen)
+        contenedorDialogo.addView(campoTelefono)
+
+        AlertDialog.Builder(this)
+            .setTitle("Compartir Ticket en PDF")
+            .setMessage("Ingresa el número de WhatsApp destino:")
+            .setView(contenedorDialogo)
+            .setPositiveButton("Generar y Enviar") { _, _ ->
+                val telefonoIngresado = campoTelefono.text.toString().trim()
+                if (telefonoIngresado.isEmpty()) {
+                    Toast.makeText(this, "Por favor ingresa un número", Toast.LENGTH_SHORT).show()
+                } else {
+                    val archivoPdfGenerado = convertirVistaAPdf(ticketCapturado)
+                    if (archivoPdfGenerado != null) {
+                        compartirPdfPorWhatsApp(archivoPdfGenerado, telefonoIngresado)
+                    } else {
+                        Toast.makeText(this, "Ocurrió un error al crear el PDF", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun convertirVistaAPdf(vistaTicket: View): File? {
+        return try {
+            val botonWhatsApp = vistaTicket.findViewById<View>(R.id.btnGenerarPdfWhatsApp)
+            val visibilidadOriginal = botonWhatsApp?.visibility
+            botonWhatsApp?.visibility = View.GONE
+
+            val mapaBitsTicket = Bitmap.createBitmap(vistaTicket.width, vistaTicket.height, Bitmap.Config.ARGB_8888)
+            val lienzo = Canvas(mapaBitsTicket)
+            vistaTicket.draw(lienzo)
+
+            botonWhatsApp?.visibility = visibilidadOriginal ?: View.VISIBLE
+
+            val documentoPdf = PdfDocument()
+            val infoPagina = PdfDocument.PageInfo.Builder(vistaTicket.width, vistaTicket.height, 1).create()
+            val paginaPdf = documentoPdf.startPage(infoPagina)
+            paginaPdf.canvas.drawBitmap(mapaBitsTicket, 0f, 0f, null)
+            documentoPdf.finishPage(paginaPdf)
+
+            val archivoTemporalPdf = File(cacheDir, "Ticket_Abarrotes_Perez.pdf")
+            val flujoSalida = FileOutputStream(archivoTemporalPdf)
+            documentoPdf.writeTo(flujoSalida)
+            documentoPdf.close()
+            flujoSalida.close()
+            archivoTemporalPdf
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun compartirPdfPorWhatsApp(archivoPdf: File, numeroDestino: String) {
+        try {
+            val uriSegura: Uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider_pdf",
+                archivoPdf
+            )
+            val intentCompartir = Intent(Intent.ACTION_SEND).apply {
+                type = "application/pdf"
+                putExtra(Intent.EXTRA_STREAM, uriSegura)
+                putExtra(Intent.EXTRA_TEXT, "Ticket de compra - Abarrotes Pérez")
+                setPackage("com.whatsapp")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(intentCompartir)
+            Toast.makeText(this, "Selecciona el contacto $numeroDestino en WhatsApp", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "WhatsApp no está instalado o hubo un error", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  HID (dispatch a HidCapturador)
     // ─────────────────────────────────────────────────────────────────────────
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         if (hid.onKeyEvent(event)) return true
         return super.dispatchKeyEvent(event)
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  RecyclerView Adapter
-    // ─────────────────────────────────────────────────────────────────────────
+    /** Si el lector escanea mientras hay un EditText enfocado, borra los caracteres que
+     *  alcanzaron a colarse en el campo (mismo comportamiento que Inventario). */
+    private fun removerBasuraDelFoco(codigoLeido: String) {
+        val view = currentFocus
+        if (view is EditText) {
+            var textoActual = view.text.toString()
+            for (i in minOf(codigoLeido.length, 5) downTo 1) {
+                val pedazoFiltrado = codigoLeido.substring(0, i)
+                if (textoActual.endsWith(pedazoFiltrado)) {
+                    textoActual = textoActual.substring(0, textoActual.length - i)
+                    view.setText(textoActual)
+                    view.setSelection(textoActual.length)
+                    break
+                }
+            }
+        }
+    }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Adapter
+    // ─────────────────────────────────────────────────────────────────────────
     inner class VentaAdapter(
         private val items: MutableList<DatabaseHelper.ItemVenta>,
         private val onChange: () -> Unit
     ) : RecyclerView.Adapter<VentaAdapter.VH>() {
 
         inner class VH(view: View) : RecyclerView.ViewHolder(view) {
-            val tvNombre: TextView   = view.findViewById(R.id.tvNombreProducto)
-            val tvPrecio: TextView   = view.findViewById(R.id.tvPrecioUnitario)
-            val tvCantidad: TextView = view.findViewById(R.id.tvCantidad)
-            val tvSubtotal: TextView = view.findViewById(R.id.tvSubtotal)
-            val btnMas: ImageButton  = view.findViewById(R.id.btnMas)
-            // LÍNEA CORREGIDA ABAJO:
-            val btnMenos: Button     = view.findViewById(R.id.btnMenos)
+            val tvNombre: TextView    = view.findViewById(R.id.tvNombreProducto)
+            val tvPrecio: TextView    = view.findViewById(R.id.tvPrecioUnitario)
+            val tvCantidad: TextView  = view.findViewById(R.id.tvCantidad)
+            val tvSubtotal: TextView  = view.findViewById(R.id.tvSubtotal)
+            val btnMas: ImageButton   = view.findViewById(R.id.btnMas)
+            val btnMenos: Button      = view.findViewById(R.id.btnMenos)
             val btnEliminar: ImageButton = view.findViewById(R.id.btnEliminar)
         }
 
@@ -410,7 +559,6 @@ class VentaActivity : AppCompatActivity() {
                     Toast.makeText(holder.itemView.context, "Stock máximo", Toast.LENGTH_SHORT).show()
                 }
             }
-
             holder.btnMenos.setOnClickListener {
                 if (item.cantidad > 1) {
                     item.cantidad--
@@ -418,7 +566,6 @@ class VentaActivity : AppCompatActivity() {
                     onChange()
                 }
             }
-
             holder.btnEliminar.setOnClickListener {
                 items.removeAt(position)
                 notifyItemRemoved(position)
