@@ -24,6 +24,8 @@ import com.example.ing_software_abarrotezperez.scanner.HidCapturador
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.MultiFormatWriter
+import java.util.Locale
+import kotlin.math.roundToInt
 
 class InventarioActivity : AppCompatActivity() {
     private lateinit var vm: ScannerViewModel
@@ -37,6 +39,10 @@ class InventarioActivity : AppCompatActivity() {
     private lateinit var etPrecioCompra: EditText
     private lateinit var etStock: EditText
     private lateinit var etCaducidad: EditText
+    private lateinit var layoutCaducidad: LinearLayout
+    private lateinit var divisorCaducidad: View
+    private lateinit var cardStockCaducidad: CardView
+    private lateinit var tvMargen: TextView
     private lateinit var rgTipo: RadioGroup
     private lateinit var rbPerecedero: RadioButton
     private lateinit var rbNoPerecedero: RadioButton
@@ -81,6 +87,10 @@ class InventarioActivity : AppCompatActivity() {
         etPrecioCompra   = findViewById(R.id.etPrecioCompra)
         etStock          = findViewById(R.id.etStock)
         etCaducidad      = findViewById(R.id.etCaducidad)
+        layoutCaducidad  = findViewById(R.id.layoutCaducidad)
+        divisorCaducidad = findViewById(R.id.divisorCaducidad)
+        cardStockCaducidad = findViewById(R.id.cardStockCaducidad)
+        tvMargen         = findViewById(R.id.tvMargen)
         rgTipo           = findViewById(R.id.rgTipo)
         rbPerecedero     = findViewById(R.id.rbPerecedero)
         rbNoPerecedero   = findViewById(R.id.rbNoPerecedero)
@@ -92,6 +102,7 @@ class InventarioActivity : AppCompatActivity() {
         configurarSugerenciasNombres()
         configurarFormatoFecha()
         configurarRadioGroupTipo()
+        configurarMargen()
 
         btnGuardar.setOnClickListener { guardarProducto() }
         btnLimpiar.setOnClickListener { limpiarFormulario() }
@@ -106,8 +117,6 @@ class InventarioActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        etStock.isEnabled = false
-
         // Recuperar la bandera de solo editar
         val codigoAEditar = intent.getStringExtra("CODIGO_A_EDITAR")
         val soloEditar = intent.getBooleanExtra("SOLO_EDITAR", false)
@@ -119,17 +128,66 @@ class InventarioActivity : AppCompatActivity() {
 
     private fun configurarRadioGroupTipo() {
         // Estado inicial: Perecedero (según el XML, rbPerecedero está checked)
-        etCaducidad.isEnabled = true
-        etStock.isEnabled = false
+        mostrarCaducidad(true)
 
         rgTipo.setOnCheckedChangeListener { _, checkedId ->
             if (checkedId == R.id.rbNoPerecedero) {
-                etCaducidad.isEnabled = false
+                // No perecedero: se oculta la caducidad y el stock ocupa todo el ancho
+                mostrarCaducidad(false)
                 etCaducidad.setText("")
-                etStock.isEnabled = true
             } else {
-                etCaducidad.isEnabled = true
-                etStock.isEnabled = false
+                // Perecedero: aparece la caducidad junto al stock
+                mostrarCaducidad(true)
+            }
+            // El stock se puede escribir en ambos tipos
+        }
+    }
+
+    private fun mostrarCaducidad(visible: Boolean) {
+        val v = if (visible) View.VISIBLE else View.GONE
+        layoutCaducidad.visibility = v
+        divisorCaducidad.visibility = v
+
+        // La tarjeta blanca ocupa todo el ancho con caducidad (weight 2) y se encoge
+        // a la mitad sin ella (weight 1), alineada a la izquierda como el stock.
+        val lp = cardStockCaducidad.layoutParams as LinearLayout.LayoutParams
+        lp.weight = if (visible) 2f else 1f
+        cardStockCaducidad.layoutParams = lp
+    }
+
+    // ── Precios: lectura segura y ganancia en vivo ──────────────────────────
+    /** Lee un precio aceptando punto o coma decimal. Devuelve null si está vacío o es inválido. */
+    private fun leerPrecio(campo: EditText): Double? =
+        campo.text.toString().trim().replace(',', '.').toDoubleOrNull()
+
+    private fun configurarMargen() {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) = actualizarMargen()
+        }
+        etPrecioCompra.addTextChangedListener(watcher)
+        etPrecioVenta.addTextChangedListener(watcher)
+        actualizarMargen()
+    }
+
+    private fun actualizarMargen() {
+        val compra = leerPrecio(etPrecioCompra)
+        val venta = leerPrecio(etPrecioVenta)
+        when {
+            compra == null || venta == null || compra <= 0.0 || venta <= 0.0 -> {
+                tvMargen.text = "Ganancia: —"
+                tvMargen.setTextColor(Color.parseColor("#9E9E9E"))
+            }
+            compra >= venta -> {
+                tvMargen.text = "⚠ La compra debe ser menor que la venta"
+                tvMargen.setTextColor(Color.parseColor("#C62828"))
+            }
+            else -> {
+                val ganancia = venta - compra
+                val porcentaje = (ganancia / compra * 100).roundToInt()
+                tvMargen.text = String.format(Locale.US, "Ganancia: $%.2f  (+%d%%)", ganancia, porcentaje)
+                tvMargen.setTextColor(Color.parseColor("#2E7D32"))
             }
         }
     }
@@ -210,7 +268,7 @@ class InventarioActivity : AppCompatActivity() {
                 if (!isValidDate) {
                     etCaducidad.setTextColor(Color.RED)
                     if (formattedDate.length == 8) vibrarError()
-                } else etCaducidad.setTextColor(Color.WHITE)
+                } else etCaducidad.setTextColor(Color.parseColor("#2B1B14"))
                 isUpdating = false
             }
         })
@@ -285,10 +343,10 @@ class InventarioActivity : AppCompatActivity() {
         val nombre = actvNombre.text.toString().trim()
         if (nombre.isEmpty()) { actvNombre.error = "Nombre requerido"; return }
 
-        val precioV = etPrecioVenta.text.toString().toDoubleOrNull() ?: 0.0
+        val precioV = leerPrecio(etPrecioVenta) ?: 0.0
         if (precioV <= 0) { etPrecioVenta.error = "Precio inválido"; return }
 
-        val precioC = etPrecioCompra.text.toString().toDoubleOrNull() ?: 0.0
+        val precioC = leerPrecio(etPrecioCompra) ?: 0.0
         if (precioC <= 0) { etPrecioCompra.error = "Precio de compra requerido"; return }
 
         if (precioC >= precioV) {

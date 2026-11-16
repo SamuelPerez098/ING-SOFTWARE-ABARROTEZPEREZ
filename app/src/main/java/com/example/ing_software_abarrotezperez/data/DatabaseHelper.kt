@@ -243,23 +243,33 @@ class DatabaseHelper(context: Context) :
         }
 
         if (producto.fechaCaducidad != null) {
-            val cursorLote = db.rawQuery(
-                "SELECT id_lote FROM lote WHERE id_producto = ? AND fecha_caducidad = ?",
-                arrayOf(finalId.toString(), producto.fechaCaducidad)
-            )
-            if (cursorLote.moveToFirst()) {
-                val idLote = cursorLote.getInt(0)
-                db.execSQL("UPDATE lote SET cantidad = cantidad + 1 WHERE id_lote = ?", arrayOf(idLote))
-            } else {
-                val cvLote = ContentValues().apply {
-                    put("id_producto", finalId)
-                    put("fecha_caducidad", producto.fechaCaducidad)
-                    put("cantidad", 1)
+            // Unidades que entran con este guardado = stock capturado - stock que ya había.
+            // Antes siempre sumaba 1 al lote; ahora respeta el stock que se escribe en el formulario
+            // y, al solo editar precios (stock sin cambios), no agrega nada al lote.
+            val unidadesNuevas = producto.stock - (existing?.stock ?: 0)
+            if (unidadesNuevas > 0) {
+                val cursorLote = db.rawQuery(
+                    "SELECT id_lote FROM lote WHERE id_producto = ? AND fecha_caducidad = ?",
+                    arrayOf(finalId.toString(), producto.fechaCaducidad)
+                )
+                if (cursorLote.moveToFirst()) {
+                    val idLote = cursorLote.getInt(0)
+                    db.execSQL(
+                        "UPDATE lote SET cantidad = cantidad + ? WHERE id_lote = ?",
+                        arrayOf(unidadesNuevas, idLote)
+                    )
+                } else {
+                    val cvLote = ContentValues().apply {
+                        put("id_producto", finalId)
+                        put("fecha_caducidad", producto.fechaCaducidad)
+                        put("cantidad", unidadesNuevas)
+                    }
+                    db.insert(TABLE_LOTE, null, cvLote)
                 }
-                db.insert(TABLE_LOTE, null, cvLote)
+                cursorLote.close()
             }
-            cursorLote.close()
         }
+
         return finalId
     }
 

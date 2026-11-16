@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón de opción circular (Perecedero / No perecedero).
+     Sin marcar: aro naranja. Marcado: aro naranja con punto relleno. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_checked="true">
+        <layer-list>
+            <item>
+                <shape android:shape="oval">
+                    <size android:width="24dp" android:height="24dp" />
+                    <stroke android:width="2dp" android:color="#C45B20" />
+                </shape>
+            </item>
+            <item
+                android:bottom="6dp"
+                android:left="6dp"
+                android:right="6dp"
+                android:top="6dp">
+                <shape android:shape="oval">
+                    <solid android:color="#C45B20" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <item>
+        <shape android:shape="oval">
+            <size android:width="24dp" android:height="24dp" />
+            <stroke android:width="2dp" android:color="#C45B20" />
+        </shape>
+    </item>
+</selector>

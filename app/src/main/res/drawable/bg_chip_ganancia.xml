@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo suave de la línea de ganancia -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#F7F0EB" />
+    <corners android:radius="12dp" />
+</shape>
