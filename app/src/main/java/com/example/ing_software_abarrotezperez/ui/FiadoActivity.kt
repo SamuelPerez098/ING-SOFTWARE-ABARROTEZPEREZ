@@ -36,12 +36,21 @@ class FiadoActivity : AppCompatActivity() {
         val btnNuevoCliente = findViewById<Button>(R.id.btnNuevoCliente)
         val tvVacio         = findViewById<TextView>(R.id.tvVacio)
 
-        adapter = ClienteAdapter(emptyList(), emptyMap()) { cliente ->
-            val intent = Intent(this, DetalleFiadoActivity::class.java)
-            intent.putExtra("id_cliente", cliente.idCliente)
-            intent.putExtra("nombre_cliente", cliente.nombre)
-            startActivity(intent)
-        }
+        // Inicializamos el Adapter con los eventos de Ver y Editar
+        adapter = ClienteAdapter(
+            emptyList(),
+            emptyMap(),
+            onVerClick = { cliente ->
+                val intent = Intent(this, DetalleFiadoActivity::class.java)
+                intent.putExtra("id_cliente", cliente.idCliente)
+                intent.putExtra("nombre_cliente", cliente.nombre)
+                startActivity(intent)
+            },
+            onEditarClick = { cliente ->
+                mostrarDialogoEditarCliente(cliente, rvClientes, tvVacio)
+            }
+        )
+
         rvClientes.layoutManager = LinearLayoutManager(this)
         rvClientes.adapter = adapter
 
@@ -97,22 +106,22 @@ class FiadoActivity : AppCompatActivity() {
     //  VALIDACIONES HELPER
     // ─────────────────────────────────────────────
 
-    // Quita acentos y convierte a minúsculas para comparar nombres
     private fun normalizarNombre(nombre: String): String {
         val sinAcentos = Normalizer.normalize(nombre, Normalizer.Form.NFD)
             .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
         return sinAcentos.lowercase().trim()
     }
 
-    // Verifica si el nombre ya existe ignorando mayúsculas, minúsculas y acentos
     private fun nombreYaExiste(nombre: String): Boolean {
         val nombreNorm = normalizarNombre(nombre)
         return todosLosClientes.any { normalizarNombre(it.nombre) == nombreNorm }
     }
-    //Verifica que solo acepte letras en el nombre de el deudor
+
     private fun nombreTieneLetras(nombre: String): Boolean {
         return nombre.all { it.isLetter() || it.isWhitespace() }
     }
+
+
 
     // ─────────────────────────────────────────────
     //  DIÁLOGO NUEVO CLIENTE
@@ -121,6 +130,7 @@ class FiadoActivity : AppCompatActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_cliente, null)
 
         val etNombre    = dialogView.findViewById<TextInputEditText>(R.id.etNombreCliente)
+        val etTelefono  = dialogView.findViewById<TextInputEditText>(R.id.etTelefonoCliente) // <- YA RECUPERAMOS EL TELÉFONO
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
 
@@ -133,32 +143,88 @@ class FiadoActivity : AppCompatActivity() {
 
         btnGuardar.setOnClickListener {
             val nombre = etNombre.text.toString().trim()
+            val telefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL TEXTO
 
-            // Validación 1: campo vacío
             if (nombre.isEmpty()) {
                 etNombre.error = "El nombre es obligatorio"
                 return@setOnClickListener
             }
-
-            // Validación 2: solo números o sin letras
             if (!nombreTieneLetras(nombre)) {
                 etNombre.error = "El nombre debe contener letras"
                 return@setOnClickListener
             }
-
-            // Validación 3: nombre duplicado (ignora mayúsculas, minúsculas y acentos)
             if (nombreYaExiste(nombre)) {
                 etNombre.error = "Ya existe un cliente con ese nombre"
                 return@setOnClickListener
             }
 
-            val resultado = db.registrarCliente(nombre)
+            // ASUMIENDO QUE TU FUNCIÓN SE LLAMA ASÍ (si se llama registrarCliente, cámbialo abajo)
+            val resultado = db.registrarClienteConTelefono(nombre, telefono)
+
             if (resultado != -1L) {
                 Toast.makeText(this, "Cliente '$nombre' registrado ✅", Toast.LENGTH_SHORT).show()
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
                 etNombre.error = "Error al guardar, intenta de nuevo"
+            }
+        }
+        dialog.show()
+    }
+
+    // ─────────────────────────────────────────────
+    //  DIÁLOGO EDITAR CLIENTE
+    // ─────────────────────────────────────────────
+    private fun mostrarDialogoEditarCliente(cliente: DatabaseHelper.Cliente, rvClientes: RecyclerView, tvVacio: TextView) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_nuevo_cliente, null)
+
+        val tvTitulo    = dialogView.findViewById<TextView>(R.id.tvTituloNuevoCliente)
+        val etNombre    = dialogView.findViewById<TextInputEditText>(R.id.etNombreCliente)
+        val etTelefono  = dialogView.findViewById<TextInputEditText>(R.id.etTelefonoCliente)
+        val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
+        val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
+
+        if (tvTitulo != null) tvTitulo.text = "Editar Cliente"
+
+        // ¡LÍNEA DESCOMENTADA! Ahora sí cargará el teléfono que ya tiene el cliente
+        etNombre.setText(cliente.nombre)
+        etTelefono?.setText(cliente.telefono)
+
+        btnGuardar.text = "Actualizar"
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        btnCancelar.setOnClickListener { dialog.dismiss() }
+
+        btnGuardar.setOnClickListener {
+            val nuevoNombre = etNombre.text.toString().trim()
+            val nuevoTelefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL NUEVO TELÉFONO
+
+            if (nuevoNombre.isEmpty()) {
+                etNombre.error = "El nombre es obligatorio"
+                return@setOnClickListener
+            }
+            if (!nombreTieneLetras(nuevoNombre)) {
+                etNombre.error = "El nombre debe contener letras"
+                return@setOnClickListener
+            }
+
+            if (normalizarNombre(nuevoNombre) != normalizarNombre(cliente.nombre) && nombreYaExiste(nuevoNombre)) {
+                etNombre.error = "Ya existe otro cliente con ese nombre"
+                return@setOnClickListener
+            }
+
+            // GUARDAMOS AMBOS DATOS
+            val resultado = db.actualizarCliente(cliente.idCliente, nuevoNombre, nuevoTelefono)
+            if (resultado > 0) {
+                Toast.makeText(this, "Cliente actualizado ✅", Toast.LENGTH_SHORT).show()
+                cargarClientes(rvClientes, tvVacio)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show()
             }
         }
         dialog.show()

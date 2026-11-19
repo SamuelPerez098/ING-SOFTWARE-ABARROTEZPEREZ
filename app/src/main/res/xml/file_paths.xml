@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths>
-    <files-path name="mis_fotos" path="." />
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <files-path name="mis_archivos" path="." />
+    <cache-path name="mi_cache" path="." />
 </paths>
