@@ -14,7 +14,7 @@ class DatabaseHelper(context: Context) :
     companion object {
         const val DATABASE_NAME = "tienda.db"
         // CAMBIO: Se aumenta la versión para que se vuelva a crear la BD con la nueva columna
-        const val DATABASE_VERSION = 3
+        const val DATABASE_VERSION = 4
 
         // --- Tablas ---
         const val TABLE_PRODUCTO       = "producto"
@@ -37,7 +37,8 @@ class DatabaseHelper(context: Context) :
         db.execSQL("""
             CREATE TABLE cliente (
                 id_cliente  INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre      TEXT NOT NULL
+                nombre      TEXT NOT NULL,
+                telefono    TEXT
             )
         """.trimIndent())
 
@@ -543,7 +544,8 @@ class DatabaseHelper(context: Context) :
 
     data class Cliente(
         val idCliente: Int = 0,
-        val nombre: String = ""
+        val nombre: String = "",
+        val telefono: String = ""
     )
 
     data class Fiado(
@@ -565,6 +567,7 @@ class DatabaseHelper(context: Context) :
         return writableDatabase.insert(TABLE_CLIENTE, null, cv)
     }
 
+
     fun getAllClientes(): List<Cliente> {
         val lista = mutableListOf<Cliente>()
         val cursor = readableDatabase.query(
@@ -574,11 +577,22 @@ class DatabaseHelper(context: Context) :
             while (it.moveToNext()) {
                 lista.add(Cliente(
                     idCliente = it.getInt(it.getColumnIndexOrThrow("id_cliente")),
-                    nombre    = it.getString(it.getColumnIndexOrThrow("nombre"))
+                    nombre    = it.getString(it.getColumnIndexOrThrow("nombre")),
+                    // Esta es la línea que faltaba para leer el teléfono
+                    telefono  = it.getString(it.getColumnIndexOrThrow("telefono")) ?: ""
                 ))
             }
         }
         return lista
+    }
+
+    fun actualizarCliente(idCliente: Int, nuevoNombre: String, nuevoTelefono: String): Int {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("nombre", nuevoNombre)
+            put("telefono", nuevoTelefono)
+        }
+        return db.update(TABLE_CLIENTE, values, "id_cliente = ?", arrayOf(idCliente.toString()))
     }
 
     fun getFiadosActivosPorCliente(idCliente: Int): List<Fiado> {
@@ -793,6 +807,31 @@ class DatabaseHelper(context: Context) :
             }
         }
         return mapaGanancias
+    }
+
+    // Nueva funcion para el ticket (registrar al cliente)
+    fun registrarClienteConTelefono(nombre: String, telefono: String): Long {
+        val db = writableDatabase
+        val cv = ContentValues().apply {
+            put("nombre", nombre)
+            put("telefono", telefono)
+        }
+        return db.insert(TABLE_CLIENTE, null, cv)
+    }
+
+    // Parte dos (buscar al cliente)
+    fun getClientePorTelefono(telefono: String): Cliente? {
+        val db = readableDatabase
+        val cursor = db.query(TABLE_CLIENTE, null, "telefono = ?", arrayOf(telefono), null, null, null)
+        return cursor.use {
+            if (it.moveToFirst()) {
+                Cliente(
+                    idCliente = it.getInt(it.getColumnIndexOrThrow("id_cliente")),
+                    nombre = it.getString(it.getColumnIndexOrThrow("nombre")),
+                    telefono = it.getString(it.getColumnIndexOrThrow("telefono"))
+                )
+            } else null
+        }
     }
 
     fun insertar300ProductosDePrueba() {
