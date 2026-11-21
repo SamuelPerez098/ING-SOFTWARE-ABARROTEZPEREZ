@@ -2,14 +2,22 @@ package com.example.ing_software_abarrotezperez.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.Dialog
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -40,6 +48,9 @@ class ReportesActivity : AppCompatActivity() {
     private lateinit var rvCaducidad: RecyclerView
     private lateinit var lineChart: LineChart
 
+    // Base lista para notificaciones importantes (no muestra nada actualmente)
+    private val notificacionesImportantes = mutableListOf<String>()
+
     // Esta variable guardará la fecha que estamos consultando (Por defecto: Hoy)
     private var fechaFiltro: String = ""
 
@@ -57,6 +68,7 @@ class ReportesActivity : AppCompatActivity() {
 
         val btnSeleccionarDia = findViewById<Button>(R.id.btnSeleccionarDia)
         val btnRegresar = findViewById<ImageView>(R.id.btnRegresarReportes)
+        val btnCampana = findViewById<ImageView>(R.id.btnCampanaReportes)
 
         rvCaducidad.layoutManager = LinearLayoutManager(this)
 
@@ -70,6 +82,7 @@ class ReportesActivity : AppCompatActivity() {
             mostrarSelectorDeFecha()
         }
 
+        configurarCampanaMenu(btnCampana)
         configurarGrafico()
         cargarDatosDeReportes()
     }
@@ -77,6 +90,84 @@ class ReportesActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         cargarDatosDeReportes()
+    }
+
+    private fun configurarCampanaMenu(btnCampana: ImageView) {
+        val esModoOscuro = (resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        btnCampana.setImageResource(
+            if (esModoOscuro) R.drawable.campana_oscura else R.drawable.campana_clara
+        )
+
+        btnCampana.setOnClickListener {
+            val dialog = Dialog(this)
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+            val contenedor = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                setBackgroundColor(Color.WHITE)
+                setPadding(48, 48, 48, 36)
+            }
+
+            val tvTitulo = TextView(this).apply {
+                text = "Notificaciones"
+                textSize = 22f
+                setTextColor(Color.BLACK)
+                setTypeface(typeface, Typeface.BOLD)
+                setPadding(0, 0, 0, 24)
+            }
+
+            val scrollNotificaciones = ScrollView(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                )
+            }
+
+            val tvContenido = TextView(this).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                text = if (notificacionesImportantes.isEmpty()) ""
+                else notificacionesImportantes.joinToString("\n\n")
+                textSize = 16f
+                setTextColor(Color.BLACK)
+            }
+            scrollNotificaciones.addView(tvContenido)
+
+            val btnCerrar = Button(this).apply {
+                text = "CERRAR"
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    gravity = Gravity.END
+                    topMargin = 16
+                }
+                setOnClickListener { dialog.dismiss() }
+            }
+
+            contenedor.addView(tvTitulo)
+            contenedor.addView(scrollNotificaciones)
+            contenedor.addView(btnCerrar)
+
+            dialog.setContentView(contenedor)
+            dialog.window?.apply {
+                setBackgroundDrawable(ColorDrawable(Color.WHITE))
+                setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+            dialog.show()
+        }
     }
 
     private fun mostrarSelectorDeFecha() {
