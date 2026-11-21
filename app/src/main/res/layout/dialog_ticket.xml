@@ -1,92 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="16dp"
-    android:background="?android:attr/colorBackground">
+    android:background="#FAFAFA">
 
-    <!-- Nombre de la tienda -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="ABARROTES PEREZ"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#00B259" />
-
-    <!-- Fecha y Hora -->
-    <TextView
-        android:id="@+id/tvTicketFechaHora"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="00/00/0000 00:00:00"
-        android:textSize="14sp"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="12dp"/>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorOnSurfaceVariant"
-        android:layout_marginBottom="8dp"/>
-
-    <!-- Lista de productos -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="200dp">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/llTicketProductos"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical">
+
+            <!-- Encabezado del Ticket -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="================================\n        ABARROTES PÉREZ\n================================"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"/>
+
+            <TextView
+                android:id="@+id/tvTicketFechaHora"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="center"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Cabeceras de columnas -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="--------------------------------\nCANT| DESCRIPCIÓN  | P.U. | IMP\n--------------------------------"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"/>
+
+            <!-- Contenedor dinámico de productos -->
+            <LinearLayout
+                android:id="@+id/llTicketProductos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="--------------------------------"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"/>
+
+            <!-- Totales -->
+            <TextView
+                android:id="@+id/tvTicketTotal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewEnd"
+                android:typeface="monospace"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#000000"/>
+
+            <TextView
+                android:id="@+id/tvTicketRecibido"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewEnd"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"/>
+
+            <TextView
+                android:id="@+id/tvTicketCambio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAlignment="viewEnd"
+                android:typeface="monospace"
+                android:textSize="12sp"
+                android:textColor="#000000"
+                android:layout_marginBottom="16dp"/>
+
+        </LinearLayout>
     </ScrollView>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?attr/colorOnSurfaceVariant"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"/>
 
-    <!-- Totales -->
-    <TextView
-        android:id="@+id/tvTicketTotal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="TOTAL: $0.00"
-        android:textSize="16sp"
-        android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tvTicketRecibido"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="RECIBIDO: $0.00"
-        android:textSize="16sp"
-        android:layout_marginTop="4dp"/>
+    <!-- NUEVO: Selector de cliente para WhatsApp -->
+<TextView
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:layout_marginTop="8dp"
+android:text="Selecciona un cliente para enviar ticket:"
+android:textColor="#333333"
+android:textSize="14sp"
+android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/tvTicketCambio"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="CAMBIO: $0.00"
-        android:textSize="18sp"
-        android:textColor="#00B259"
-        android:textStyle="bold"
-        android:layout_marginTop="8dp"/>
+<Spinner
+android:id="@+id/spinnerClientesTicket"
+android:layout_width="match_parent"
+android:layout_height="48dp"
+android:layout_marginBottom="8dp"
+android:background="@android:drawable/btn_dropdown" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnGenerarPdfWhatsApp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="ENVIAR POR WHATSAPP"
-        android:textSize="14sp"
-        android:textColor="#FFFFFF"/>
-
+    <!-- Botón de WhatsApp que ya tenías -->
+<com.google.android.material.button.MaterialButton
+android:id="@+id/btnGenerarPdfWhatsApp"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="ENVIAR POR WHATSAPP"
+android:textColor="#FFFFFF"
+app:backgroundTint="#25D366" />
 </LinearLayout>

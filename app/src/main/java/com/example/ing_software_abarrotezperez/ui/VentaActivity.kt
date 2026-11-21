@@ -297,18 +297,17 @@ class VentaActivity : AppCompatActivity() {
     // ─────────────────────────────────────────────────────────────────────────
     private fun confirmarVenta() {
         val total = itemsVenta.sumOf { it.subtotal }
-        val recibidoStr = etRecibido.text.toString().trim()
-        val recibido = if (recibidoStr.isEmpty()) total else recibidoStr.toDoubleOrNull()
+        val recibidoStr = etRecibido.text?.toString()?.trim() ?: ""
 
-        if (recibido == null) {
-            Toast.makeText(this, "Ingresa un monto válido", Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (recibido < total) {
+        val recibido = if (recibidoStr.isEmpty()) 0.0 else (recibidoStr.toDoubleOrNull() ?: 0.0)
+
+        if (recibidoStr.isNotEmpty() && recibido < total) {
             Toast.makeText(this, "El monto recibido es menor al TOTAL", Toast.LENGTH_SHORT).show()
             return
         }
-        val cambio = recibido - total
+
+        val cambio = if (recibido >= total) recibido - total else 0.0
+        val mensajeTicketListo = construirTextoTicket(total, recibido, cambio)
 
         val ticketView = layoutInflater.inflate(R.layout.dialog_ticket, null)
         val tvFechaHora      = ticketView.findViewById<TextView>(R.id.tvTicketFechaHora)
@@ -316,33 +315,88 @@ class VentaActivity : AppCompatActivity() {
         val tvTicketTotal    = ticketView.findViewById<TextView>(R.id.tvTicketTotal)
         val tvTicketRecibido = ticketView.findViewById<TextView>(R.id.tvTicketRecibido)
         val tvTicketCambio   = ticketView.findViewById<TextView>(R.id.tvTicketCambio)
-        val btnGenerarPdfWhatsApp =
-            ticketView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerarPdfWhatsApp)
+        val btnWhatsApp      = ticketView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerarPdfWhatsApp)
+        val spinnerClientes  = ticketView.findViewById<Spinner>(R.id.spinnerClientesTicket)
 
-        val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault())
-        tvFechaHora.text = sdf.format(Date())
+        val sdf = SimpleDateFormat("dd/MM/yyyy   HH:mm", Locale.getDefault())
+        tvFechaHora.text = "Fecha: ${sdf.format(Date())}"
 
         llProductos.removeAllViews()
         for (item in itemsVenta) {
             val tv = TextView(this)
-            tv.text = "${item.cantidad}x ${item.producto.nombre}\n$${"%.2f".format(item.subtotal)}"
-            tv.textSize = 14f
-            tv.setPadding(0, 8, 0, 8)
+            val cant = item.cantidad.toString().padStart(3)
+            val desc = (item.producto?.nombre ?: "Producto").padEnd(12).take(12)
+            val precio = String.format(Locale.US, "%.2f", item.producto?.precioVenta ?: 0.0).padStart(6)
+            val importe = String.format(Locale.US, "%.2f", item.subtotal).padStart(6)
+
+            tv.text = "$cant| $desc |$precio|$importe"
+            tv.typeface = android.graphics.Typeface.MONOSPACE
+            tv.textSize = 12f
+            tv.setTextColor(android.graphics.Color.BLACK)
             llProductos.addView(tv)
         }
 
-        tvTicketTotal.text    = "TOTAL: $%.2f".format(total)
-        tvTicketRecibido.text = "RECIBIDO: $%.2f".format(recibido)
-        tvTicketCambio.text   = "CAMBIO: $%.2f".format(cambio)
+        tvTicketTotal.text    = "TOTAL: ${String.format(Locale.US, "$%.2f", total)}"
+        tvTicketRecibido.text = "RECIBIDO: ${String.format(Locale.US, "$%.2f", recibido)}"
+        tvTicketCambio.text   = "CAMBIO: ${String.format(Locale.US, "$%.2f", cambio)}"
 
-        btnGenerarPdfWhatsApp.setOnClickListener { solicitarNumeroParaPdf(ticketView) }
+        // --- CONFIGURACIÓN DEL SPINNER DE CLIENTES ---
+        // Cargamos los clientes con la función que modificaste en el paso anterior
+        val listaClientes = vm.db.getAllClientes()
 
-        AlertDialog.Builder(this)
+        // Creamos la lista visual para el Spinner. La primera opción será manual.
+        val opcionesSpinner = mutableListOf("Ingresar número manualmente...")
+        opcionesSpinner.addAll(listaClientes.map {
+            "${it.nombre} ${if(it.telefono.isNotEmpty()) "(Tel: ${it.telefono})" else "(Sin tel)"}"
+        })
+
+        val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesSpinner)
+        spinnerClientes.adapter = adapterSpinner
+
+        btnWhatsApp.isEnabled = false
+        btnWhatsApp.text = "COBRA PARA ENVIAR TICKET"
+
+        btnWhatsApp.setOnClickListener {
+            val posicion = spinnerClientes.selectedItemPosition
+            if (posicion == 0) {
+                // Eligieron "Ingresar número manualmente..." -> Abre el cuadro de texto
+                solicitarNumeroParaTicket(mensajeTicketListo)
+            } else {
+                // Eligieron un cliente de la lista. Restamos 1 por la opción manual inicial.
+                val clienteSeleccionado = listaClientes[posicion - 1]
+                if (clienteSeleccionado.telefono.isNotEmpty()) {
+                    // Envia directo porque ya tiene teléfono guardado
+                    enviarTicketPorWhatsAppTexto(clienteSeleccionado.telefono, mensajeTicketListo)
+                } else {
+                    Toast.makeText(this, "Este cliente no tiene teléfono. Ingresa uno.", Toast.LENGTH_SHORT).show()
+                    solicitarNumeroParaTicket(mensajeTicketListo)
+                }
+            }
+        }
+
+        val dialog = AlertDialog.Builder(this)
             .setView(ticketView)
-            .setPositiveButton("Confirmar") { _, _ -> ejecutarVenta() }
+            .setPositiveButton("Confirmar", null)
             .setNeutralButton("Fiado") { _, _ -> mostrarDialogoFiado() }
             .setNegativeButton("Cancelar", null)
-            .show()
+            .create()
+
+        dialog.show()
+
+        val btnConfirmar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        val btnFiado     = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+        val btnCancelar  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+
+        btnConfirmar.setOnClickListener {
+            ejecutarVenta()
+
+            btnWhatsApp.isEnabled = true
+            btnWhatsApp.text = "ENVIAR POR WHATSAPP"
+
+            btnConfirmar.isEnabled = false
+            btnFiado.visibility = View.GONE
+            btnCancelar.text = "Cerrar"
+        }
     }
 
     private fun ejecutarVenta() {
@@ -359,9 +413,42 @@ class VentaActivity : AppCompatActivity() {
     }
 
     private fun mostrarDialogoFiado() {
+        val db = vm.db.readableDatabase
+        val cursor = db.rawQuery("SELECT nombre FROM cliente ORDER BY nombre ASC", null)
+        val clientes = mutableListOf<String>()
+
+        while (cursor.moveToNext()) {
+            clientes.add(cursor.getString(0))
+        }
+        cursor.close()
+
+        // Si aún no hay clientes en la base de datos, abrimos directamente la ventana para crear uno
+        if (clientes.isEmpty()) {
+            mostrarDialogoNuevoCliente()
+            return
+        }
+
+        val arregloClientes = clientes.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Seleccionar Cliente (Fiado)")
+            .setItems(arregloClientes) { _, which ->
+                // Si el usuario selecciona un cliente de la lista, registramos el fiado
+                val nombreSeleccionado = arregloClientes[which]
+                registrarFiado(nombreSeleccionado)
+            }
+            .setPositiveButton("Nuevo Cliente") { _, _ ->
+                // Botón extra por si el cliente al que se le fía no está en la lista
+                mostrarDialogoNuevoCliente()
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun mostrarDialogoNuevoCliente() {
         val input = EditText(this).apply { hint = "Nombre del cliente" }
         AlertDialog.Builder(this)
-            .setTitle("Venta a fiado")
+            .setTitle("Nuevo cliente a fiado")
             .setView(input)
             .setPositiveButton("Guardar") { _, _ ->
                 val nombre = input.text.toString().trim()
@@ -412,9 +499,14 @@ class VentaActivity : AppCompatActivity() {
     // ─────────────────────────────────────────────────────────────────────────
     //  PDF / WHATSAPP
     // ─────────────────────────────────────────────────────────────────────────
-    private fun solicitarNumeroParaPdf(ticketCapturado: View) {
+
+    // Prueba de si funciona con wasap
+
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    private fun solicitarNumeroParaTicket(mensajeTicket: String) {
         val campoTelefono = EditText(this).apply {
-            hint = "Ej. 521234567890"
+            hint = "Ej. 9511234567"
             inputType = android.text.InputType.TYPE_CLASS_PHONE
         }
         val contenedorDialogo = FrameLayout(this)
@@ -423,76 +515,111 @@ class VentaActivity : AppCompatActivity() {
         contenedorDialogo.addView(campoTelefono)
 
         AlertDialog.Builder(this)
-            .setTitle("Compartir Ticket en PDF")
-            .setMessage("Ingresa el número de WhatsApp destino:")
+            .setTitle("Enviar Ticket por WhatsApp")
+            .setMessage("Ingresa el número celular de 10 dígitos:")
             .setView(contenedorDialogo)
-            .setPositiveButton("Generar y Enviar") { _, _ ->
+            .setPositiveButton("Enviar") { _, _ ->
                 val telefonoIngresado = campoTelefono.text.toString().trim()
                 if (telefonoIngresado.isEmpty()) {
                     Toast.makeText(this, "Por favor ingresa un número", Toast.LENGTH_SHORT).show()
                 } else {
-                    val archivoPdfGenerado = convertirVistaAPdf(ticketCapturado)
-                    if (archivoPdfGenerado != null) {
-                        compartirPdfPorWhatsApp(archivoPdfGenerado, telefonoIngresado)
-                    } else {
-                        Toast.makeText(this, "Ocurrió un error al crear el PDF", Toast.LENGTH_SHORT).show()
-                    }
+                    enviarTicketPorWhatsAppTexto(telefonoIngresado, mensajeTicket)
                 }
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun convertirVistaAPdf(vistaTicket: View): File? {
-        return try {
-            val botonWhatsApp = vistaTicket.findViewById<View>(R.id.btnGenerarPdfWhatsApp)
-            val visibilidadOriginal = botonWhatsApp?.visibility
-            botonWhatsApp?.visibility = View.GONE
 
-            val mapaBitsTicket = Bitmap.createBitmap(vistaTicket.width, vistaTicket.height, Bitmap.Config.ARGB_8888)
-            val lienzo = Canvas(mapaBitsTicket)
-            vistaTicket.draw(lienzo)
 
-            botonWhatsApp?.visibility = visibilidadOriginal ?: View.VISIBLE
+    private fun construirTextoTicket(totalVenta: Double, recibidoVenta: Double, cambioVenta: Double): String {
+        val fechaHoraActual = SimpleDateFormat("dd/MM/yyyy   'Hora:' HH:mm", Locale.getDefault()).format(Date())
 
-            val documentoPdf = PdfDocument()
-            val infoPagina = PdfDocument.PageInfo.Builder(vistaTicket.width, vistaTicket.height, 1).create()
-            val paginaPdf = documentoPdf.startPage(infoPagina)
-            paginaPdf.canvas.drawBitmap(mapaBitsTicket, 0f, 0f, null)
-            documentoPdf.finishPage(paginaPdf)
+        val sbProductos = StringBuilder()
+        for (item in itemsVenta) {
+            val nombreSeguro = item.producto?.nombre ?: "Producto"
+            val desc = nombreSeguro.padEnd(20).take(20)
+            val precioSeguro = item.producto?.precioVenta ?: 0.0
+            val pu = String.format(Locale.US, "$%.2f", precioSeguro).padStart(6)
+            val imp = String.format(Locale.US, "$%.2f", item.subtotal).padStart(7)
+            sbProductos.append(" ${item.cantidad.toString().padStart(2)}    | $desc | $pu | $imp\n")
+        }
 
-            val archivoTemporalPdf = File(cacheDir, "Ticket_Abarrotes_Perez.pdf")
-            val flujoSalida = FileOutputStream(archivoTemporalPdf)
-            documentoPdf.writeTo(flujoSalida)
-            documentoPdf.close()
-            flujoSalida.close()
-            archivoTemporalPdf
+        val strTotal = String.format(Locale.US, "$%.2f", totalVenta)
+        val strRecibido = String.format(Locale.US, "$%.2f", recibidoVenta)
+        val strCambio = String.format(Locale.US, "$%.2f", cambioVenta)
+
+        return """
+==================================================
+                 ABARROTES PÉREZ
+==================================================
+Propietario: Saúl Pérez Martínez
+Mercado Venustiano Carranza, Local 23
+Colonia Miguel Alemán Valdéz
+Oaxaca de Juárez, Oax., C.P. 68120
+
+Fecha: $fechaHoraActual
+Folio de Venta: #VENTA
+Atendido por: Saúl Pérez
+
+--------------------------------------------------
+CANT. | DESCRIPCIÓN          | P.U.   | IMPORTE
+--------------------------------------------------
+$sbProductos--------------------------------------------------
+SUBTOTAL:                             $strTotal
+TOTAL A PAGAR:                        $strTotal
+
+==================================================
+               DETALLE DE PAGO
+==================================================
+MÉTODO DE PAGO: EFECTIVO
+
+Total Recibido:                       $strRecibido
+Cambio Entregado:                     $strCambio
+==================================================
+
+¡Gracias por su preferencia!
+Vuelva pronto a Abarrotes Pérez.
+==================================================
+""".trimIndent()
+    }
+
+
+    private fun enviarTicketPorWhatsAppTexto(telefono10Digitos: String, textoTicket: String) {
+        val telefonoLimpio = telefono10Digitos.replace(Regex("[^\\d]"), "")
+
+        if (telefonoLimpio.length != 10) {
+            Toast.makeText(this, "Ingresa un número celular válido de 10 dígitos", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val numeroConCodigo = "52$telefonoLimpio"
+            val textoCodificado = java.net.URLEncoder.encode(textoTicket, "UTF-8")
+            val uri = android.net.Uri.parse("https://api.whatsapp.com/send?phone=$numeroConCodigo&text=$textoCodificado")
+            val intent = Intent(Intent.ACTION_VIEW, uri)
+
+            try {
+                intent.setPackage("com.whatsapp")
+                startActivity(intent)
+            } catch (e1: android.content.ActivityNotFoundException) {
+                try {
+                    intent.setPackage("com.whatsapp.w4b")
+                    startActivity(intent)
+                } catch (e2: android.content.ActivityNotFoundException) {
+                    intent.setPackage(null)
+                    startActivity(intent)
+                }
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            Toast.makeText(this, "Error al abrir WhatsApp: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun compartirPdfPorWhatsApp(archivoPdf: File, numeroDestino: String) {
-        try {
-            val uriSegura: Uri = FileProvider.getUriForFile(
-                this,
-                "${packageName}.fileprovider_pdf",
-                archivoPdf
-            )
-            val intentCompartir = Intent(Intent.ACTION_SEND).apply {
-                type = "application/pdf"
-                putExtra(Intent.EXTRA_STREAM, uriSegura)
-                putExtra(Intent.EXTRA_TEXT, "Ticket de compra - Abarrotes Pérez")
-                setPackage("com.whatsapp")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            startActivity(intentCompartir)
-            Toast.makeText(this, "Selecciona el contacto $numeroDestino en WhatsApp", Toast.LENGTH_LONG).show()
-        } catch (e: Exception) {
-            Toast.makeText(this, "WhatsApp no está instalado o hubo un error", Toast.LENGTH_LONG).show()
-        }
-    }
+
+    //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
     // ─────────────────────────────────────────────────────────────────────────
     //  HID (dispatch a HidCapturador)
@@ -523,7 +650,8 @@ class VentaActivity : AppCompatActivity() {
     // ─────────────────────────────────────────────────────────────────────────
     //  Adapter
     // ─────────────────────────────────────────────────────────────────────────
-    inner class VentaAdapter(
+
+        inner class VentaAdapter(
         private val items: MutableList<DatabaseHelper.ItemVenta>,
         private val onChange: () -> Unit
     ) : RecyclerView.Adapter<VentaAdapter.VH>() {
