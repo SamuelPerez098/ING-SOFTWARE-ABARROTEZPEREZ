@@ -11,10 +11,14 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <!-- Lector por cable USB (adaptador OTG): opcional, la app funciona sin él -->
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
     <uses-permission android:name="android.permission.CAMERA" />
 
     <queries>
         <package android:name="com.google.android.gms" />
+        <!-- Para que el Intent SEND de PDF/WhatsApp encuentre la app -->
+        <package android:name="com.whatsapp" />
     </queries>
 
     <application
@@ -28,6 +32,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.INGSOFTWAREABARROTEZPEREZ" >
 
+        <!-- FileProvider para compartir el ticket PDF por WhatsApp -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider_pdf"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_archivos_pdf" />
+        </provider>
+
         <activity android:name=".ui.LoginActivity"
             android:exported="true">
             <intent-filter>
@@ -36,8 +51,14 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.InventarioActivity" />
-        <activity android:name=".ui.VentaActivity" />
+        <!-- configChanges: al conectar/desconectar el lector (Bluetooth o USB) Android cambia la
+             configuración del teclado. Sin esto la pantalla se recrea y se pierde la venta en curso. -->
+        <activity
+            android:name=".ui.InventarioActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation" />
+        <activity
+            android:name=".ui.VentaActivity"
+            android:configChanges="keyboard|keyboardHidden|navigation" />
         <activity android:name=".ui.ReportesActivity" />
         <activity android:name=".MainActivity" />
         <activity android:name=".ui.FiadoActivity" />
@@ -48,6 +69,12 @@
         <activity android:name=".ui.AlmacenamientoActivity" />
         <activity android:name=".ui.CompraActivity" />
         <activity android:name=".ui.ListaInventarioActivity" />
+
+        <!-- Escáner por cámara (pantalla completa, usada desde Inventario) -->
+        <activity
+            android:name=".scanner.CamaraScannerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -64,5 +91,4 @@
             android:value="@integer/google_play_services_version" />
 
     </application>
-
 </manifest>

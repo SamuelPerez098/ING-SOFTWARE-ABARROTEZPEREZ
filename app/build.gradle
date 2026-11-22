@@ -60,6 +60,9 @@ dependencies {
     // Código de barras
     implementation 'com.google.zxing:core:3.4.1'
 
+    // Escáner de código de barras con la cámara del teléfono
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
     // Gráficas
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 

@@ -21,7 +21,6 @@
             android:id="@+id/btnRegresarReportes"
             android:layout_width="32dp"
             android:layout_height="32dp"
-
             android:src="@drawable/reporte_logo"
             app:tint="#FFFFFF" />
 
@@ -36,18 +35,15 @@
             android:textSize="22sp"
             android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnSeleccionarDia"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:backgroundTint="#FFFFFF"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:text="DÍA"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            app:cornerRadius="18dp" />
+        <!-- Botón campanita (reemplaza al botón DÍA) -->
+        <ImageButton
+            android:id="@+id/btnCampanita"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Alertas de caducidad"
+            android:src="@drawable/ic_bell"
+            app:tint="#FFFFFF" />
     </LinearLayout>
 
     <ScrollView

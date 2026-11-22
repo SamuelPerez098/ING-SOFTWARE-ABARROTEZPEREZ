@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo circular blanco con efecto ripple. Se usa en el botón de limpiar (bote de basura),
+     para que sea un círculo perfecto como el botón de LISTA. -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33C45B20">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFF" />
+        </shape>
+    </item>
+</ripple>

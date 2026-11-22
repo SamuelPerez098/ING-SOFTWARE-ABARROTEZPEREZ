@@ -13,10 +13,8 @@ class DatabaseHelper(context: Context) :
 
     companion object {
         const val DATABASE_NAME = "tienda.db"
-        // CAMBIO: Se aumenta la versión para que se vuelva a crear la BD con la nueva columna
-        const val DATABASE_VERSION = 3
+        const val DATABASE_VERSION = 4
 
-        // --- Tablas ---
         const val TABLE_PRODUCTO       = "producto"
         const val TABLE_LOTE           = "lote"
         const val TABLE_VENTA          = "venta"
@@ -37,11 +35,11 @@ class DatabaseHelper(context: Context) :
         db.execSQL("""
             CREATE TABLE cliente (
                 id_cliente  INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre      TEXT NOT NULL
+                nombre      TEXT NOT NULL,
+                telefono    TEXT
             )
         """.trimIndent())
 
-        // CAMBIO: Se agregó precio_compra a la tabla
         db.execSQL("""
             CREATE TABLE producto (
                 id_producto     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,9 +47,9 @@ class DatabaseHelper(context: Context) :
                 nombre          TEXT NOT NULL,
                 descripcion     TEXT,
                 precio_venta    REAL,
-                precio_compra   REAL NOT NULL DEFAULT 0.0, 
+                precio_compra   REAL NOT NULL DEFAULT 0.0,
                 stock           INTEGER DEFAULT 0,
-                fecha_caducidad TEXT 
+                fecha_caducidad TEXT
             )
         """.trimIndent())
 
@@ -158,7 +156,6 @@ class DatabaseHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Se eliminan las tablas existentes (el orden importa por las llaves foráneas)
         db.execSQL("DROP TABLE IF EXISTS pago_fiado")
         db.execSQL("DROP TABLE IF EXISTS fiado")
         db.execSQL("DROP TABLE IF EXISTS detalle_venta")
@@ -171,8 +168,6 @@ class DatabaseHelper(context: Context) :
         db.execSQL("DROP TABLE IF EXISTS merma")
         db.execSQL("DROP TABLE IF EXISTS producto")
         db.execSQL("DROP TABLE IF EXISTS cliente")
-
-        // Se vuelve a crear la base de datos con la nueva estructura
         onCreate(db)
     }
 
@@ -185,15 +180,14 @@ class DatabaseHelper(context: Context) :
     //  PRODUCTO
     // ─────────────────────────────────────────────
 
-    // CAMBIO: Se agregó precioCompra al Data Class
     data class Producto(
         val idProducto: Int = 0,
         val codigoBarras: String = "",
         val nombre: String = "",
         val descripcion: String = "",
-        var precioVenta: Double = 0.0, // <--- CAMBIO AQUÍ (de val a var)
+        var precioVenta: Double = 0.0,
         val precioCompra: Double = 0.0,
-        var stock: Int = 0,            // <--- CAMBIO AQUÍ (de val a var)
+        var stock: Int = 0,
         val fechaCaducidad: String? = null
     )
 
@@ -212,7 +206,7 @@ class DatabaseHelper(context: Context) :
                     nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
                     descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
                     precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
-                    precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
+                    precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")),
                     stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
                     fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
                 )
@@ -227,7 +221,7 @@ class DatabaseHelper(context: Context) :
             put("nombre",          producto.nombre)
             put("descripcion",     producto.descripcion)
             put("precio_venta",    producto.precioVenta)
-            put("precio_compra",   producto.precioCompra) // CAMBIO
+            put("precio_compra",   producto.precioCompra)
             put("stock",           producto.stock)
             put("fecha_caducidad", producto.fechaCaducidad)
         }
@@ -243,42 +237,40 @@ class DatabaseHelper(context: Context) :
         }
 
         if (producto.fechaCaducidad != null) {
-            val cursorLote = db.rawQuery(
-                "SELECT id_lote FROM lote WHERE id_producto = ? AND fecha_caducidad = ?",
-                arrayOf(finalId.toString(), producto.fechaCaducidad)
-            )
-            if (cursorLote.moveToFirst()) {
-                val idLote = cursorLote.getInt(0)
-                db.execSQL("UPDATE lote SET cantidad = cantidad + 1 WHERE id_lote = ?", arrayOf(idLote))
-            } else {
-                val cvLote = ContentValues().apply {
-                    put("id_producto", finalId)
-                    put("fecha_caducidad", producto.fechaCaducidad)
-                    put("cantidad", 1)
+            val unidadesNuevas = producto.stock - (existing?.stock ?: 0)
+            if (unidadesNuevas > 0) {
+                val cursorLote = db.rawQuery(
+                    "SELECT id_lote FROM lote WHERE id_producto = ? AND fecha_caducidad = ?",
+                    arrayOf(finalId.toString(), producto.fechaCaducidad)
+                )
+                if (cursorLote.moveToFirst()) {
+                    val idLote = cursorLote.getInt(0)
+                    db.execSQL(
+                        "UPDATE lote SET cantidad = cantidad + ? WHERE id_lote = ?",
+                        arrayOf(unidadesNuevas, idLote)
+                    )
+                } else {
+                    val cvLote = ContentValues().apply {
+                        put("id_producto", finalId)
+                        put("fecha_caducidad", producto.fechaCaducidad)
+                        put("cantidad", unidadesNuevas)
+                    }
+                    db.insert(TABLE_LOTE, null, cvLote)
                 }
-                db.insert(TABLE_LOTE, null, cvLote)
+                cursorLote.close()
             }
-            cursorLote.close()
         }
+
         return finalId
     }
 
     fun getAllProductos(): List<Producto> {
         val db = readableDatabase
         val lista = mutableListOf<Producto>()
-
-        // Ordena primero por largo del texto y luego por el texto.
-        // Esto hace que: "Prueba 2" (8 chars) vaya antes que "Prueba 10" (9 chars)
         val cursor = db.query(
-            TABLE_PRODUCTO,
-            null,
-            null,
-            null,
-            null,
-            null,
+            TABLE_PRODUCTO, null, null, null, null, null,
             "LENGTH(nombre) ASC, nombre ASC"
         )
-
         cursor.use {
             while (it.moveToNext()) {
                 lista.add(
@@ -298,17 +290,41 @@ class DatabaseHelper(context: Context) :
         return lista
     }
 
+    fun eliminarProducto(codigoBarras: String): Boolean {
+        val db = writableDatabase
+        val filasBorradas = db.delete(TABLE_PRODUCTO, "codigo_barras = ?", arrayOf(codigoBarras))
+        return filasBorradas > 0
+    }
+
+    // ─────────────────────────────────────────────
+    //  PROMOCIONES / ACTUALIZAR PRECIO
+    // ─────────────────────────────────────────────
+
+    /** Actualiza el precio de venta usando el ID interno del producto. */
+    fun actualizarPrecioProducto(idProducto: Int, nuevoPrecio: Double): Int {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("precio_venta", nuevoPrecio)
+        }
+        return db.update(TABLE_PRODUCTO, values, "id_producto = ?", arrayOf(idProducto.toString()))
+    }
+
+    /** Atajo: actualiza el precio por código de barras. */
+    fun actualizarPrecioVenta(codigoBarras: String, nuevoPrecio: Double): Boolean {
+        val db = writableDatabase
+        val values = ContentValues().apply { put("precio_venta", nuevoPrecio) }
+        return db.update(TABLE_PRODUCTO, values, "codigo_barras = ?", arrayOf(codigoBarras)) > 0
+    }
+
+    /** Alias de compatibilidad por si lo llamas desde otro lado. */
+    fun aplicarPromocion(codigo: String, nuevoPrecio: Double): Int {
+        val values = ContentValues().apply { put("precio_venta", nuevoPrecio) }
+        return writableDatabase.update(TABLE_PRODUCTO, values, "codigo_barras = ?", arrayOf(codigo))
+    }
+
     // ─────────────────────────────────────────────
     //  VENTAS Y FIFO
     // ─────────────────────────────────────────────
-
-
-    fun eliminarProducto(codigoBarras: String): Boolean {
-        val db = writableDatabase
-        // Borramos el registro de la tabla producto donde coincida el código
-        val filasBorradas = db.delete("producto", "codigo_barras = ?", arrayOf(codigoBarras))
-        return filasBorradas > 0 // Retorna true si se borró con éxito
-    }
 
     data class ItemVenta(val producto: Producto, var cantidad: Int = 1) {
         val subtotal get() = producto.precioVenta * cantidad
@@ -364,12 +380,14 @@ class DatabaseHelper(context: Context) :
     }
 
     // ─────────────────────────────────────────────
-    //  SPRINT 3: ENTRADAS (Fiado y Merma)
+    //  FIADO Y MERMA
     // ─────────────────────────────────────────────
 
     fun getSaldoPendienteCliente(idCliente: Int): Double {
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT SUM(saldo_pendiente) FROM fiado WHERE id_cliente = ?", arrayOf(idCliente.toString()))
+        val cursor = readableDatabase.rawQuery(
+            "SELECT SUM(saldo_pendiente) FROM fiado WHERE id_cliente = ?",
+            arrayOf(idCliente.toString())
+        )
         return cursor.use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
 
@@ -404,12 +422,10 @@ class DatabaseHelper(context: Context) :
     }
 
     // ─────────────────────────────────────────────
-    //  SPRINT 4: SALIDAS (Reportes de Negocio)
+    //  REPORTES
     // ─────────────────────────────────────────────
 
-    // CAMBIO: Ganancia del Día ahora resta el precio_compra nativo del producto, es mucho más eficiente
     fun getGananciaDelDia(): Double {
-        val db = readableDatabase
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val query = """
             SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad)
@@ -418,31 +434,71 @@ class DatabaseHelper(context: Context) :
             JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
             WHERE v.fecha LIKE ?
         """.trimIndent()
-        return db.rawQuery(query, arrayOf("$today%")).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+        return readableDatabase.rawQuery(query, arrayOf("$today%"))
+            .use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
 
     fun getVentaDelDia(): Double {
-        val db = readableDatabase
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
-        return db.rawQuery(query, arrayOf("$today%")).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+        return readableDatabase.rawQuery(query, arrayOf("$today%"))
+            .use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
 
+    fun getGananciaDelDia(fechaFiltro: String): Double {
+        val query = """
+            SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad)
+            FROM $TABLE_VENTA v
+            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+            WHERE v.fecha LIKE ?
+        """.trimIndent()
+        return readableDatabase.rawQuery(query, arrayOf("$fechaFiltro%"))
+            .use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun getVentaDelDia(fechaFiltro: String): Double {
+        val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
+        return readableDatabase.rawQuery(query, arrayOf("$fechaFiltro%"))
+            .use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+    }
+
+    fun getGananciasPorHoraDelDia(fechaFiltro: String): Map<Int, Float> {
+        val mapa = mutableMapOf<Int, Float>()
+        val query = """
+            SELECT CAST(strftime('%H', v.fecha) AS INTEGER) as hora,
+                   SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) as total_ganancia
+            FROM $TABLE_VENTA v
+            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
+            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
+            WHERE v.fecha LIKE ?
+            GROUP BY hora
+        """.trimIndent()
+        readableDatabase.rawQuery(query, arrayOf("$fechaFiltro%")).use { c ->
+            while (c.moveToNext()) {
+                mapa[c.getInt(c.getColumnIndexOrThrow("hora"))] =
+                    c.getFloat(c.getColumnIndexOrThrow("total_ganancia"))
+            }
+        }
+        return mapa
+    }
+
+    fun getGananciasPorHoraDelDia(): Map<Int, Float> {
+        val hoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return getGananciasPorHoraDelDia(hoy)
+    }
 
     fun getProductosPorCaducar(): List<Producto> {
-        val db = readableDatabase
         val lista = mutableListOf<Producto>()
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
         val query = """
-            SELECT * FROM $TABLE_PRODUCTO 
-            WHERE fecha_caducidad IS NOT NULL 
-              AND fecha_caducidad != '' 
-              AND fecha_caducidad >= ? 
+            SELECT * FROM $TABLE_PRODUCTO
+            WHERE fecha_caducidad IS NOT NULL
+              AND fecha_caducidad != ''
+              AND fecha_caducidad >= ?
             ORDER BY fecha_caducidad ASC
         """.trimIndent()
-
-        db.rawQuery(query, arrayOf(today)).use {
+        readableDatabase.rawQuery(query, arrayOf(today)).use {
             while (it.moveToNext()) {
                 lista.add(
                     Producto(
@@ -451,7 +507,7 @@ class DatabaseHelper(context: Context) :
                         nombre         = it.getString(it.getColumnIndexOrThrow("nombre")),
                         descripcion    = it.getString(it.getColumnIndexOrThrow("descripcion")) ?: "",
                         precioVenta    = it.getDouble(it.getColumnIndexOrThrow("precio_venta")),
-                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")), // CAMBIO
+                        precioCompra   = it.getDouble(it.getColumnIndexOrThrow("precio_compra")),
                         stock          = it.getInt(it.getColumnIndexOrThrow("stock")),
                         fechaCaducidad = it.getString(it.getColumnIndexOrThrow("fecha_caducidad"))
                     )
@@ -461,37 +517,35 @@ class DatabaseHelper(context: Context) :
         return lista
     }
 
-    // CAMBIO: Reporte general de ganancias simplificado con la misma lógica
     fun getReporteGanancias(): Double {
-        val db = readableDatabase
         val query = """
             SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad)
             FROM $TABLE_DETALLE_VENTA dv
             JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
         """.trimIndent()
-        return db.rawQuery(query, null).use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
+        return readableDatabase.rawQuery(query, null)
+            .use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
 
     fun getHistorialMovimientos(): List<String> {
-        val db = readableDatabase
         val historial = mutableListOf<String>()
         val query = """
-            SELECT 'VENTA' as t, fecha, total FROM venta 
-            UNION SELECT 'COMPRA' as t, fecha, total FROM compra 
+            SELECT 'VENTA' as t, fecha, total FROM venta
+            UNION SELECT 'COMPRA' as t, fecha, total FROM compra
             UNION SELECT 'MERMA' as t, fecha, cantidad FROM merma ORDER BY fecha DESC
         """.trimIndent()
-        db.rawQuery(query, null).use {
-            while (it.moveToNext()) historial.add("${it.getString(0)} | ${it.getString(1)} | $${it.getDouble(2)}")
+        readableDatabase.rawQuery(query, null).use {
+            while (it.moveToNext())
+                historial.add("${it.getString(0)} | ${it.getString(1)} | $${it.getDouble(2)}")
         }
         return historial
     }
 
-    // CAMBIO: Simplificada la comparativa de márgenes
     fun getComparativaMargen(): List<String> {
-        val db = readableDatabase
         val comparativa = mutableListOf<String>()
-        val query = "SELECT nombre, precio_venta, precio_compra FROM $TABLE_PRODUCTO"
-        db.rawQuery(query, null).use {
+        readableDatabase.rawQuery(
+            "SELECT nombre, precio_venta, precio_compra FROM $TABLE_PRODUCTO", null
+        ).use {
             while (it.moveToNext()) {
                 val margen = it.getDouble(1) - it.getDouble(2)
                 comparativa.add("${it.getString(0)} | Venta: $${it.getDouble(1)} | Margen: $${String.format("%.2f", margen)}")
@@ -523,7 +577,8 @@ class DatabaseHelper(context: Context) :
 
     fun getTotalDeudaPendiente(): Double {
         val cursor = readableDatabase.rawQuery(
-            "SELECT SUM(saldo_pendiente) FROM fiado WHERE saldo_pendiente > 0", null)
+            "SELECT SUM(saldo_pendiente) FROM fiado WHERE saldo_pendiente > 0", null
+        )
         return cursor.use { if (it.moveToFirst()) it.getDouble(0) else 0.0 }
     }
 
@@ -533,7 +588,8 @@ class DatabaseHelper(context: Context) :
 
     data class Cliente(
         val idCliente: Int = 0,
-        val nombre: String = ""
+        val nombre: String = "",
+        val telefono: String = ""
     )
 
     data class Fiado(
@@ -555,31 +611,61 @@ class DatabaseHelper(context: Context) :
         return writableDatabase.insert(TABLE_CLIENTE, null, cv)
     }
 
+    fun registrarClienteConTelefono(nombre: String, telefono: String): Long {
+        val cv = ContentValues().apply {
+            put("nombre", nombre)
+            put("telefono", telefono)
+        }
+        return writableDatabase.insert(TABLE_CLIENTE, null, cv)
+    }
+
     fun getAllClientes(): List<Cliente> {
         val lista = mutableListOf<Cliente>()
-        val cursor = readableDatabase.query(
+        readableDatabase.query(
             TABLE_CLIENTE, null, null, null, null, null, "nombre ASC"
-        )
-        cursor.use {
+        ).use {
             while (it.moveToNext()) {
                 lista.add(Cliente(
                     idCliente = it.getInt(it.getColumnIndexOrThrow("id_cliente")),
-                    nombre    = it.getString(it.getColumnIndexOrThrow("nombre"))
+                    nombre    = it.getString(it.getColumnIndexOrThrow("nombre")),
+                    telefono  = it.getString(it.getColumnIndexOrThrow("telefono")) ?: ""
                 ))
             }
         }
         return lista
     }
 
+    fun getClientePorTelefono(telefono: String): Cliente? {
+        val cursor = readableDatabase.query(
+            TABLE_CLIENTE, null, "telefono = ?", arrayOf(telefono), null, null, null
+        )
+        return cursor.use {
+            if (it.moveToFirst()) {
+                Cliente(
+                    idCliente = it.getInt(it.getColumnIndexOrThrow("id_cliente")),
+                    nombre    = it.getString(it.getColumnIndexOrThrow("nombre")),
+                    telefono  = it.getString(it.getColumnIndexOrThrow("telefono"))
+                )
+            } else null
+        }
+    }
+
+    fun actualizarCliente(idCliente: Int, nuevoNombre: String, nuevoTelefono: String): Int {
+        val values = ContentValues().apply {
+            put("nombre", nuevoNombre)
+            put("telefono", nuevoTelefono)
+        }
+        return writableDatabase.update(TABLE_CLIENTE, values, "id_cliente = ?", arrayOf(idCliente.toString()))
+    }
+
     fun getFiadosActivosPorCliente(idCliente: Int): List<Fiado> {
         val lista = mutableListOf<Fiado>()
-        val cursor = readableDatabase.query(
+        readableDatabase.query(
             TABLE_FIADO, null,
             "id_cliente = ? AND saldo_pendiente > 0",
             arrayOf(idCliente.toString()),
             null, null, null
-        )
-        cursor.use {
+        ).use {
             while (it.moveToNext()) {
                 lista.add(Fiado(
                     idFiado        = it.getInt(it.getColumnIndexOrThrow("id_fiado")),
@@ -598,8 +684,7 @@ class DatabaseHelper(context: Context) :
         return try {
             val fecha = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
             val cvVenta = ContentValues().apply {
-                put("fecha", fecha)
-                put("total", monto)
+                put("fecha", fecha); put("total", monto)
             }
             val idVenta = db.insert(TABLE_VENTA, null, cvVenta)
             val cvFiado = ContentValues().apply {
@@ -615,12 +700,10 @@ class DatabaseHelper(context: Context) :
 
     fun getPagosPorFiado(idFiado: Int): List<PagoFiado> {
         val lista = mutableListOf<PagoFiado>()
-        val cursor = readableDatabase.query(
-            TABLE_PAGO_FIADO, null,
-            "id_fiado = ?", arrayOf(idFiado.toString()),
+        readableDatabase.query(
+            TABLE_PAGO_FIADO, null, "id_fiado = ?", arrayOf(idFiado.toString()),
             null, null, "fecha_pago DESC"
-        )
-        cursor.use {
+        ).use {
             while (it.moveToNext()) {
                 lista.add(PagoFiado(
                     idPago    = it.getInt(it.getColumnIndexOrThrow("id_pago")),
@@ -632,6 +715,7 @@ class DatabaseHelper(context: Context) :
         }
         return lista
     }
+
     fun getClientesConDeuda(): List<Triple<Int, String, Double>> {
         val lista = mutableListOf<Triple<Int, String, Double>>()
         val query = """
@@ -650,17 +734,14 @@ class DatabaseHelper(context: Context) :
     }
 
     fun getTodosLosProductosConCaducidad(): List<Producto> {
-        val db = readableDatabase
         val lista = mutableListOf<Producto>()
-        // Trae todos los que tengan fecha de caducidad, ordenados de más viejos a más nuevos
         val query = """
-            SELECT * FROM $TABLE_PRODUCTO 
-            WHERE fecha_caducidad IS NOT NULL 
-              AND fecha_caducidad != '' 
+            SELECT * FROM $TABLE_PRODUCTO
+            WHERE fecha_caducidad IS NOT NULL
+              AND fecha_caducidad != ''
             ORDER BY fecha_caducidad ASC
         """.trimIndent()
-
-        db.rawQuery(query, null).use {
+        readableDatabase.rawQuery(query, null).use {
             while (it.moveToNext()) {
                 lista.add(
                     Producto(
@@ -679,144 +760,23 @@ class DatabaseHelper(context: Context) :
         return lista
     }
 
-    // 1. Ganancias por hora (actualizado para recibir fecha)
-    fun getGananciasPorHoraDelDia(fechaFiltro: String): Map<Int, Float> {
-        val db = readableDatabase
-        val mapaGanancias = mutableMapOf<Int, Float>()
-        val query = """
-            SELECT CAST(strftime('%H', v.fecha) AS INTEGER) as hora, 
-                   SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) as total_ganancia
-            FROM $TABLE_VENTA v
-            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
-            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
-            WHERE v.fecha LIKE ?
-            GROUP BY hora
-        """.trimIndent()
-
-        // Usamos la fecha seleccionada en lugar de "hoy"
-        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
-            while (cursor.moveToNext()) {
-                val hora = cursor.getInt(cursor.getColumnIndexOrThrow("hora"))
-                val ganancia = cursor.getFloat(cursor.getColumnIndexOrThrow("total_ganancia"))
-                mapaGanancias[hora] = ganancia
-            }
-        }
-        return mapaGanancias
-    }
-
-    // 2. Ganancia Total del Día (asegúrate que la consulta coincida con la tuya)
-    fun getGananciaDelDia(fechaFiltro: String): Double {
-        val db = readableDatabase
-        var ganancia = 0.0
-        val query = """
-            SELECT SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) 
-            FROM $TABLE_VENTA v
-            JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
-            JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
-            WHERE v.fecha LIKE ?
-        """.trimIndent()
-
-        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
-            if (cursor.moveToFirst()) { ganancia = cursor.getDouble(0) }
-        }
-        return ganancia
-    }
-
-    // 3. Venta Total del Día
-    fun getVentaDelDia(fechaFiltro: String): Double {
-        val db = readableDatabase
-        var venta = 0.0
-        val query = "SELECT SUM(total) FROM $TABLE_VENTA WHERE fecha LIKE ?"
-
-        db.rawQuery(query, arrayOf("$fechaFiltro%")).use { cursor ->
-            if (cursor.moveToFirst()) { venta = cursor.getDouble(0) }
-        }
-        return venta
-    }
-
-    fun aplicarPromocion(codigo: String, nuevoPrecio: Double): Int {
-        val db = writableDatabase
-        val values = ContentValues().apply {
-            put("precioVenta", nuevoPrecio)
-        }
-        return db.update("productos", values, "codigoBarras = ?", arrayOf(codigo))
-    }
-
-    fun actualizarPrecioVenta(codigoBarras: String, nuevoPrecio: Double): Boolean {
-        val db = this.writableDatabase
-        val values = android.content.ContentValues().apply {
-            put("precioVenta", nuevoPrecio)
-        }
-
-        // Actualiza la fila donde el código de barras coincida
-        val filasAfectadas = db.update("productos", values, "codigoBarras = ?", arrayOf(codigoBarras))
-        db.close()
-
-        return filasAfectadas > 0
-    }
-    fun getGananciasPorHoraDelDia(): Map<Int, Float> {
-        val db = readableDatabase
-        val mapaGanancias = mutableMapOf<Int, Float>()
-
-        // Obtenemos la fecha de hoy en formato yyyy-MM-dd para filtrar
-        val hoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-        // Consulta corregida:
-        // 1. Usa la constante TABLE_VENTA.
-        // 2. Hace JOIN con detalle y producto para calcular (Venta - Costo).
-        // 3. Filtra por el día actual usando LIKE.
-        val query = """
-        SELECT CAST(strftime('%H', v.fecha) AS INTEGER) as hora, 
-               SUM((dv.precio_unitario - p.precio_compra) * dv.cantidad) as total_ganancia
-        FROM $TABLE_VENTA v
-        JOIN $TABLE_DETALLE_VENTA dv ON v.id_venta = dv.id_venta
-        JOIN $TABLE_PRODUCTO p ON dv.id_producto = p.id_producto
-        WHERE v.fecha LIKE ?
-        GROUP BY hora
-    """.trimIndent()
-
-        db.rawQuery(query, arrayOf("$hoy%")).use { cursor ->
-            while (cursor.moveToNext()) {
-                val hora = cursor.getInt(0)
-                val total = cursor.getFloat(1)
-                mapaGanancias[hora] = total
-            }
-        }
-        return mapaGanancias
-    }
-
     fun insertar300ProductosDePrueba() {
         val db = writableDatabase
         db.beginTransaction()
         try {
             for (i in 1..300) {
-                val producto = Producto(
-                    codigoBarras = "PRUEBA-$i",
-                    nombre = "Prueba $i",
-                    descripcion = "Producto de carga inicial",
-                    precioVenta = 50.0,
-                    precioCompra = 30.0,
-                    stock = 100, // Stock inicial de prueba
-                    fechaCaducidad = null
-                )
-
-                // Insertamos directamente. Si el código ya existe por algún error,
-                // el 'IGNORE' evitará que truene o que resetee el stock.
                 val cv = ContentValues().apply {
-                    put("codigo_barras",   producto.codigoBarras)
-                    put("nombre",          producto.nombre)
-                    put("descripcion",     producto.descripcion)
-                    put("precio_venta",    producto.precioVenta)
-                    put("precio_compra",   producto.precioCompra)
-                    put("stock",           producto.stock)
-                    put("fecha_caducidad", producto.fechaCaducidad)
+                    put("codigo_barras",   "PRUEBA-$i")
+                    put("nombre",          "Prueba $i")
+                    put("descripcion",     "Producto de carga inicial")
+                    put("precio_venta",    50.0)
+                    put("precio_compra",   30.0)
+                    put("stock",           100)
+                    put("fecha_caducidad", null as String?)
                 }
-                db.insertWithOnConflict("producto", null, cv, SQLiteDatabase.CONFLICT_IGNORE)
+                db.insertWithOnConflict(TABLE_PRODUCTO, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
             }
             db.setTransactionSuccessful()
-        } finally {
-            db.endTransaction()
-        }
+        } finally { db.endTransaction() }
     }
-
 }

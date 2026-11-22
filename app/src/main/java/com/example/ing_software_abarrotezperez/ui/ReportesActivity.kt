@@ -1,29 +1,35 @@
 package com.example.ing_software_abarrotezperez.ui
 
 import android.app.AlertDialog
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
-import com.github.mikephil.charting.components.AxisBase
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -40,7 +46,7 @@ class ReportesActivity : AppCompatActivity() {
     private lateinit var rvCaducidad: RecyclerView
     private lateinit var lineChart: LineChart
 
-    // Esta variable guardará la fecha que estamos consultando (Por defecto: Hoy)
+    // Fecha actual (YYYY-MM-DD) para los reportes del día
     private var fechaFiltro: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,20 +61,17 @@ class ReportesActivity : AppCompatActivity() {
         rvCaducidad = findViewById(R.id.rvCaducidad)
         lineChart = findViewById(R.id.lineChartGanancias)
 
-        val btnSeleccionarDia = findViewById<Button>(R.id.btnSeleccionarDia)
+        val btnCampanita = findViewById<ImageButton>(R.id.btnCampanita)
         val btnRegresar = findViewById<ImageView>(R.id.btnRegresarReportes)
 
         rvCaducidad.layoutManager = LinearLayoutManager(this)
 
-        // Definir la fecha de hoy al iniciar (Formato: YYYY-MM-DD)
         fechaFiltro = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
         btnRegresar.setOnClickListener { finish() }
 
-        // Abrir el calendario al presionar el botón de DÍA
-        btnSeleccionarDia.setOnClickListener {
-            mostrarSelectorDeFecha()
-        }
+        // La campanita abre el diálogo de productos prioritarios
+        btnCampanita.setOnClickListener { mostrarProductosPrioritarios() }
 
         configurarGrafico()
         cargarDatosDeReportes()
@@ -79,39 +82,60 @@ class ReportesActivity : AppCompatActivity() {
         cargarDatosDeReportes()
     }
 
-    private fun mostrarSelectorDeFecha() {
-        val calendar = Calendar.getInstance()
+    // ======================================================================
+    // CAMPANITA: productos caducados o por caducar en <= 3 días
+    // ======================================================================
+    private fun mostrarProductosPrioritarios() {
+        val todos = dbHelper.getAllProductos()
+        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        val hoy = Date()
+        val limite = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 3) }.time
 
-        // Sincronizar el calendario con la fecha que ya estaba seleccionada
-        val partesFecha = fechaFiltro.split("-")
-        if (partesFecha.size == 3) {
-            calendar.set(Calendar.YEAR, partesFecha[0].toInt())
-            calendar.set(Calendar.MONTH, partesFecha[1].toInt() - 1)
-            calendar.set(Calendar.DAY_OF_MONTH, partesFecha[2].toInt())
+        val prioritarios = todos
+            .filter { prod ->
+                if (prod.fechaCaducidad.isNullOrEmpty()) return@filter false
+                try {
+                    val f = sdf.parse(prod.fechaCaducidad!!) ?: return@filter false
+                    // Caducados (before hoy) O dentro de los próximos 3 días
+                    f.before(limite)
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            .sortedBy { prod ->
+                try {
+                    sdf.parse(prod.fechaCaducidad!!)
+                } catch (e: Exception) {
+                    Date(Long.MAX_VALUE)
+                }
+            }
+            .toMutableList()
+
+        if (prioritarios.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("Sin alertas")
+                .setMessage("No hay productos caducados ni próximos a caducar en 3 días.")
+                .setPositiveButton("OK", null)
+                .show()
+            return
         }
 
-        val datePickerDialog = DatePickerDialog(
-            this,
-            { _, year, month, dayOfMonth ->
-                val mesFormat = String.format("%02d", month + 1)
-                val diaFormat = String.format("%02d", dayOfMonth)
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_productos_prioritarios, null)
+        val rv = dialogView.findViewById<RecyclerView>(R.id.rvProductosPrioritarios)
+        rv.layoutManager = LinearLayoutManager(this)
+        rv.adapter = CaducidadAdapter(prioritarios)
 
-                // Actualizar la variable de búsqueda
-                fechaFiltro = "$year-$mesFormat-$diaFormat"
-
-                // Cambiar el título de la pantalla
-                tvTituloReportes.text = "REPORTES ($diaFormat/$mesFormat)"
-
-                // Recargar toda la gráfica y los cuadros de ventas
-                cargarDatosDeReportes()
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePickerDialog.show()
+        AlertDialog.Builder(this)
+            .setTitle("⚠ Productos prioritarios")
+            .setView(dialogView)
+            .setPositiveButton("Cerrar", null)
+            .show()
     }
 
+    // ======================================================================
+    // Gráfica
+    // ======================================================================
     private fun configurarGrafico() {
         lineChart.description.isEnabled = false
         lineChart.setDrawGridBackground(false)
@@ -119,18 +143,11 @@ class ReportesActivity : AppCompatActivity() {
 
         val xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-
-        // 1. Definir los límites estrictos
         xAxis.axisMinimum = 7f
         xAxis.axisMaximum = 18f
-
-        // 2. Obligar a que salte de 1 en 1
         xAxis.granularity = 1f
         xAxis.isGranularityEnabled = true
-
-        // 3. LA CLAVE: Forzar exactamente 12 etiquetas (las 12 horas de 7 a 18)
         xAxis.setLabelCount(12, true)
-
         xAxis.setDrawGridLines(false)
         xAxis.valueFormatter = object : ValueFormatter() {
             override fun getAxisLabel(value: Float, axis: AxisBase?): String {
@@ -142,10 +159,12 @@ class ReportesActivity : AppCompatActivity() {
         val yAxisLeft = lineChart.axisLeft
         yAxisLeft.axisMinimum = 0f
         yAxisLeft.axisMaximum = 700f
-
         lineChart.axisRight.isEnabled = false
     }
 
+    // ======================================================================
+    // Carga de datos (resumen + lista + gráfico)
+    // ======================================================================
     private fun cargarDatosDeReportes() {
         val gananciaDia = dbHelper.getGananciaDelDia(fechaFiltro)
         tvGananciaDia.text = "$${String.format("%.2f", gananciaDia)}"
@@ -155,29 +174,23 @@ class ReportesActivity : AppCompatActivity() {
 
         cargarDatosGrafico()
 
-        // =========================================================================
-        // NUEVA LÓGICA DE ORDENAMIENTO DE CADUCIDADES
-        // =========================================================================
-
-        // 1. Obtenemos TODOS los productos y filtramos solo los que tienen fecha de caducidad
+        // Lista de caducidades
         val todosLosProductos = dbHelper.getAllProductos()
         val productosConCaducidad = todosLosProductos.filter { !it.fechaCaducidad.isNullOrEmpty() }
 
         val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
         val hoy = Date()
 
-        // 2. Los ordenamos cronológicamente (del pasado al futuro)
         val listaOrdenada = productosConCaducidad.sortedBy { producto ->
             try {
                 sdf.parse(producto.fechaCaducidad!!)
             } catch (e: Exception) {
-                Date(Long.MAX_VALUE) // Si alguna fecha está corrupta, la manda hasta el final
+                Date(Long.MAX_VALUE)
             }
         }
 
         val listaProcesada = mutableListOf<DatabaseHelper.Producto>()
 
-        // 3. Aplicamos la lógica de merma (Mandar a 0 el stock si ya caducó)
         for (prod in listaOrdenada) {
             var productoProcesado = prod
             try {
@@ -211,7 +224,6 @@ class ReportesActivity : AppCompatActivity() {
         dataSet.circleRadius = 5f
         dataSet.setDrawCircleHole(true)
         dataSet.valueTextSize = 10f
-
         dataSet.setDrawFilled(true)
         dataSet.fillColor = Color.parseColor("#803A5BA0")
 
@@ -220,17 +232,96 @@ class ReportesActivity : AppCompatActivity() {
         lineChart.invalidate()
     }
 
+    // ======================================================================
+    // Diálogo de detalle + promoción
+    // ======================================================================
+    private fun mostrarDetalleProducto(producto: DatabaseHelper.Producto) {
+        val dialogView = LayoutInflater.from(this)
+            .inflate(R.layout.dialog_detalle_producto, null)
+
+        val tvNombre = dialogView.findViewById<TextView>(R.id.tvNombreDetalle)
+        val tvStock = dialogView.findViewById<TextView>(R.id.tvStockDetalle)
+        val tvFecha = dialogView.findViewById<TextView>(R.id.tvFechaDetalle)
+        val tvPrecioOriginal = dialogView.findViewById<TextView>(R.id.tvPrecioOriginal)
+        val tvPrecioDescuento = dialogView.findViewById<TextView>(R.id.tvPrecioConDescuento)
+        val btnPromocionar = dialogView.findViewById<Button>(R.id.btnPromocionar)
+        val llPromocion = dialogView.findViewById<LinearLayout>(R.id.llPromocion)
+        val etPorcentaje = dialogView.findViewById<EditText>(R.id.etPorcentaje)
+        val btnAceptar = dialogView.findViewById<Button>(R.id.btnAceptarPromocion)
+        val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarPromocion)
+
+        // ⚠ Ajusta 'producto.precio' al nombre real del campo en tu entidad Producto
+        val precioOriginal = producto.precioVenta
+
+        tvNombre.text = producto.nombre
+        tvStock.text = "Stock: ${producto.stock}"
+        tvFecha.text = "Caducidad: ${producto.fechaCaducidad}"
+        tvPrecioOriginal.text = "Precio actual: $${String.format("%.2f", precioOriginal)}"
+        llPromocion.visibility = View.GONE
+
+        btnPromocionar.setOnClickListener {
+            btnPromocionar.visibility = View.GONE
+            llPromocion.visibility = View.VISIBLE
+            etPorcentaje.requestFocus()
+        }
+
+        // Mostrar el precio con descuento en tiempo real
+        etPorcentaje.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val pct = s?.toString()?.toDoubleOrNull() ?: 0.0
+                val nuevo = precioOriginal * (1 - pct / 100.0)
+                tvPrecioDescuento.text =
+                    "Precio con descuento: $${String.format("%.2f", nuevo)}"
+            }
+        })
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+
+        btnAceptar.setOnClickListener {
+            val pct = etPorcentaje.text.toString().toDoubleOrNull()
+            if (pct == null || pct < 0 || pct > 100) {
+                Toast.makeText(this, "Ingresa un porcentaje entre 0 y 100", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val nuevoPrecio = precioOriginal * (1 - pct / 100.0)
+
+            // ⚠ Necesitas este método en DatabaseHelper (mira la nota al final)
+            dbHelper.actualizarPrecioProducto(producto.idProducto, nuevoPrecio)
+
+            Toast.makeText(
+                this,
+                "Precio actualizado a $${String.format("%.2f", nuevoPrecio)}",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            dialog.dismiss()
+            cargarDatosDeReportes()
+        }
+
+        btnCancelar.setOnClickListener { dialog.dismiss() }
+
+        dialog.show()
+    }
+
+    // ======================================================================
+    // Adapter reutilizado en la lista y en el diálogo de la campanita
+    // ======================================================================
     inner class CaducidadAdapter(private var productos: MutableList<DatabaseHelper.Producto>) :
         RecyclerView.Adapter<CaducidadAdapter.CaducidadViewHolder>() {
 
         inner class CaducidadViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val tvNombre: TextView = itemView.findViewById(android.R.id.text1)
-            val tvFecha: TextView = itemView.findViewById(android.R.id.text2)
+            val tvNombre: TextView = itemView.findViewById(R.id.tvNombreProductoItem)
+            val tvFecha: TextView = itemView.findViewById(R.id.tvFechaCaducidadItem)
+            val tvStock: TextView = itemView.findViewById(R.id.tvStockItem)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CaducidadViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(android.R.layout.simple_list_item_2, parent, false)
+                .inflate(R.layout.item_producto_caducidad, parent, false)
             return CaducidadViewHolder(view)
         }
 
@@ -246,35 +337,26 @@ class ReportesActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) { }
 
-            holder.tvNombre.text = "${producto.nombre} (Stock: ${producto.stock})"
-            holder.tvFecha.text = "Caduca el: ${producto.fechaCaducidad}"
+            holder.tvNombre.text = producto.nombre
+            holder.tvStock.text = "Stock: ${producto.stock}"
+            holder.tvFecha.text = "Caduca: ${producto.fechaCaducidad}"
 
+            val card = holder.itemView as CardView
             if (estaCaducado) {
-                holder.itemView.setBackgroundColor(Color.parseColor("#FFCDD2"))
+                card.setCardBackgroundColor(Color.parseColor("#FFCDD2"))
                 holder.tvNombre.setTextColor(Color.parseColor("#B71C1C"))
                 holder.tvFecha.setTextColor(Color.parseColor("#B71C1C"))
+                holder.tvStock.setTextColor(Color.parseColor("#B71C1C"))
             } else {
-                holder.itemView.setBackgroundColor(Color.TRANSPARENT)
-                holder.tvNombre.setTextColor(Color.BLACK)
+                card.setCardBackgroundColor(Color.WHITE)
+                holder.tvNombre.setTextColor(Color.parseColor("#212121"))
                 holder.tvFecha.setTextColor(Color.DKGRAY)
+                holder.tvStock.setTextColor(Color.parseColor("#2C55A6"))
             }
 
+            // Al tocar cualquier producto -> detalle + promocionar
             holder.itemView.setOnClickListener {
-                if (estaCaducado) {
-                    AlertDialog.Builder(holder.itemView.context)
-                        .setTitle("Producto Caducado")
-                        .setMessage("Este producto caducó y se registró en Mermas automáticamente. ¿Qué deseas hacer?")
-                        .setPositiveButton("Ver Mermas") { _, _ ->
-                            val intent = Intent(this@ReportesActivity, MermasActivity::class.java)
-                            startActivity(intent)
-                        }
-                        .setNegativeButton("Borrar de lista") { _, _ ->
-                            productos.removeAt(position)
-                            notifyItemRemoved(position)
-                            notifyItemRangeChanged(position, productos.size)
-                        }
-                        .show()
-                }
+                mostrarDetalleProducto(producto)
             }
         }
 
