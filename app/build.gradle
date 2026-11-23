@@ -47,6 +47,14 @@ android {
     }
 }
 
+// Pérez AI: litertlm-android 0.18.0 trae metadata de Kotlin 2.4 y el compilador del
+// proyecto es 2.2. Se omite la verificación de versión de metadata para poder leerla.
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
+}
+
 dependencies {
 
     implementation libs.androidx.activity.ktx
@@ -98,4 +106,7 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // Pérez AI: modelo de lenguaje local (LiteRT-LM). El modelo (.litertlm) NO va en el APK.
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.18.0")
 }
