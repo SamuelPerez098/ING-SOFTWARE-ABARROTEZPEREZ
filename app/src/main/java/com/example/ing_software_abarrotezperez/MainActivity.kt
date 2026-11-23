@@ -42,11 +42,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         // ──────────────────────────────────────────
-        // 2. BOTÓN COMPRAS
+        // 2. BOTÓN ASISTENTE (Pérez AI)
         // ──────────────────────────────────────────
         val btnOnline = findViewById<CardView>(R.id.btnIrFiados)
         btnOnline.setOnClickListener {
+            startActivity(Intent(this, ChatActivity::class.java))
+        }
+        // Compras seguía colgando solo de esta tarjeta: se conserva con pulsación larga
+        btnOnline.setOnLongClickListener {
             startActivity(Intent(this, CompraActivity::class.java))
+            true
         }
 
         // ──────────────────────────────────────────

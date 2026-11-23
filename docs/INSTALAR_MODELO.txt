@@ -1,0 +1,29 @@
+INSTALAR EL MODELO DE LENGUAJE LOCAL (opcional; el asistente funciona sin él)
+
+El archivo del modelo NO va dentro del APK. Se copia una sola vez al teléfono y después
+funciona sin Internet. La descarga la haces TÚ en la PC (no la hace la app).
+
+1) Descarga UNO de estos archivos en la PC (Hugging Face, comunidad "litert-community"):
+   A. (recomendado para empezar) repo  litert-community/Qwen3-0.6B-int4
+        archivo: qwen3_0.6b_nothink_q4_block32_ekv1280.litertlm
+        (versión sin "pensamiento": más rápida y ligera en CPU)
+   B. (alternativa oficial) repo  litert-community/Qwen3-0.6B
+        archivo: Qwen3-0.6B.litertlm   (≈ 586 MB)
+   Licencia de Qwen3-0.6B: Apache 2.0.
+
+2) Con el teléfono conectado por USB (depuración USB activada) y la app instalada en modo DEBUG:
+      adb push <ruta-del-archivo>.litertlm /data/local/tmp/model.litertlm
+      adb shell run-as com.example.ing_software_abarrotezperez cp /data/local/tmp/model.litertlm files/
+      adb shell rm /data/local/tmp/model.litertlm
+
+3) Abre Pérez AI. El encabezado debe decir "● Sin Internet · IA local lista".
+   (Si dice "modo básico", la app no encontró el archivo: debe estar en files/ y pesar más de 50 MB.)
+
+4) Prueba con una frase rara que las reglas no entienden, por ejemplo:
+      "¿qué cosas se me van a echar a perder en 10 días?"
+   La PRIMERA vez tardará más (carga el modelo en RAM). El modelo se descarga solo tras 3 minutos
+   sin uso, o si el sistema pide memoria.
+
+5) Para ver qué pasa por dentro:  adb logcat -s PerezAI-LLM PerezAI
+
+Para quitar el modelo:  adb shell run-as com.example.ing_software_abarrotezperez rm files/model.litertlm

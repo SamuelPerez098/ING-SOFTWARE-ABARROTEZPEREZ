@@ -68,6 +68,10 @@
         <activity android:name=".ui.PerfilActivity" />
         <activity android:name=".ui.AlmacenamientoActivity" />
         <activity android:name=".ui.CompraActivity" />
+        <!-- Pérez AI: adjustResize mantiene el campo de texto visible sobre el teclado -->
+        <activity
+            android:name=".ui.ChatActivity"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.ListaInventarioActivity" />
 
         <!-- Escáner por cámara (pantalla completa, usada desde Inventario) -->
