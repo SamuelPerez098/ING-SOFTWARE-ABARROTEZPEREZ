@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.app.AlertDialog
 import android.os.Bundle
 import android.os.Environment
@@ -112,7 +114,7 @@ class AlmacenamientoActivity : AppCompatActivity() {
             return
         }
 
-        val progressDialog = AlertDialog.Builder(this)
+        val progressDialog = MaterialAlertDialogBuilder(this)
             .setTitle("Subiendo respaldo…")
             .setMessage("Conectando con Google Drive.\nPor favor espera.")
             .setCancelable(false)

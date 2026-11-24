@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -101,7 +103,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
         tilDesc?.hint = "Descripción (ej: leche, pan...)"
         etDesc.hint = ""
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
@@ -156,7 +158,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
         tilMonto?.hint = "Monto a pagar (máx: $${"%.2f".format(saldoTotalMaximo)})"
         etMonto.hint = ""
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()

@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -135,7 +137,7 @@ class FiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
@@ -193,7 +195,7 @@ class FiadoActivity : AppCompatActivity() {
 
         btnGuardar.text = "Actualizar"
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
