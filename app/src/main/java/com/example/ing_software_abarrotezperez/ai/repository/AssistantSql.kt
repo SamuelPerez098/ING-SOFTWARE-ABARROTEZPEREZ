@@ -180,6 +180,12 @@ GROUP BY f.id_cliente ORDER BY 3 DESC"""
 FROM fiado f JOIN cliente c ON c.id_cliente = f.id_cliente
 WHERE f.saldo_pendiente > 0 GROUP BY f.id_cliente ORDER BY 3 DESC LIMIT 1"""
 
+    // ?1 = desde, ?2 = hasta (exclusivo); pérdida de vender bajo el costo en el periodo.
+    const val MARGEN_NEGATIVO = """SELECT COALESCE(SUM((p.precio_compra - dv.precio_unitario) * dv.cantidad),0)
+FROM detalle_venta dv JOIN venta v ON v.id_venta = dv.id_venta
+JOIN producto p ON p.id_producto = dv.id_producto
+WHERE v.fecha >= ?1 AND v.fecha < ?2 AND dv.precio_unitario < p.precio_compra"""
+
     /** Expande tokens con texto fijo. */
     fun expand(sql: String, excludeTest: Boolean): String =
         sql.replace("{CAD}", CAD_CTE)

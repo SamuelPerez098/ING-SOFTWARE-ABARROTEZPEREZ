@@ -1,6 +1,5 @@
 package com.example.ing_software_abarrotezperez.ai.insights
 
-import com.example.ing_software_abarrotezperez.ai.config.AssistantConfig
 import com.example.ing_software_abarrotezperez.ai.repository.AssistantRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
@@ -13,18 +12,12 @@ import java.util.Locale
 
 /**
  * Motor determinista del resumen de la tienda. No depende del modelo de lenguaje.
- *
- * - Ids estables `slug:periodo:entidad` (no dependen de texto ni cifras): la campanita decide
- *   "nuevo desde la última vista" por ese id + severidad, no por el contenido.
- * - Comparativos justos (hoy vs mismo día de la semana pasada solo hasta la misma hora).
- * - "Sin ventas hoy" se suprime si ese día de la semana no vendió en las últimas 4 semanas
- *   (tienda cerrada) o antes de la hora configurada.
- * - Mínimo de historial por indicador: sin datos, no se inventa nada.
- * - Cálculo en segundo plano con caché de 60 s.
+ * Ids estables `slug[:entidad]` (estado) o `slug:periodo[:entidad]` (día/mes/semana).
+ * Cálculo en segundo plano con caché de 60 s.
  */
 class InsightsEngine(
     private val repo: AssistantRepository,
-    private val cfg: AssistantConfig,
+    private val cfg: InsightConfig,
     private val ahora: () -> LocalDateTime = { LocalDateTime.now() },
     private val ultimoRespaldoMillis: () -> Long? = { null }
 ) {
@@ -43,7 +36,6 @@ class InsightsEngine(
     private fun calcularSync(now: LocalDateTime): List<Insight> {
         val out = mutableListOf<Insight>()
         val hoy = now.toLocalDate()
-        val hoyIso = hoy.toString()
 
         val historial = repo.resumenVentas(
             hoy.minusDays(cfg.diasHistorialMinimo.toLong()).toString(),
@@ -51,13 +43,13 @@ class InsightsEngine(
         )
         val hayHistorial = historial.tickets >= cfg.ventasMinimasHistorico
 
-        cobranza(out, hoy, hoyIso)
+        cobranza(out, hoy)
         if (hayHistorial) {
             ventas(out, now, hoy)
             ganancia(out, hoy)
             mermas(out, hoy)
         }
-        respaldo(out, hoyIso)
+        respaldo(out)
         return out
     }
 
@@ -73,24 +65,41 @@ class InsightsEngine(
 
     private fun money(v: Double) = "$%.2f".format(Locale.US, v)
 
+    private fun horaFmt(h: Int) = String.format(Locale.US, "%02d:00:00", h)
+
     // ── Cobranza ──
-    private fun cobranza(out: MutableList<Insight>, hoy: LocalDate, hoyIso: String) {
+    private fun cobranza(out: MutableList<Insight>, hoy: LocalDate) {
         val (total, cuentas) = repo.fiadoPendiente()
         if (total > 0) {
+            val sev = when {
+                total >= cfg.montoDeudaTotalCritica.toDouble() -> Severidad.CRITICA
+                total >= cfg.montoDeudaAlerta.toDouble() -> Severidad.ATENCION
+                else -> Severidad.INFO
+            }
             out += Insight(
-                id("fiado_pendiente"), TipoInsight.COBRANZA,
-                if (total >= cfg.montoDeudaAlerta.toDouble()) Severidad.ATENCION else Severidad.INFO,
+                id("fiado_pendiente"), TipoInsight.COBRANZA, sev,
                 "Cobranza pendiente",
                 "$cuentas ${if (cuentas == 1) "fiado" else "fiados"} por cobrar · ${money(total)} en total.",
                 "¿Quién me debe dinero?"
             )
         }
 
-        val limite = hoy.minusDays(cfg.diasDeudaAntigua.toLong()).toString()
-        repo.fiadoAntiguo(limite).forEach { d ->
+        val limiteCritica = hoy.minusDays(cfg.diasDeudaCritica.toLong()).toString()
+        val criticos = repo.fiadoAntiguo(limiteCritica).filter { it.monto >= cfg.montoDeudaCritica.toDouble() }
+        val criticosIds = criticos.map { it.idCliente }.toSet()
+        criticos.forEach { d ->
             out += Insight(
-                id("fiado_antiguo", entidad = "cliente${d.idCliente}"), TipoInsight.COBRANZA,
-                if (d.monto >= 100) Severidad.CRITICA else Severidad.ATENCION,
+                id("fiado_antiguo", entidad = "cliente${d.idCliente}"), TipoInsight.COBRANZA, Severidad.CRITICA,
+                "Deuda crítica: ${d.nombre}",
+                "Debe ${money(d.monto)} desde hace más de ${cfg.diasDeudaCritica} días.",
+                "¿Cuánto me debe ${d.nombre}?"
+            )
+        }
+
+        val limiteAtencion = hoy.minusDays(cfg.diasDeudaAntigua.toLong()).toString()
+        repo.fiadoAntiguo(limiteAtencion).filter { it.idCliente !in criticosIds }.forEach { d ->
+            out += Insight(
+                id("fiado_antiguo", entidad = "cliente${d.idCliente}"), TipoInsight.COBRANZA, Severidad.ATENCION,
                 "Deuda antigua: ${d.nombre}",
                 "Debe ${money(d.monto)} desde hace más de ${cfg.diasDeudaAntigua} días.",
                 "¿Cuánto me debe ${d.nombre}?"
@@ -112,13 +121,13 @@ class InsightsEngine(
     private fun ventas(out: MutableList<Insight>, now: LocalDateTime, hoy: LocalDate) {
         val hoyIso = hoy.toString()
         val hora = now.hour
-        val hoyHasta = "$hoyIso ${String.format(Locale.US, "%02d:00:00", hora)}"
+        val hoyHasta = "$hoyIso ${horaFmt(hora)}"
         val semanaPasada = hoy.minusDays(7)
-        val semanaPasadaHasta = "$semanaPasada ${String.format(Locale.US, "%02d:00:00", hora)}"
 
         val hoyResumen = repo.resumenVentas(hoyIso, hoyHasta)
-        val semanaPasadaResumen = repo.resumenVentas(semanaPasada.toString(), semanaPasadaHasta)
+        val semanaPasadaResumen = repo.resumenVentas(semanaPasada.toString(), "$semanaPasada ${horaFmt(hora)}")
 
+        // hoy vs mismo día semana pasada (INFO/ATENCION, nunca CRITICA)
         if (semanaPasadaResumen.total > 0 && hoyResumen.total < semanaPasadaResumen.total * 0.5) {
             out += Insight(
                 id("ventas_hoy_vs_semana", hoyIso), TipoInsight.VENTAS, Severidad.ATENCION,
@@ -128,13 +137,34 @@ class InsightsEngine(
             )
         }
 
-        if (hora >= cfg.horaSinVentas && hoyResumen.tickets == 0 && mismoDiaSemanaTuvoVentas(hoy)) {
+        // hoy vs promedio de las últimas 4 semanas (mismo día y hora) -> CRITICA
+        val (promedio, semanasConVentas) = promedioMismoDia(hoy, hora)
+        if (semanasConVentas >= 3 && promedio > 0 && hoyResumen.total < promedio * cfg.caidaVentasCritica.toDouble()) {
             out += Insight(
-                id("sin_ventas", hoyIso), TipoInsight.VENTAS, Severidad.CRITICA,
-                "Sin ventas registradas hoy",
-                "Pasó la hora de cierre (${cfg.horaSinVentas}:00) y aún no hay ventas.",
-                "¿Por qué no hay ventas hoy?"
+                id("ventas_hoy_vs_promedio", hoyIso), TipoInsight.VENTAS, Severidad.CRITICA,
+                "Ventas de hoy muy por debajo del promedio",
+                "Hoy ${money(hoyResumen.total)} vs ${money(promedio)} de promedio en las últimas 4 semanas (mismo día y hora).",
+                "¿Por qué cayeron tanto las ventas de hoy?"
             )
+        }
+
+        // sin ventas: ATENCION tras horaSinVentas, CRITICA tras horaCierre si el día suele vender
+        if (hoyResumen.tickets == 0) {
+            if (hora >= cfg.horaCierre && promedioTicketsDiaSemana(hoy) >= cfg.ticketsMinimosDiaActivo) {
+                out += Insight(
+                    id("sin_ventas", hoyIso), TipoInsight.VENTAS, Severidad.CRITICA,
+                    "Sin ventas registradas hoy",
+                    "Pasó la hora de cierre (${cfg.horaCierre}:00) y este día suele vender.",
+                    "¿Por qué no hay ventas hoy?"
+                )
+            } else if (hora >= cfg.horaSinVentas && mismoDiaSemanaTuvoVentas(hoy)) {
+                out += Insight(
+                    id("sin_ventas", hoyIso), TipoInsight.VENTAS, Severidad.ATENCION,
+                    "Sin ventas registradas hoy",
+                    "Pasó la hora de cierre (${cfg.horaSinVentas}:00) y aún no hay ventas.",
+                    "¿Por qué no hay ventas hoy?"
+                )
+            }
         }
 
         val treinta = repo.resumenVentas(hoy.minusDays(30).toString(), hoy.plusDays(1).toString())
@@ -146,6 +176,26 @@ class InsightsEngine(
                 "¿Cuál es mi ticket promedio?"
             )
         }
+    }
+
+    private fun promedioMismoDia(hoy: LocalDate, hora: Int): Pair<Double, Int> {
+        var suma = 0.0
+        var conVentas = 0
+        for (i in 1..4) {
+            val d = hoy.minusWeeks(i.toLong())
+            val r = repo.resumenVentas(d.toString(), "$d ${horaFmt(hora)}")
+            if (r.tickets > 0) { suma += r.total; conVentas++ }
+        }
+        return (if (conVentas > 0) suma / conVentas else 0.0) to conVentas
+    }
+
+    private fun promedioTicketsDiaSemana(hoy: LocalDate, semanas: Int = 4): Double {
+        var total = 0
+        for (i in 1..semanas) {
+            val d = hoy.minusWeeks(i.toLong())
+            total += repo.resumenVentas(d.toString(), d.plusDays(1).toString()).tickets
+        }
+        return total.toDouble() / semanas
     }
 
     private fun mismoDiaSemanaTuvoVentas(hoy: LocalDate, semanas: Int = 4): Boolean {
@@ -161,27 +211,48 @@ class InsightsEngine(
         val iniSemana = hoy.minusDays((hoy.dayOfWeek.value - 1).toLong())
         val actual = repo.resumenVentas(iniSemana.toString(), hoy.plusDays(1).toString())
         val anterior = repo.resumenVentas(iniSemana.minusWeeks(1).toString(), iniSemana.toString())
-        if (anterior.ganancia > 0 && actual.ganancia < anterior.ganancia * 0.5) {
-            out += Insight(
-                id("ganancia_semana", semanaDe(iniSemana)), TipoInsight.GANANCIA, Severidad.ATENCION,
-                "Ganancia de la semana por debajo de la anterior",
-                "Esta semana ${money(actual.ganancia)} vs ${money(anterior.ganancia)} la semana pasada.",
-                "¿Cómo va mi ganancia esta semana?"
-            )
+        val semana = semanaDe(iniSemana)
+
+        when {
+            anterior.ganancia >= cfg.pisoGananciaSemanal.toDouble() &&
+                actual.ganancia < anterior.ganancia * cfg.caidaVentasCritica.toDouble() ->
+                out += Insight(
+                    id("ganancia_semana", semana), TipoInsight.GANANCIA, Severidad.CRITICA,
+                    "Ganancia de la semana desplomada",
+                    "Esta semana ${money(actual.ganancia)} vs ${money(anterior.ganancia)} la semana pasada.",
+                    "¿Por qué cayó tanto mi ganancia?"
+                )
+            anterior.ganancia > 0 && actual.ganancia < anterior.ganancia * 0.5 ->
+                out += Insight(
+                    id("ganancia_semana", semana), TipoInsight.GANANCIA, Severidad.ATENCION,
+                    "Ganancia de la semana por debajo de la anterior",
+                    "Esta semana ${money(actual.ganancia)} vs ${money(anterior.ganancia)} la semana pasada.",
+                    "¿Cómo va mi ganancia esta semana?"
+                )
         }
 
+        val perdida7d = repo.perdidaMargenNegativo(hoy.minusDays(7).toString(), hoy.plusDays(1).toString())
         repo.listarProductos(cfg.excludeTestProducts)
             .filter { it.stock > 0 && it.precioVenta <= it.precioCompra }
             .forEach { p ->
                 val negativo = p.precioVenta < p.precioCompra
                 out += Insight(
-                    id("margen_bajo", entidad = p.codigo), TipoInsight.GANANCIA,
-                    if (negativo) Severidad.CRITICA else Severidad.ATENCION,
-                    if (negativo) "Margen negativo: ${p.nombre}" else "Sin margen: ${p.nombre}",
-                    "Venta ${money(p.precioVenta)} ≤ compra ${money(p.precioCompra)}.",
+                    id("margen_bajo", entidad = p.codigo), TipoInsight.GANANCIA, Severidad.ATENCION,
+                    if (negativo) "Vendido bajo el costo: ${p.nombre}" else "Sin margen: ${p.nombre}",
+                    if (negativo) "Venta ${money(p.precioVenta)} < compra ${money(p.precioCompra)} (¿promoción?)."
+                    else "Venta ${money(p.precioVenta)} = compra ${money(p.precioCompra)}.",
                     "¿Qué productos me dejan pérdida?"
                 )
             }
+
+        if (perdida7d >= cfg.perdidaMargenCritica.toDouble()) {
+            out += Insight(
+                id("perdida_margen", hoy.plusDays(0).toString()), TipoInsight.GANANCIA, Severidad.CRITICA,
+                "Pérdida por vender bajo el costo",
+                "En los últimos 7 días perdiste ${money(perdida7d)} vendiendo bajo el costo.",
+                "¿Qué productos vendí bajo el costo?"
+            )
+        }
     }
 
     // ── Mermas ──
@@ -191,14 +262,26 @@ class InsightsEngine(
         val iniMesAnterior = iniMes.minusMonths(1)
         val actual = repo.mermas(iniMes.toString(), hoy.plusDays(1).toString(), 50, cfg.excludeTestProducts)
         val anterior = repo.mermas(iniMesAnterior.toString(), iniMes.toString(), 50, cfg.excludeTestProducts)
-        if (anterior.perdida > 0 && actual.perdida > anterior.perdida && actual.perdida >= cfg.mermasPisoPesos.toDouble()) {
-            out += Insight(
-                id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.ATENCION,
-                "Mermas al alza este mes",
-                "Este mes ${money(actual.perdida)} vs ${money(anterior.perdida)} el mes pasado.",
-                "¿Por qué subieron las mermas?"
-            )
+
+        when {
+            anterior.perdida > 0 && actual.perdida >= cfg.mermasPisoCritico.toDouble() &&
+                actual.perdida >= anterior.perdida * cfg.factorMermaCritica.toDouble() ->
+                out += Insight(
+                    id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.CRITICA,
+                    "Mermas críticas este mes",
+                    "Este mes ${money(actual.perdida)} vs ${money(anterior.perdida)} el mes pasado.",
+                    "¿Por qué se dispararon las mermas?"
+                )
+            anterior.perdida > 0 && actual.perdida > anterior.perdida &&
+                actual.perdida >= cfg.mermasPisoPesos.toDouble() ->
+                out += Insight(
+                    id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.ATENCION,
+                    "Mermas al alza este mes",
+                    "Este mes ${money(actual.perdida)} vs ${money(anterior.perdida)} el mes pasado.",
+                    "¿Por qué subieron las mermas?"
+                )
         }
+
         actual.items.firstOrNull()?.let { m ->
             out += Insight(
                 id("merma_producto", mes, m.nombre), TipoInsight.MERMAS, Severidad.INFO,
@@ -210,7 +293,7 @@ class InsightsEngine(
     }
 
     // ── Respaldo ──
-    private fun respaldo(out: MutableList<Insight>, hoyIso: String) {
+    private fun respaldo(out: MutableList<Insight>) {
         val ultimo = ultimoRespaldoMillis()
         if (ultimo == null) {
             out += Insight(
