@@ -430,6 +430,9 @@ class VentaActivity : AppCompatActivity() {
             adapter.notifyDataSetChanged()
             actualizarTotal()
             true
+        } else if (idVenta == -2L) {
+            Aviso.error(this, "Sin stock suficiente", "No hay existencias para completar la venta. Revisa el inventario.")
+            false
         } else {
             Aviso.error(this, "No se registró la venta", "Intenta de nuevo.")
             false
@@ -500,6 +503,10 @@ class VentaActivity : AppCompatActivity() {
         cursorCliente.close()
 
         val idVenta = vm.db.registrarVenta(itemsVenta)
+        if (idVenta == -2L) {
+            Aviso.error(this, "Sin stock suficiente", "No hay existencias para completar el fiado.")
+            return
+        }
         if (idVenta < 0) {
             Aviso.error(this, "No se registró el fiado", "La venta no se completó.")
             return
