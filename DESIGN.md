@@ -258,6 +258,22 @@ Burbuja del asistente: superficie del tema, contorno de 1dp, esquinas 20dp con l
 ### Ticket
 Panel de `#FAFAFA` con texto monoespaciado de 12sp en negro, alineado con guiones y signos de igual dibujados con caracteres. Es una pieza funcional: reproduce la impresora térmica, no el sistema visual.
 
+## Motion
+
+El movimiento confirma; no se luce. Es un punto de venta de alta frecuencia y la velocidad manda sobre el espectáculo.
+
+**Base única:** `ui/Motion.kt` concentra duraciones, interpoladores y helpers (`pressFeedback`, `fadeInUp`, `fadeOut`, `fadeErrorIn`, `setEnabledAnimated`, `CampanaAnimator`). Ninguna pantalla crea animadores a mano.
+
+**Duraciones:** 100 ms (feedback rápido), 150 ms (fundidos de salida y errores), 180 ms (entradas de contenido), 300 ms (tope de transición). La campanita es la única excepción: 600 ms por ciclo, 5 ciclos, finita.
+
+**Curvas:** entrada `DecelerateInterpolator()`; salida `AccelerateInterpolator()`.
+
+**Reglas:**
+- Todo se condiciona a `ValueAnimator.areAnimatorsEnabled()`; si el sistema las apaga, se aplica el estado final sin animar.
+- Acciones de alta frecuencia (escaneo, agregar al carrito, cobro) no animan o se quedan en ≤100 ms.
+- Máximo una animación protagonista por pantalla.
+- No se animan cifras de dinero que el dueño está leyendo.
+
 ## Do's and Don'ts
 
 ### Do:
