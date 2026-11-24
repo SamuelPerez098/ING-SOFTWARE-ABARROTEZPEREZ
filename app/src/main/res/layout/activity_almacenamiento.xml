@@ -6,214 +6,230 @@
     android:background="?android:attr/colorBackground"
     android:orientation="vertical">
 
-    <!-- Encabezado superior con imagen y título -->
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="75dp"
-        android:background="#6A6A6A"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="16dp">
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginEnd="12dp"
-            android:src="@drawable/configuracion_logo"
-            app:tint="#FFFFFF" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="ALMACENAMIENTO"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <!-- Contenedor sin borde morado (strokeWidth = 0dp) -->
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:layout_weight="1"
-        app:cardBackgroundColor="?attr/colorSurface"
-        app:cardCornerRadius="30dp"
-        app:cardElevation="0dp"
-        app:strokeWidth="0dp">
-
-        <ScrollView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <LinearLayout
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="#FF5722"
-                android:foregroundTint="#4CAF50"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:outlineAmbientShadowColor="#3F51B5"
-                android:outlineSpotShadowColor="#8BC34A"
-                android:padding="20dp">
+                android:paddingTop="8dp"
+                android:paddingBottom="16dp"
+                android:text="Almacenamiento"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="22sp"
+                android:textStyle="bold" />
 
-                <RelativeLayout
-                    android:layout_width="200dp"
-                    android:layout_height="200dp"
-                    android:layout_marginTop="10dp">
+            <!-- Uso y desglose -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
 
-                    <com.google.android.material.progressindicator.CircularProgressIndicator
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_centerInParent="true"
-                        android:progress="100"
-                        app:indicatorColor="#F0F0F0"
-                        app:indicatorSize="180dp"
-                        app:trackColor="#F0F0F0"
-                        app:trackThickness="20dp" />
-
-                    <com.google.android.material.progressindicator.CircularProgressIndicator
-                        android:id="@+id/progressAppUsage"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_centerInParent="true"
-                        android:progress="35"
-                        app:indicatorColor="#313131"
-                        app:indicatorSize="180dp"
-                        app:trackCornerRadius="10dp"
-                        app:trackThickness="20dp" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/tvPorcentajeUso"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="35%"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="32sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="En uso"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-                </RelativeLayout>
-
-                <com.google.android.material.card.MaterialCardView
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    app:cardBackgroundColor="?attr/colorSurfaceVariant"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp">
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
+                    <RelativeLayout
+                        android:layout_width="180dp"
+                        android:layout_height="180dp">
 
-                        <TextView
-                            android:id="@+id/tvEspacioApp"
+                        <com.google.android.material.progressindicator.CircularProgressIndicator
+                            android:id="@+id/progressAppUsage"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:text=" App y Base de Datos: 124 MB"
-                            android:textColor="?android:attr/textColorPrimary"
-                            android:textSize="15sp" />
-
-                        <TextView
-                            android:id="@+id/tvEspacioLibre"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Espacio libre en teléfono: 12.4 GB"
-                            android:textColor="?android:attr/textColorPrimary"
-                            android:textSize="15sp" />
-                    </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
-                    android:layout_marginBottom="12dp"
-                    android:text="Seguridad de datos"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/btnRealizarRespaldo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="12dp"
-                    app:strokeColor="#4CAF50"
-                    app:strokeWidth="2dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="16dp">
-
-                        <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
-                            android:src="@android:drawable/ic_menu_upload"
-                            app:tint="#4CAF50" />
+                            android:layout_height="match_parent"
+                            android:layout_centerInParent="true"
+                            android:progress="35"
+                            app:indicatorColor="#00B259"
+                            app:indicatorSize="180dp"
+                            app:trackColor="?attr/colorSurfaceVariant"
+                            app:trackCornerRadius="7dp"
+                            app:trackThickness="14dp" />
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="16dp"
-                            android:layout_weight="1"
+                            android:layout_centerInParent="true"
+                            android:gravity="center"
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tvPorcentajeUso"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Crear Respaldo en Drive"
-                                android:textColor="?android:attr/textColorPrimary"
-                                android:textSize="16sp"
+                                android:fontFeatureSettings="tnum"
+                                android:text="35%"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="32sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Sube tu base de datos a la nube"
-                                android:textColor="?android:attr/textColorSecondary"
-                                android:textSize="12sp" />
+                                android:text="En uso"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </RelativeLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingVertical="14dp">
+
+                            <TextView
+                                android:id="@+id/tvEspacioApp"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="App y Base de Datos"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/tvEspacioAppValor"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:fontFeatureSettings="tnum"
+                                android:text="124 MB"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:background="?attr/colorOutlineVariant" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingVertical="14dp">
+
+                            <TextView
+                                android:id="@+id/tvEspacioLibre"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="Espacio libre en teléfono"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/tvEspacioLibreValor"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="sans-serif-medium"
+                                android:fontFeatureSettings="tnum"
+                                android:text="12.4 GB"
+                                android:textColor="?attr/colorOnSurface"
+                                android:textSize="14sp" />
                         </LinearLayout>
                     </LinearLayout>
-                </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <Button
-                    android:id="@+id/btnRegresarAlmacenamiento"
+            <!-- Seguridad de datos -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="12dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="Seguridad de datos"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnRealizarRespaldo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:layout_marginTop="24dp"
-                    android:backgroundTint="#9E9E9E"
-                    android:text="REGRESAR"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"
-                    app:cornerRadius="15dp" />
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-            </LinearLayout>
-        </ScrollView>
-    </com.google.android.material.card.MaterialCardView>
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_badge_verde">
 
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_gravity="center"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_nube"
+                            app:tint="#00B259" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="sans-serif-medium"
+                            android:text="Crear Respaldo en Drive"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sube tu base de datos a la nube"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-import android.widget.Button
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -71,16 +70,11 @@ class AlmacenamientoActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, signInOptions)
 
         val btnRespaldo = findViewById<MaterialCardView>(R.id.btnRealizarRespaldo)
-        val btnRegresar = findViewById<Button>(R.id.btnRegresarAlmacenamiento)
 
         calcularEspacio()
 
         btnRespaldo.setOnClickListener {
             iniciarRespaldoDrive()
-        }
-
-        btnRegresar.setOnClickListener {
-            finish()
         }
     }
 
@@ -156,10 +150,12 @@ class AlmacenamientoActivity : AppCompatActivity() {
     }
 
     private fun calcularEspacio() {
-        val progressApp    = findViewById<CircularProgressIndicator>(R.id.progressAppUsage)
-        val tvPorcentaje   = findViewById<TextView>(R.id.tvPorcentajeUso)
-        val tvEspacioApp   = findViewById<TextView>(R.id.tvEspacioApp)
-        val tvEspacioLibre = findViewById<TextView>(R.id.tvEspacioLibre)
+        val progressApp       = findViewById<CircularProgressIndicator>(R.id.progressAppUsage)
+        val tvPorcentaje      = findViewById<TextView>(R.id.tvPorcentajeUso)
+        val tvEspacioApp      = findViewById<TextView>(R.id.tvEspacioApp)
+        val tvEspacioAppValor = findViewById<TextView>(R.id.tvEspacioAppValor)
+        val tvEspacioLibre    = findViewById<TextView>(R.id.tvEspacioLibre)
+        val tvEspacioLibreValor = findViewById<TextView>(R.id.tvEspacioLibreValor)
 
         val dbFile = getDatabasePath(DriveHelper.DB_NAME)
         val dbSize = if (dbFile.exists()) dbFile.length() else 0L
@@ -189,8 +185,10 @@ class AlmacenamientoActivity : AppCompatActivity() {
         val porcentajeUsoTelefono =
             ((bytesUsadosTelefono.toDouble() / totalBytesTelefono.toDouble()) * 100).toInt()
 
-        tvEspacioApp.text   = "App y Base de Datos: ${String.format("%.2f", appMegabytes)} MB"
-        tvEspacioLibre.text = "Espacio libre en teléfono: ${String.format("%.2f", gigabytesLibres)} GB"
+        tvEspacioApp.text        = "App y Base de Datos"
+        tvEspacioAppValor.text   = "${String.format("%.2f", appMegabytes)} MB"
+        tvEspacioLibre.text      = "Espacio libre en teléfono"
+        tvEspacioLibreValor.text = "${String.format("%.2f", gigabytesLibres)} GB"
         tvPorcentaje.text   = "$porcentajeUsoTelefono%"
         progressApp.setProgressCompat(porcentajeUsoTelefono, true)
     }
