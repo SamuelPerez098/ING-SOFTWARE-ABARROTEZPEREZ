@@ -13,7 +13,7 @@ colors:
   error: "#BA1A1A"
   venta: "#00B259"
   inventario: "#C45B20"
-  reportes: "#2C55A6"
+  reportes: "#2563EB"
   fiado: "#5E17EB"
   mermas: "#B71C1C"
   asistente: "#7A513E"
@@ -143,7 +143,7 @@ El mosaico del menú usa un tono hermano del mismo pasillo (por ejemplo, el mosa
 
 - **Verde Venta** (`#00B259`): ventas, cobro, total a pagar, línea de totales. Es el color del dinero que entra.
 - **Terracota Inventario** (`#C45B20`): lista de inventario, búsqueda, alta de producto, botones de la ficha de producto.
-- **Azul Reportes** (`#2C55A6`): reportes, gráficas, campanita de caducidades.
+- **Azul Reportes** (`#2563EB`, franja `#1E40AF`): reportes, gráficas, campanita de caducidades. Único azul del módulo; contraste 5.2:1 sobre superficie clara, 8.7:1 con texto blanco sobre la franja y 6.3:1 en oscuro (`#60A5FA`).
 - **Violeta Fiado** (`#5E17EB`): clientes, fiados, saldos, detalle de cliente.
 - **Rojo Merma** (`#B71C1C`): mermas, pérdidas, y el número negativo de la pérdida.
 - **Café Pérez AI** (`#7A513E`): asistente, burbuja del propietario, botón de enviar. Es el único módulo con identidad cálida.
@@ -297,7 +297,7 @@ Tarjetas de fila para las listas (producto, cliente, fiado, merma, carrito):
 - **Contenedor:** radio 16dp, margen 16dp horizontal y 6dp vertical, padding interno 16dp.
 - **Profundidad:** sin sombra; borde de 1dp (`colorOutlineVariant`) o elevación ≤ 2dp. El Techo de 4dp sigue mandando.
 - **Tipografía:** título 16sp bold, texto secundario 13sp, cifra destacada 16–18sp bold.
-- **Acento por módulo:** Inventario `#C45B20`, Fiado `#5E17EB`, Merma `#B71C1C`, Venta `#00B259`, Reportes `#2C55A6`, Pérez AI `#7A513E`. Un solo acento por ficha; el resto usa roles del tema.
+- **Acento por módulo:** Inventario `#C45B20`, Fiado `#5E17EB`, Merma `#B71C1C`, Venta `#00B259`, Reportes `#2563EB`, Pérez AI `#7A513E`. Un solo acento por ficha; el resto usa roles del tema.
 - **Claro y oscuro:** fondo `?attr/colorSurface`, textos con `?attr/colorOnSurface` / `colorOnSurfaceVariant`.
 - **Acciones:** `Widget.Abarrotes.IconAccion` (MaterialButton IconButton, táctil 48dp, icono 20dp, `contentDescription` en español). Estados con `Widget.Abarrotes.Estado.{Peligro,Advertencia,Neutro}`.
 

@@ -6,7 +6,6 @@
     <!-- Acentos por módulo (DESIGN.md) -->
     <color name="acento_venta">#00B259</color>
     <color name="acento_inventario">#C45B20</color>
-    <color name="acento_reportes">#2C55A6</color>
     <color name="acento_fiado">#5E17EB</color>
     <color name="acento_merma">#B71C1C</color>
     <color name="acento_asistente">#7A513E</color>
@@ -14,6 +13,10 @@
     <color name="acento_almacenamiento">#475569</color>
     <color name="boton_primario">#27272A</color>
     <color name="badge_foto">#334155</color>
+    <color name="acento_reportes">#2563EB</color>
+    <color name="reportes_azul">#2563EB</color>
+    <color name="insignia_ambar_texto">#92400E</color>
+    <color name="insignia_roja_texto">#B91C1C</color>
 
     <!-- Estados de etiqueta -->
     <color name="estado_peligro">#B71C1C</color>
