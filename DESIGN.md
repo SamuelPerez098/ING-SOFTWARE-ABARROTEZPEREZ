@@ -274,6 +274,22 @@ El movimiento confirma; no se luce. Es un punto de venta de alta frecuencia y la
 - Máximo una animación protagonista por pantalla.
 - No se animan cifras de dinero que el dueño está leyendo.
 
+## Feedback
+
+Los avisos transitorios son un componente propio (`ui/Aviso.kt`), no un Toast: un Snackbar de Material con vista propia (`view_aviso.xml`).
+
+**Tipos y color (Semáforo):** ÉXITO verde `#00B259`; ERROR rojo `#B71C1C`; ADVERTENCIA magenta `#E42566`; INFO azul `#3A5BA0`.
+
+**Blanco Roto:** icono y texto siempre blancos sobre el relleno saturado. El relleno es el mismo en claro y oscuro, así que el aviso no depende del tema.
+
+**Contenido:** título corto (16sp, 700) y detalle opcional (14sp). Español, sin emojis, tono directo; solo datos que ya existan en el ámbito de la función.
+
+**Comportamiento:** entra con `Motion.fadeInUp` (8 dp) y sale con `Motion.fadeOut`; permanece 2.2 s. Se puede anclar sobre una vista (`setAnchorView`) para no tapar barras fijas, como el total de Venta.
+
+**Háptica:** vibración leve solo en ÉXITO y ERROR.
+
+**Accesibilidad:** anuncia título y detalle con `announceForAccessibility`; respeta `areAnimatorsEnabled()` a través de `Motion`.
+
 ## Do's and Don'ts
 
 ### Do:
