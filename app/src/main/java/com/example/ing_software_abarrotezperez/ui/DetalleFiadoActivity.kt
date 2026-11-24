@@ -60,11 +60,13 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val fiados = db.getFiadosActivosPorCliente(idCliente)
 
         if (fiados.isEmpty()) {
-            rvFiados.visibility    = View.GONE
-            tvSinDeudas.visibility = View.VISIBLE
+            rvFiados.visibility = View.GONE
+            if (tvSinDeudas.visibility != View.VISIBLE) {
+                Motion.fadeInUp(tvSinDeudas, 6f * tvSinDeudas.resources.displayMetrics.density)
+            }
         } else {
-            rvFiados.visibility    = View.VISIBLE
-            tvSinDeudas.visibility = View.GONE
+            rvFiados.visibility = View.VISIBLE
+            if (tvSinDeudas.visibility == View.VISIBLE) Motion.fadeOut(tvSinDeudas)
 
             val textos = fiados.mapIndexed { index, fiado ->
                 "Deuda #${index + 1} — Saldo: $${"%.2f".format(fiado.saldoPendiente)}"
@@ -111,8 +113,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
             val monto = etMonto.text.toString().toDoubleOrNull()
 
             if (desc.isEmpty() || monto == null || monto <= 0) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Por favor completa todos los campos"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
@@ -122,8 +124,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Error al guardar, intenta de nuevo"
+                Motion.fadeErrorIn(tvError)
             }
         }
 
@@ -165,8 +167,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
             val monto = etMonto.text.toString().toDoubleOrNull()
 
             if (monto == null || monto <= 0) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Ingresa un monto válido"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
@@ -174,8 +176,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
             val saldoMaximo = "%.2f".format(saldoTotalMaximo).toDouble()
 
             if (montoPago > saldoMaximo) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "El monto no puede ser mayor al saldo total ($${"%.2f".format(saldoMaximo)})"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
@@ -199,8 +201,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Error al procesar parte del pago, intenta de nuevo"
+                Motion.fadeErrorIn(tvError)
             }
         }
 
