@@ -1,50 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
+    android:layout_marginVertical="6dp"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/tvItemNombre"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_centerVertical="true"
-                android:layout_marginEnd="12dp"
-                android:layout_toStartOf="@+id/btnItemEliminar"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="2"
                 android:text="Nombre del Producto"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <ImageView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnItemEditar"
+                style="@style/Widget.Abarrotes.IconAccion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="Editar producto"
+                app:icon="@drawable/ic_lapiz"
+                app:iconTint="@color/acento_inventario" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnItemPromo"
+                style="@style/Widget.Abarrotes.IconAccion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="Aplicar descuento"
+                app:icon="@drawable/ic_descuento"
+                app:iconTint="@color/acento_inventario" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnItemEliminar"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true"
-                android:src="@android:drawable/ic_menu_delete"
-                app:tint="#F44336" />
-        </RelativeLayout>
+                style="@style/Widget.Abarrotes.IconAccion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="Eliminar producto"
+                app:icon="@android:drawable/ic_menu_delete"
+                app:iconTint="@color/estado_peligro" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvItemCodigo"
@@ -53,12 +70,13 @@
             android:layout_marginTop="4dp"
             android:text="Código: 123456789"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="14sp" />
+            android:textSize="13sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -67,49 +85,16 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Precio: $0.00"
-                android:textColor="#4CAF50"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvItemStock"
-                android:layout_width="0dp"
+                style="@style/Widget.Abarrotes.Estado.Neutro"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Stock: 0"
-                android:textColor="#E42566"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnItemEditar"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="4dp"
-                android:layout_weight="1"
-                android:backgroundTint="#2196F3"
-                android:text="EDITAR"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnItemPromo"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="1"
-                android:backgroundTint="#D1004C"
-                android:text="PROMOCIÓN"
-                android:textColor="#FFFFFF"
-                android:textSize="12sp" />
-
+                android:text="Stock: 0" />
         </LinearLayout>
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>
