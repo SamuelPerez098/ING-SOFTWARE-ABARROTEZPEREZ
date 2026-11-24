@@ -165,6 +165,21 @@ FROM merma m JOIN producto p ON p.id_producto = m.id_producto
 WHERE m.fecha >= ?1 AND m.fecha < ?2 {TEST}
 GROUP BY m.motivo ORDER BY perdida DESC LIMIT 5"""
 
+    // ── Resumen de tienda (solo lectura) ──
+    const val FIADO_TOTAL = """SELECT COALESCE(SUM(f.saldo_pendiente),0), COUNT(f.id_fiado)
+FROM fiado f WHERE f.saldo_pendiente > 0"""
+
+    // ?1 = fecha límite ISO; deuda cuya venta es anterior a ese día (fiado no guarda fecha propia).
+    const val FIADO_ANTIGUO = """SELECT c.id_cliente, c.nombre, COALESCE(SUM(f.saldo_pendiente),0)
+FROM fiado f JOIN venta v ON v.id_venta = f.id_venta
+JOIN cliente c ON c.id_cliente = f.id_cliente
+WHERE f.saldo_pendiente > 0 AND v.fecha < ?1
+GROUP BY f.id_cliente ORDER BY 3 DESC"""
+
+    const val MAYOR_DEUDOR = """SELECT c.id_cliente, c.nombre, COALESCE(SUM(f.saldo_pendiente),0)
+FROM fiado f JOIN cliente c ON c.id_cliente = f.id_cliente
+WHERE f.saldo_pendiente > 0 GROUP BY f.id_cliente ORDER BY 3 DESC LIMIT 1"""
+
     /** Expande tokens con texto fijo. */
     fun expand(sql: String, excludeTest: Boolean): String =
         sql.replace("{CAD}", CAD_CTE)
