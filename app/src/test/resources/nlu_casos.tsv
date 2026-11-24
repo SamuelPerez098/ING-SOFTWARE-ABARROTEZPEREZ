@@ -156,3 +156,11 @@ dime las mermas y los agotados	SHRINKAGE	analisis
 qué se me va a caducar y cuánto vendí	EXPIRING_SOON	caducidades
 cuánto vale mi inventario y qué debo comprar	INVENTORY_VALUE	inventario
 productos agotados o con pocas existencias	OUT_OF_STOCK	inventario
+¿cómo va la tienda?	STORE_SUMMARY	resumen
+resumen de hoy	STORE_SUMMARY	resumen
+resumen de la tienda	STORE_SUMMARY	resumen
+dame un resumen	STORE_SUMMARY	resumen
+cómo va el negocio	STORE_SUMMARY	resumen
+cómo está la tienda	STORE_SUMMARY	resumen
+cómo anda todo	STORE_SUMMARY	resumen
+qué balance tengo	STORE_SUMMARY	resumen

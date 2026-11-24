@@ -101,6 +101,11 @@ class IntentClassifier {
             "existencias de|stock de|cuanto hay|donde esta|que tanto",
             none = listOf("venta\\w*|vend\\w*|caduc\\w*|venc\\w*|merma\\w*|ganancia\\w*")),
 
+        // ── Resumen de tienda ──
+        rule(STORE_SUMMARY, 6, "resumen"),
+        rule(STORE_SUMMARY, 6, "balance|panorama"),
+        rule(STORE_SUMMARY, 5, "como (?:va|esta|anda|vamos)\\w*", "tienda|negocio|local|todo"),
+
         // ── Ayuda ──
         rule(HELP, 6, "que puedes|que sabes|como funciona|en que me ayudas|que haces|ayuda|ayudame|comandos|opciones|que preguntas|que te puedo")
     )

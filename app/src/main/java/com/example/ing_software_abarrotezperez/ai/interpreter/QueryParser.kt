@@ -124,7 +124,7 @@ class QueryParser(
                 period = e.periods.getOrNull(0)?.period, comparePeriod = e.periods.getOrNull(1)?.period
             )
             SEARCH_PRODUCT -> QueryParameters(productQuery = e.residual.joinToString(" ").ifBlank { null }, limit = e.limit)
-            HELP, UNKNOWN -> QueryParameters()
+            STORE_SUMMARY, HELP, UNKNOWN -> QueryParameters()
         }
         return InterpretationResult(intent, params, confidence)
     }
@@ -152,7 +152,7 @@ class QueryParser(
             NO_MOVEMENT to "los productos sin ventas",
             LOW_ROTATION to "los productos de baja rotación",
             SHRINKAGE to "las mermas y pérdidas",
-            HELP to "ayuda", UNKNOWN to "otra cosa"
+            HELP to "ayuda", UNKNOWN to "otra cosa", STORE_SUMMARY to "el resumen de tu tienda"
         )
         val EXAMPLES = mapOf(
             LOW_STOCK to "productos con pocas existencias",
@@ -169,7 +169,7 @@ class QueryParser(
             NO_MOVEMENT to "productos sin ventas el último mes",
             LOW_ROTATION to "productos de baja rotación",
             SHRINKAGE to "mermas de este mes",
-            HELP to "qué puedes hacer", UNKNOWN to "qué puedes hacer"
+            HELP to "qué puedes hacer", UNKNOWN to "qué puedes hacer", STORE_SUMMARY to "cómo va la tienda"
         )
     }
 }

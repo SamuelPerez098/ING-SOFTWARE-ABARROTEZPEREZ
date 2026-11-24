@@ -33,6 +33,9 @@ class InsightsEngine(
         return resultado
     }
 
+    /** Versión síncrona para herramientas (corre en el hilo del motor; sin caché ni hilos propios). */
+    fun calcularSync(): List<Insight> = calcularSync(ahora())
+
     private fun calcularSync(now: LocalDateTime): List<Insight> {
         val out = mutableListOf<Insight>()
         val hoy = now.toLocalDate()
