@@ -1,12 +1,13 @@
 package com.example.ing_software_abarrotezperez.scanner
 
+import com.example.ing_software_abarrotezperez.ui.Aviso
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageButton
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -34,7 +35,7 @@ class CamaraScannerActivity : AppCompatActivity() {
             if (concedido) {
                 camara.iniciar()
             } else {
-                Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
+                Aviso.advertencia(this, "Permiso de cámara", "Actívalo para escanear con el teléfono.")
                 finish()
             }
         }
