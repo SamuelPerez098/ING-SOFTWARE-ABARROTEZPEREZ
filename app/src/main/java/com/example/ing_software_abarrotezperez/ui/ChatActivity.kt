@@ -94,8 +94,11 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        // Pregunta enviada desde el panel de resumen
-        intent.getStringExtra("pregunta")?.let { vm.send(it) }
+        // Pregunta enviada desde el panel de resumen: se consume una sola vez
+        // (no se reenvía al rotar ni al recrear la Activity).
+        if (savedInstanceState == null) {
+            intent.getStringExtra("pregunta")?.let { vm.send(it) }
+        }
     }
 
     /** Siempre indica que funciona sin Internet; añade si la IA local está disponible. */

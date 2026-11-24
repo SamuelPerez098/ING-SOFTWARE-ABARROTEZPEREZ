@@ -48,11 +48,8 @@ import androidx.lifecycle.lifecycleScope
 import com.example.ing_software_abarrotezperez.ai.insights.Insight
 import com.example.ing_software_abarrotezperez.ai.insights.InsightsEngine
 import com.example.ing_software_abarrotezperez.ai.insights.Severidad
+import com.example.ing_software_abarrotezperez.ai.insights.TipoInsight
 import com.example.ing_software_abarrotezperez.ai.insights.Visto
-import com.example.ing_software_abarrotezperez.ai.interpreter.ClassificationStatus
-import com.example.ing_software_abarrotezperez.ai.interpreter.IntentClassifier
-import com.example.ing_software_abarrotezperez.ai.interpreter.TextNormalizer
-import com.example.ing_software_abarrotezperez.ai.models.AssistantIntent
 import com.example.ing_software_abarrotezperez.ai.repository.SqliteAssistantRepository
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import java.time.LocalDateTime
@@ -92,7 +89,11 @@ class ReportesActivity : AppCompatActivity() {
 
     private lateinit var badgeCampanita: View
     private val prefsInsights by lazy { getSharedPreferences("insights_visto", MODE_PRIVATE) }
-    private val clasificador = IntentClassifier()
+    private var calculando = false
+    private var sheetResumen: BottomSheetDialog? = null
+    private var rvResumen: RecyclerView? = null
+    private var vacioResumen: View? = null
+    private var tvVacioResumen: TextView? = null
     private val engine by lazy {
         InsightsEngine(
             SqliteAssistantRepository { dbHelper.readableDatabase },
@@ -167,9 +168,11 @@ class ReportesActivity : AppCompatActivity() {
     // RESUMEN + CAMPANITA (motor de insights)
     // ======================================================================
     private fun calcularInsights() {
+        calculando = true
         lifecycleScope.launch {
             val insights = engine.calcular()
             ultimosInsights = insights
+            calculando = false
             val visto = cargarVisto()
             if (Visto.haySinVer(visto, insights)) {
                 if (animadorCampana?.isRunning != true) {
@@ -180,6 +183,24 @@ class ReportesActivity : AppCompatActivity() {
                 detenerCampanita()
                 badgeCampanita.visibility = View.GONE
             }
+            refrescarPanelSiAbierto()
+        }
+    }
+
+    private fun refrescarPanelSiAbierto() {
+        val rv = rvResumen ?: return
+        val vacio = vacioResumen ?: return
+        val tv = tvVacioResumen ?: return
+        if (sheetResumen?.isShowing != true) return
+        val insights = ultimosInsights
+        if (insights.isEmpty()) {
+            rv.visibility = View.GONE
+            vacio.visibility = View.VISIBLE
+            tv.text = if (calculando) "Calculando…" else "Todo en orden"
+        } else {
+            rv.visibility = View.VISIBLE
+            vacio.visibility = View.GONE
+            rv.adapter = ResumenAdapter(insights)
         }
     }
 
@@ -210,10 +231,15 @@ class ReportesActivity : AppCompatActivity() {
         val rv = vista.findViewById<RecyclerView>(R.id.rvInsights)
         val vacio = vista.findViewById<View>(R.id.llResumenVacio)
         val tvHora = vista.findViewById<TextView>(R.id.tvHoraActualizacion)
+        val tvVacio = vista.findViewById<TextView>(R.id.tvResumenVacio)
         rv.layoutManager = LinearLayoutManager(this)
+        rvResumen = rv
+        vacioResumen = vacio
+        tvVacioResumen = tvVacio
         if (insights.isEmpty()) {
             rv.visibility = View.GONE
             vacio.visibility = View.VISIBLE
+            tvVacio.text = if (calculando) "Calculando…" else "Todo en orden"
         } else {
             rv.visibility = View.VISIBLE
             vacio.visibility = View.GONE
@@ -222,8 +248,13 @@ class ReportesActivity : AppCompatActivity() {
         tvHora.text = "Actualizado: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())}"
 
         val sheet = BottomSheetDialog(this)
+        sheetResumen = sheet
         sheet.setContentView(vista)
-        sheet.setOnDismissListener { btnCampanita.requestFocus() }
+        sheet.setOnDismissListener {
+            sheetResumen = null
+            rvResumen = null; vacioResumen = null; tvVacioResumen = null
+            btnCampanita.requestFocus()
+        }
         sheet.show()
     }
 
@@ -234,15 +265,18 @@ class ReportesActivity : AppCompatActivity() {
         animadorCampana = null
     }
 
-    private fun preguntaResuelve(p: String): Boolean {
-        return try {
-            val c = clasificador.classify(TextNormalizer.clean(p))
-            val intent = c.top?.intent
-            c.status != ClassificationStatus.NONE && intent != null &&
-                intent != AssistantIntent.UNKNOWN && intent != AssistantIntent.HELP
-        } catch (e: Exception) {
-            false
-        }
+    private fun textoAccion(i: Insight): String = when (i.tipo) {
+        TipoInsight.COBRANZA -> "Ver fiados"
+        TipoInsight.RESPALDO -> "Ir a respaldo"
+        TipoInsight.MERMAS -> "Ver mermas"
+        else -> "Preguntar a Pérez AI"
+    }
+
+    private fun accion(i: Insight): () -> Unit = when (i.tipo) {
+        TipoInsight.COBRANZA -> { { startActivity(Intent(this@ReportesActivity, FiadoActivity::class.java)) } }
+        TipoInsight.RESPALDO -> { { startActivity(Intent(this@ReportesActivity, AlmacenamientoActivity::class.java)) } }
+        TipoInsight.MERMAS -> { { startActivity(Intent(this@ReportesActivity, MermasActivity::class.java)) } }
+        else -> { { startActivity(Intent(this@ReportesActivity, ChatActivity::class.java).putExtra("pregunta", i.preguntaSugerida)) } }
     }
 
     inner class ResumenAdapter(private val items: List<Insight>) :
@@ -275,14 +309,8 @@ class ReportesActivity : AppCompatActivity() {
             holder.severidad.setTextColor(color)
             holder.itemView.contentDescription = "$etiqueta: ${i.titulo}. ${i.detalle}"
 
-            val resuelve = preguntaResuelve(i.preguntaSugerida)
-            holder.preguntar.visibility = if (resuelve) View.VISIBLE else View.GONE
-            holder.preguntar.setOnClickListener {
-                startActivity(
-                    Intent(this@ReportesActivity, ChatActivity::class.java)
-                        .putExtra("pregunta", i.preguntaSugerida)
-                )
-            }
+            holder.preguntar.text = textoAccion(i)
+            holder.preguntar.setOnClickListener { accion(i)() }
         }
 
         override fun getItemCount() = items.size

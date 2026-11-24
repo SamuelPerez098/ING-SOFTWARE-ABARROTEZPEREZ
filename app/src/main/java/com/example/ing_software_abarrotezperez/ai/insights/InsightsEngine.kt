@@ -144,7 +144,7 @@ class InsightsEngine(
                 id("ventas_hoy_vs_promedio", hoyIso), TipoInsight.VENTAS, Severidad.CRITICA,
                 "Ventas de hoy muy por debajo del promedio",
                 "Hoy ${money(hoyResumen.total)} vs ${money(promedio)} de promedio en las últimas 4 semanas (mismo día y hora).",
-                "¿Por qué cayeron tanto las ventas de hoy?"
+                "¿Cuánto he vendido hoy?"
             )
         }
 
@@ -155,14 +155,14 @@ class InsightsEngine(
                     id("sin_ventas", hoyIso), TipoInsight.VENTAS, Severidad.CRITICA,
                     "Sin ventas registradas hoy",
                     "Pasó la hora de cierre (${cfg.horaCierre}:00) y este día suele vender.",
-                    "¿Por qué no hay ventas hoy?"
+                    "¿Cuánto he vendido hoy?"
                 )
             } else if (hora >= cfg.horaSinVentas && mismoDiaSemanaTuvoVentas(hoy)) {
                 out += Insight(
                     id("sin_ventas", hoyIso), TipoInsight.VENTAS, Severidad.ATENCION,
                     "Sin ventas registradas hoy",
                     "Pasó la hora de cierre (${cfg.horaSinVentas}:00) y aún no hay ventas.",
-                    "¿Por qué no hay ventas hoy?"
+                    "¿Cuánto he vendido hoy?"
                 )
             }
         }
@@ -173,7 +173,7 @@ class InsightsEngine(
                 id("ticket_promedio"), TipoInsight.VENTAS, Severidad.INFO,
                 "Ticket promedio (30 días)",
                 "${money(treinta.total / treinta.tickets)} por venta (${treinta.tickets} ventas).",
-                "¿Cuál es mi ticket promedio?"
+                "¿Cuánto he vendido en los últimos 30 días?"
             )
         }
     }
@@ -220,7 +220,7 @@ class InsightsEngine(
                     id("ganancia_semana", semana), TipoInsight.GANANCIA, Severidad.CRITICA,
                     "Ganancia de la semana desplomada",
                     "Esta semana ${money(actual.ganancia)} vs ${money(anterior.ganancia)} la semana pasada.",
-                    "¿Por qué cayó tanto mi ganancia?"
+                    "¿Cuánto he ganado esta semana?"
                 )
             anterior.ganancia > 0 && actual.ganancia < anterior.ganancia * 0.5 ->
                 out += Insight(
@@ -270,7 +270,7 @@ class InsightsEngine(
                     id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.CRITICA,
                     "Mermas críticas este mes",
                     "Este mes ${money(actual.perdida)} vs ${money(anterior.perdida)} el mes pasado.",
-                    "¿Por qué se dispararon las mermas?"
+                    "¿Cuánto he perdido en mermas este mes?"
                 )
             anterior.perdida > 0 && actual.perdida > anterior.perdida &&
                 actual.perdida >= cfg.mermasPisoPesos.toDouble() ->
@@ -278,7 +278,7 @@ class InsightsEngine(
                     id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.ATENCION,
                     "Mermas al alza este mes",
                     "Este mes ${money(actual.perdida)} vs ${money(anterior.perdida)} el mes pasado.",
-                    "¿Por qué subieron las mermas?"
+                    "¿Cuánto he perdido en mermas este mes?"
                 )
         }
 
