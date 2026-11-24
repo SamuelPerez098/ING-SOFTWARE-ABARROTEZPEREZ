@@ -692,9 +692,9 @@ Vuelva pronto a Abarrotes Pérez.
             val tvPrecio: TextView    = view.findViewById(R.id.tvPrecioUnitario)
             val tvCantidad: TextView  = view.findViewById(R.id.tvCantidad)
             val tvSubtotal: TextView  = view.findViewById(R.id.tvSubtotal)
-            val btnMas: ImageButton   = view.findViewById(R.id.btnMas)
+            val btnMas: Button        = view.findViewById(R.id.btnMas)
             val btnMenos: Button      = view.findViewById(R.id.btnMenos)
-            val btnEliminar: ImageButton = view.findViewById(R.id.btnEliminar)
+            val btnEliminar: Button      = view.findViewById(R.id.btnEliminar)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
