@@ -35,7 +35,7 @@ class IntentClassifier {
         Rule(i, w, all.map(::re), none.map(::re))
 
     private val forward = "proxim\\w*|pronto|por caducar|por vencer|a punto de (?:caducar|vencer)|caducan|caduquen|vencen|caducaran|venceran|dentro de"
-    private val expiredWord = "caducad\\w*|vencid\\w*|expirad\\w*|caducaron|vencieron|pasad\\w* de (?:fecha|caducidad)"
+    private val expiredWord = "caducad\\w*|vencid\\w*|expirad\\w*|caducaron|vencieron|caduco|vencio|expiro|pasad\\w* de (?:fecha|caducidad)"
     private val salesWord = "venta\\w*|vend\\w*|ingres\\w*|gane|ganancia\\w*|ganado|factur\\w*"
 
     private val rules: List<Rule> = listOf(
@@ -93,7 +93,7 @@ class IntentClassifier {
         rule(LEAST_SELLING, 5, "(?:se )?vende(?:n)? poco"),
         rule(TOP_SELLING, 6, "mas (?:se )?vend\\w*|mas venta\\w*|(?:mejor(?:es)?|mayor(?:es)?) (?:venta|vendido)\\w*|mas popular\\w*|mas salida"),
         rule(TOP_SELLING, 6, "vend\\w* mas", none = listOf("cuanto|cuanta")),
-        rule(TOP_SELLING, 5, "estrella\\w*|favorit\\w*|mejores productos|top|los que mas (?:salen|se mueven|se llevan)"),
+        rule(TOP_SELLING, 5, "estrella\\w*|favorit\\w*|mejores productos|tops?|los que mas (?:salen|se mueven|se llevan)"),
         rule(SALES_TOTAL, 3, "$salesWord|corte de caja|cuanto (?:he )?(?:hecho|entrado|sacado)|caja"),
 
         // ── Búsqueda de producto ──

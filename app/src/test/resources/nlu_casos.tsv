@@ -191,3 +191,7 @@ cuál es el promedio de venta por cliente	TICKET_PROMEDIO	ticket
 tiket promedio de la semana	TICKET_PROMEDIO	ticket
 manda el ticket por whatsapp	NONE	fuera_de_alcance
 genera el ticket de doña mary	NONE	fuera_de_alcance
+# ── Pasado de caducar/vencer y plural de top ──
+qué producto se venció	EXPIRED	caducidades
+¿qué se me expiró?	EXPIRED	caducidades
+mis tops de la semana	TOP_SELLING	ventas
