@@ -24,7 +24,19 @@
         <item name="colorError">#BA1A1A</item>
         <item name="colorOnError">#FFFFFF</item>
 
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Abarrotes.Dialogo</item>
+
     </style>
 
     <style name="Theme.INGSOFTWAREABARROTEZPEREZ" parent="Base.Theme.INGSOFTWAREABARROTEZPEREZ" />
+
+    <!-- Diálogos: esquinas de 24dp según DESIGN.md, tipografía y botones del tema. -->
+    <style name="ThemeOverlay.Abarrotes.Dialogo" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Abarrotes.Dialogo</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Abarrotes.Dialogo" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
 </resources>
