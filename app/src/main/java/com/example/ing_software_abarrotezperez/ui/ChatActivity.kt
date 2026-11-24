@@ -87,7 +87,7 @@ class ChatActivity : AppCompatActivity() {
                         } else {
                             Motion.fadeOut(layoutPensando)
                         }
-                        btnEnviar.isEnabled = !pensando
+                        Motion.setEnabledAnimated(btnEnviar, !pensando)
                         if (pensando && adapter.itemCount > 0) rvChat.scrollToPosition(adapter.itemCount - 1)
                     }
                 }
