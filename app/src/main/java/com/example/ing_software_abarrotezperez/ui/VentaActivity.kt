@@ -301,15 +301,29 @@ class VentaActivity : AppCompatActivity() {
     private fun confirmarVenta() {
         val total = itemsVenta.sumOf { it.subtotal }
         val recibidoStr = etRecibido.text?.toString()?.trim() ?: ""
+        val recibido = recibidoStr.toDoubleOrNull()
 
-        val recibido = if (recibidoStr.isEmpty()) 0.0 else (recibidoStr.toDoubleOrNull() ?: 0.0)
-
-        if (recibidoStr.isNotEmpty() && recibido < total) {
-            Aviso.advertencia(this, "Monto insuficiente", "Recibido ${"$%.2f".format(recibido)} · Total ${"$%.2f".format(total)}")
+        // Efectivo exige monto recibido ≥ total: vacío, 0 o menor bloquea.
+        if (recibido == null) {
+            Aviso.error(
+                this,
+                "Falta el monto recibido",
+                "Escribe cuánto pagó el cliente (total ${"$%.2f".format(total)})."
+            )
+            return
+        }
+        val totalCentavos = Math.round(total * 100)
+        val recibidoCentavos = Math.round(recibido * 100)
+        if (recibidoCentavos < totalCentavos) {
+            Aviso.advertencia(
+                this,
+                "Monto insuficiente",
+                "Recibido ${"$%.2f".format(recibido)} · Total ${"$%.2f".format(total)}"
+            )
             return
         }
 
-        val cambio = if (recibido >= total) recibido - total else 0.0
+        val cambio = (recibidoCentavos - totalCentavos) / 100.0
         val mensajeTicketListo = construirTextoTicket(total, recibido, cambio)
 
         val ticketView = layoutInflater.inflate(R.layout.dialog_ticket, null)
