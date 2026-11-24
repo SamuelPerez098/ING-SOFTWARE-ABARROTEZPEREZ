@@ -93,10 +93,12 @@ class FiadoActivity : AppCompatActivity() {
 
     private fun actualizarVisibilidad(isEmpty: Boolean, rv: RecyclerView, tv: TextView) {
         if (isEmpty) {
-            tv.visibility = View.VISIBLE
+            if (tv.visibility != View.VISIBLE) {
+                Motion.fadeInUp(tv, 6f * tv.resources.displayMetrics.density)
+            }
             rv.visibility = View.GONE
         } else {
-            tv.visibility = View.GONE
+            if (tv.visibility == View.VISIBLE) Motion.fadeOut(tv)
             rv.visibility = View.VISIBLE
         }
     }
