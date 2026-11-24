@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="acento_almacenamiento">#94A3B8</color>
+    <color name="boton_primario">#52525B</color>
+    <color name="badge_foto">#3F3F46</color>
 </resources>

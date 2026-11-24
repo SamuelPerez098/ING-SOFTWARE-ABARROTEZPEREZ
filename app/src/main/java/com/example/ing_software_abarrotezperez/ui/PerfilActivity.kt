@@ -16,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.example.ing_software_abarrotezperez.R
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputEditText
 import java.io.File
 import java.io.FileOutputStream
@@ -26,7 +25,7 @@ class PerfilActivity : AppCompatActivity() {
     private lateinit var ivFotoPerfil: ImageView
     // Se cambia a TextInputEditText para que coincida exactamente con el XML
     private lateinit var etNombrePerfil: TextInputEditText
-    private lateinit var btnCambiarFoto: FloatingActionButton
+    private lateinit var btnCambiarFoto: Button
     private lateinit var btnGuardarPerfil: Button
 
     private var uriCamara: Uri? = null
@@ -60,12 +59,6 @@ class PerfilActivity : AppCompatActivity() {
         etNombrePerfil = findViewById(R.id.etNombrePerfil)
         btnCambiarFoto = findViewById(R.id.btnCambiarFoto)
         btnGuardarPerfil = findViewById(R.id.btnGuardarPerfil)
-
-        // Funcionalidad para el botón de Regresar del XML
-        val btnRegresar = findViewById<Button>(R.id.btnRegresarConfig)
-        btnRegresar.setOnClickListener {
-            finish() // Cierra la pantalla y vuelve a configuración
-        }
 
         cargarDatosGuardados() // Carga foto y nombre
 
