@@ -423,7 +423,7 @@ class VentaActivity : AppCompatActivity() {
         val idVenta = vm.db.registrarVenta(itemsVenta)
         registrandoVenta = false
         return if (idVenta > 0) {
-            val totalVenta = itemsVenta.sumOf { it.subtotal }
+            val totalVenta = Math.round(itemsVenta.sumOf { it.subtotal } * 100) / 100.0
             Aviso.exito(this, "Venta registrada", "Venta #$idVenta · ${"$%.2f".format(totalVenta)}")
             itemsVenta.clear()
             etRecibido.text.clear()
@@ -505,7 +505,7 @@ class VentaActivity : AppCompatActivity() {
             return
         }
 
-        val total = itemsVenta.sumOf { it.subtotal }
+        val total = Math.round(itemsVenta.sumOf { it.subtotal } * 100) / 100.0
         val cvFiado = android.content.ContentValues().apply {
             put("id_cliente", idCliente)
             put("id_venta", idVenta)
