@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.animation.ObjectAnimator
 import android.app.AlertDialog
 import android.content.Intent
@@ -103,11 +105,12 @@ class ReportesActivity : AppCompatActivity() {
         val prioritarios = productosPrioritarios()
 
         if (prioritarios.isEmpty()) {
-            AlertDialog.Builder(this)
-                .setTitle("Sin alertas")
-                .setMessage("No hay productos caducados ni próximos a caducar en 3 días.")
-                .setPositiveButton("OK", null)
-                .show()
+            Dialogos.informacion(
+                this,
+                "Sin alertas",
+                "No hay productos caducados ni próximos a caducar en 3 días.",
+                "OK"
+            )
             return
         }
 
@@ -117,7 +120,7 @@ class ReportesActivity : AppCompatActivity() {
         rv.layoutManager = LinearLayoutManager(this)
         rv.adapter = CaducidadAdapter(prioritarios)
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("⚠ Productos prioritarios")
             .setView(dialogView)
             .setPositiveButton("Cerrar", null)
@@ -313,7 +316,7 @@ class ReportesActivity : AppCompatActivity() {
             }
         })
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .create()
 

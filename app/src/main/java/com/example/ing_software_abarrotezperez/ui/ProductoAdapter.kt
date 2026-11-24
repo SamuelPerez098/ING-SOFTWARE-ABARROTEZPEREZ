@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -72,7 +74,7 @@ class ProductoAdapter(
 
         // LÓGICA DEL BOTÓN PROMOCIÓN / PRECIO EXACTO
         holder.btnPromo.setOnClickListener {
-            val builder = AlertDialog.Builder(context)
+            val builder = MaterialAlertDialogBuilder(context)
             builder.setTitle("Modificar Precio / Promoción")
             builder.setMessage("Ingresa el NUEVO PRECIO exacto para ${producto.nombre}.\n\n(Para quitar una promoción, simplemente ingresa el precio normal).")
 
@@ -114,27 +116,24 @@ class ProductoAdapter(
 
         // LÓGICA DEL BOTÓN ELIMINAR (BASURERO)
         holder.btnEliminar.setOnClickListener {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Eliminar Producto")
-            builder.setMessage("¿Estás seguro de que quieres eliminar '${producto.nombre}' definitivamente del inventario?")
-
-            builder.setPositiveButton("Sí, eliminar") { _, _ ->
-                // Borrar de la base de datos
-                val exito = dbHelper.eliminarProducto(producto.codigoBarras)
-
-                if (exito) {
-                    // Borrar de la lista visual
-                    listaProductos.removeAt(position)
-                    notifyItemRemoved(position)
-                    // Notificar el cambio de posiciones para evitar crasheos de la lista
-                    notifyItemRangeChanged(position, listaProductos.size)
-                    avisar { Aviso.exito(it, "Producto eliminado", producto.nombre) }
-                } else {
-                    avisar { Aviso.error(it, "No se eliminó el producto", producto.nombre) }
+            avisar { activity ->
+                Dialogos.confirmar(
+                    activity,
+                    "Eliminar producto",
+                    "¿Eliminar '${producto.nombre}' definitivamente del inventario?",
+                    "Sí, eliminar"
+                ) {
+                    val exito = dbHelper.eliminarProducto(producto.codigoBarras)
+                    if (exito) {
+                        listaProductos.removeAt(position)
+                        notifyItemRemoved(position)
+                        notifyItemRangeChanged(position, listaProductos.size)
+                        Aviso.exito(activity, "Producto eliminado", producto.nombre)
+                    } else {
+                        Aviso.error(activity, "No se eliminó el producto", producto.nombre)
+                    }
                 }
             }
-            builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }
-            builder.show()
         }
     }
 

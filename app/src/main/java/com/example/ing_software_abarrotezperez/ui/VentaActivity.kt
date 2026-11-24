@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -218,7 +220,7 @@ class VentaActivity : AppCompatActivity() {
                     "entregando las teclas a la app (revisa el modo HID / la conexión del lector)."
         }
         refrescar()
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Diagnóstico del lector")
             .setView(ScrollView(this).apply { addView(tv) })
             .setNeutralButton("Cerrar", null)
@@ -255,7 +257,7 @@ class VentaActivity : AppCompatActivity() {
         if (producto == null) {
             if (dialogoNoEncontradoVisible) return
             dialogoNoEncontradoVisible = true
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Producto no encontrado")
                 .setMessage("Código: $codigo\n¿Deseas registrarlo primero en inventario?")
                 .setPositiveButton("Ir a Inventario") { _, _ ->
@@ -375,7 +377,7 @@ class VentaActivity : AppCompatActivity() {
             }
         }
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(ticketView)
             .setPositiveButton("Confirmar", null)
             .setNeutralButton("Fiado") { _, _ -> mostrarDialogoFiado() }
@@ -432,7 +434,7 @@ class VentaActivity : AppCompatActivity() {
 
         val arregloClientes = clientes.toTypedArray()
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Seleccionar Cliente (Fiado)")
             .setItems(arregloClientes) { _, which ->
                 // Si el usuario selecciona un cliente de la lista, registramos el fiado
@@ -449,7 +451,7 @@ class VentaActivity : AppCompatActivity() {
 
     private fun mostrarDialogoNuevoCliente() {
         val input = EditText(this).apply { hint = "Nombre del cliente" }
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Nuevo cliente a fiado")
             .setView(input)
             .setPositiveButton("Guardar") { _, _ ->
@@ -516,7 +518,7 @@ class VentaActivity : AppCompatActivity() {
         contenedorDialogo.setPadding(margen, margen, margen, margen)
         contenedorDialogo.addView(campoTelefono)
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Enviar Ticket por WhatsApp")
             .setMessage("Ingresa el número celular de 10 dígitos:")
             .setView(contenedorDialogo)
