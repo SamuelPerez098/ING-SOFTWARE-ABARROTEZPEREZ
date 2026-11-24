@@ -73,6 +73,10 @@ object Aviso {
             tvDetalle.visibility = View.VISIBLE
         }
 
+        val colorTexto = colorTextoDe(tipo)
+        tvTitulo.setTextColor(colorTexto)
+        tvDetalle.setTextColor(colorTexto)
+
         val anuncio = if (detalle.isNullOrBlank()) titulo else "$titulo. $detalle"
         root.contentDescription = anuncio
 
@@ -137,6 +141,10 @@ object Aviso {
         Tipo.ADVERTENCIA -> R.drawable.bg_aviso_advertencia
         Tipo.INFO -> R.drawable.bg_aviso_info
     }
+
+    /** ADVERTENCIA usa ámbar claro: texto e icono oscuros para cumplir contraste. */
+    private fun colorTextoDe(tipo: Tipo): Int =
+        if (tipo == Tipo.ADVERTENCIA) Color.parseColor("#1A1C20") else Color.WHITE
 
     private fun vibrar(activity: Activity) {
         val vibrator = activity.getSystemService(Vibrator::class.java) ?: return

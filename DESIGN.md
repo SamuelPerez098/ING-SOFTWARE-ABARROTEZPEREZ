@@ -278,9 +278,9 @@ El movimiento confirma; no se luce. Es un punto de venta de alta frecuencia y la
 
 Los avisos transitorios son un componente propio (`ui/Aviso.kt`), no un Toast: un Snackbar de Material con vista propia (`view_aviso.xml`).
 
-**Tipos y color (Semáforo):** ÉXITO verde `#00B259`; ERROR rojo `#B71C1C`; ADVERTENCIA magenta `#E42566`; INFO azul `#3A5BA0`.
+**Tipos y color (Semáforo):** ÉXITO verde `#00793A` (texto blanco, 5.5:1); ERROR rojo `#B71C1C` (blanco, 6.6:1); ADVERTENCIA ámbar `#FFC107` (texto oscuro `#1A1C20`, 10.5:1); INFO azul `#3A5BA0` (blanco, 6.6:1). Todos los pares cumplen ≥ 4.5:1.
 
-**Blanco Roto:** icono y texto siempre blancos sobre el relleno saturado. El relleno es el mismo en claro y oscuro, así que el aviso no depende del tema.
+**Blanco Roto (con excepción):** icono y texto blancos sobre el relleno saturado; la única excepción es ADVERTENCIA, que va en ámbar con texto e icono oscuros para asegurar el contraste. El relleno es el mismo en claro y oscuro, así que el aviso no depende del tema.
 
 **Contenido:** título corto (16sp, 700) y detalle opcional (14sp). Español, sin emojis, tono directo; solo datos que ya existan en el ámbito de la función.
 
