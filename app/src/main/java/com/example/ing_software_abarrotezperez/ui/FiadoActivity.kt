@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -162,7 +161,7 @@ class FiadoActivity : AppCompatActivity() {
             val resultado = db.registrarClienteConTelefono(nombre, telefono)
 
             if (resultado != -1L) {
-                Toast.makeText(this, "Cliente '$nombre' registrado ✅", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Cliente registrado", if (telefono.isNotEmpty()) "$nombre · $telefono" else nombre)
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
@@ -220,11 +219,11 @@ class FiadoActivity : AppCompatActivity() {
             // GUARDAMOS AMBOS DATOS
             val resultado = db.actualizarCliente(cliente.idCliente, nuevoNombre, nuevoTelefono)
             if (resultado > 0) {
-                Toast.makeText(this, "Cliente actualizado ✅", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Cliente actualizado", nuevoNombre)
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
-                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show()
+                Aviso.error(this, "No se actualizó el cliente", nuevoNombre)
             }
         }
         dialog.show()

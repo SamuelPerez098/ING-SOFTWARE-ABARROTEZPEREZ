@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -119,7 +118,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
 
             val ok = db.registrarFiado(idCliente, monto)
             if (ok) {
-                Toast.makeText(this, "Deuda registrada", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Deuda registrada", "$desc · ${"$%.2f".format(monto)}")
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
@@ -134,7 +133,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
     private fun mostrarDialogoPago(tvSaldoTotal: TextView, rvFiados: RecyclerView, tvSinDeudas: TextView) {
         val fiados = db.getFiadosActivosPorCliente(idCliente)
         if (fiados.isEmpty()) {
-            Toast.makeText(this, "Este cliente no tiene deudas activas", Toast.LENGTH_SHORT).show()
+            Aviso.info(this, "Sin deudas", "Este cliente no tiene deudas activas.")
             return
         }
 
@@ -196,7 +195,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
             }
 
             if (exitoEnPagos) {
-                Toast.makeText(this, "Pago registrado", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Pago registrado", "${"$%.2f".format(monto)}")
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
