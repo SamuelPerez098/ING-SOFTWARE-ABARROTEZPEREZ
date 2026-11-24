@@ -83,6 +83,7 @@ class VentaActivity : AppCompatActivity() {
     private var modo = Modo.BLUETOOTH
     private var enPrimerPlano = false
     private var dialogoNoEncontradoVisible = false
+    private var registrandoVenta = false
 
     private val pedirPermisoCamara =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
@@ -404,28 +405,34 @@ class VentaActivity : AppCompatActivity() {
         val btnCancelar  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
 
         btnConfirmar.setOnClickListener {
-            ejecutarVenta()
-
-            btnWhatsApp.isEnabled = true
-            btnWhatsApp.text = "Enviar por WhatsApp"
-
             btnConfirmar.isEnabled = false
-            btnFiado.visibility = View.GONE
-            btnCancelar.text = "Cerrar"
+            if (ejecutarVenta()) {
+                btnWhatsApp.isEnabled = true
+                btnWhatsApp.text = "Enviar por WhatsApp"
+                btnFiado.visibility = View.GONE
+                btnCancelar.text = "Cerrar"
+            } else {
+                btnConfirmar.isEnabled = true
+            }
         }
     }
 
-    private fun ejecutarVenta() {
+    private fun ejecutarVenta(): Boolean {
+        if (registrandoVenta) return false
+        registrandoVenta = true
         val idVenta = vm.db.registrarVenta(itemsVenta)
-        if (idVenta > 0) {
+        registrandoVenta = false
+        return if (idVenta > 0) {
             val totalVenta = itemsVenta.sumOf { it.subtotal }
             Aviso.exito(this, "Venta registrada", "Venta #$idVenta · ${"$%.2f".format(totalVenta)}")
             itemsVenta.clear()
             etRecibido.text.clear()
             adapter.notifyDataSetChanged()
             actualizarTotal()
+            true
         } else {
             Aviso.error(this, "No se registró la venta", "Intenta de nuevo.")
+            false
         }
     }
 
