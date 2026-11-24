@@ -7,7 +7,6 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import com.example.ing_software_abarrotezperez.MainActivity
 import com.example.ing_software_abarrotezperez.R
 import com.google.android.material.textfield.TextInputEditText
@@ -20,16 +19,6 @@ class LoginActivity : AppCompatActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
-        // ── MODO OSCURO: restaurar ANTES de super.onCreate() ─────
-        val modoOscuroGuardado = getSharedPreferences("prefs_tema", MODE_PRIVATE)
-            .getBoolean("modo_oscuro", false)
-        AppCompatDelegate.setDefaultNightMode(
-            if (modoOscuroGuardado) AppCompatDelegate.MODE_NIGHT_YES
-            else                    AppCompatDelegate.MODE_NIGHT_NO
-        )
-        // ─────────────────────────────────────────────────────────
-
         super.onCreate(savedInstanceState)
 
         val sharedPref   = getSharedPreferences("SesionApp", Context.MODE_PRIVATE)
