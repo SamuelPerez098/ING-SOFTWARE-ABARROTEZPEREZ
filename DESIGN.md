@@ -130,6 +130,8 @@ La base estructural es Material 3 con tema claro/oscuro real (`themes.xml`), y s
 
 Un azul de sistema sereno para los estados y los controles, y encima una paleta categórica de alta saturación que funciona como señalización de pasillo.
 
+**Modo oscuro:** la app tiene tema oscuro real (`themes-night.xml`); todo cambio de color o estilo debe revisarse también en modo oscuro.
+
 ### Primary
 - **Azul de Mostrador** (`#3A5BA0`, en oscuro `#5C8AE6`): color primario del tema. Aparece en los controles Material que no pertenecen a un módulo, en el foco de los campos y en los acentos del sistema. No compite con los colores de módulo.
 - **Azul Contenedor** (`#D6E3FF`): fondo suave de contenedores informativos cuando se necesita un tinte sin gritar.
@@ -180,10 +182,12 @@ El mosaico del menú usa un tono hermano del mismo pasillo (por ejemplo, el mosa
 - **Body** (400, 16sp, 1.4): texto de listas, descripciones, contenido del chat y de los campos.
 - **Label** (500, 11–12sp, mayúsculas en acciones): botones (`EDITAR`, `PROMOCIÓN`, `COBRAR`), insignias y metadatos; en 12sp va la hora y las notas del chat.
 
+La escala anterior es por roles, no un inventario cerrado: existen tamaños puntuales fuera de ella (36sp, 32sp, 30sp y algunos intermedios como 20–21sp o 13–15sp) para cifras, encabezados y metadatos concretos.
+
 ### Named Rules
 **La Regla del Puño Firme.** Todo lo que el dueño necesita leer de reojo —total, precio, stock, saldo, nombre de producto— va en negritas. Lo secundario va regular y en Tinta Suave.
 
-**La Regla del Mono.** El monoespaciado se reserva al ticket impreso en pantalla. Fuera de él, toda la app es Roboto.
+**La Regla del Mono.** El monoespaciado se reserva al ticket impreso en pantalla y a la pantalla de diagnóstico de lectores (`mostrarDiagnostico()` en `VentaActivity.kt`), donde alinea la salida técnica. Fuera de esos dos casos, toda la app es Roboto.
 
 ## Layout
 
