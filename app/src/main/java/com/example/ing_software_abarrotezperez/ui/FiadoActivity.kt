@@ -144,7 +144,9 @@ class FiadoActivity : AppCompatActivity() {
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val nombre = etNombre.text.toString().trim()
             val telefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL TEXTO
 
@@ -161,8 +163,10 @@ class FiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // ASUMIENDO QUE TU FUNCIÓN SE LLAMA ASÍ (si se llama registrarCliente, cámbialo abajo)
+            registrando = true
+            btnGuardar.isEnabled = false
             val resultado = db.registrarClienteConTelefono(nombre, telefono)
+            registrando = false
 
             if (resultado != -1L) {
                 Aviso.exito(this, "Cliente registrado", if (telefono.isNotEmpty()) "$nombre · $telefono" else nombre)
@@ -170,6 +174,7 @@ class FiadoActivity : AppCompatActivity() {
                 dialog.dismiss()
             } else {
                 etNombre.error = "Error al guardar, intenta de nuevo"
+                btnGuardar.isEnabled = true
             }
         }
         dialog.show()
@@ -202,7 +207,9 @@ class FiadoActivity : AppCompatActivity() {
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val nuevoNombre = etNombre.text.toString().trim()
             val nuevoTelefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL NUEVO TELÉFONO
 
@@ -220,14 +227,17 @@ class FiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // GUARDAMOS AMBOS DATOS
+            registrando = true
+            btnGuardar.isEnabled = false
             val resultado = db.actualizarCliente(cliente.idCliente, nuevoNombre, nuevoTelefono)
+            registrando = false
             if (resultado > 0) {
                 Aviso.exito(this, "Cliente actualizado", nuevoNombre)
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
                 Aviso.error(this, "No se actualizó el cliente", nuevoNombre)
+                btnGuardar.isEnabled = true
             }
         }
         dialog.show()

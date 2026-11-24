@@ -105,7 +105,9 @@ class DetalleFiadoActivity : AppCompatActivity() {
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val desc  = etDesc.text.toString().trim()
             val monto = etMonto.text.toString().toDoubleOrNull()
 
@@ -115,7 +117,10 @@ class DetalleFiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            registrando = true
+            btnGuardar.isEnabled = false
             val ok = db.registrarFiado(idCliente, monto)
+            registrando = false
             if (ok) {
                 Aviso.exito(this, "Deuda registrada", "$desc · ${"$%.2f".format(monto)}")
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
@@ -123,6 +128,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
             } else {
                 tvError.text = "Error al guardar, intenta de nuevo"
                 Motion.fadeErrorIn(tvError)
+                btnGuardar.isEnabled = true
             }
         }
 
@@ -160,7 +166,9 @@ class DetalleFiadoActivity : AppCompatActivity() {
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val monto = etMonto.text.toString().toDoubleOrNull()
 
             if (monto == null || monto <= 0) {
@@ -178,6 +186,8 @@ class DetalleFiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            registrando = true
+            btnGuardar.isEnabled = false
             var exitoEnPagos = true
             for (fiado in fiados) {
                 if (montoPago <= 0.0) break
@@ -192,6 +202,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
                     break
                 }
             }
+            registrando = false
 
             if (exitoEnPagos) {
                 Aviso.exito(this, "Pago registrado", "${"$%.2f".format(monto)}")
@@ -200,6 +211,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
             } else {
                 tvError.text = "Error al procesar parte del pago, intenta de nuevo"
                 Motion.fadeErrorIn(tvError)
+                btnGuardar.isEnabled = true
             }
         }
 
