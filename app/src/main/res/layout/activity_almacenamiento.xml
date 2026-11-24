@@ -4,7 +4,33 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
+
+    <!-- Franja de encabezado -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:background="#4B5563"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
+            android:src="@drawable/ic_almacenamiento"
+            app:tint="#FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ALMACENAMIENTO"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -15,16 +41,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="8dp"
-                android:paddingBottom="16dp"
-                android:text="Almacenamiento"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="22sp"
-                android:textStyle="bold" />
 
             <!-- Uso y desglose -->
             <com.google.android.material.card.MaterialCardView
@@ -53,7 +69,7 @@
                             android:layout_height="match_parent"
                             android:layout_centerInParent="true"
                             android:progress="35"
-                            app:indicatorColor="#00B259"
+                            app:indicatorColor="@color/acento_almacenamiento"
                             app:indicatorSize="180dp"
                             app:trackColor="?attr/colorSurfaceVariant"
                             app:trackCornerRadius="7dp"
@@ -187,7 +203,7 @@
                     <FrameLayout
                         android:layout_width="40dp"
                         android:layout_height="40dp"
-                        android:background="@drawable/bg_badge_verde">
+                        android:background="@drawable/bg_badge_gris">
 
                         <ImageView
                             android:layout_width="22dp"
@@ -195,7 +211,7 @@
                             android:layout_gravity="center"
                             android:importantForAccessibility="no"
                             android:src="@drawable/ic_nube"
-                            app:tint="#00B259" />
+                            app:tint="@color/acento_almacenamiento" />
                     </FrameLayout>
 
                     <LinearLayout

@@ -11,6 +11,7 @@
     <color name="acento_merma">#B71C1C</color>
     <color name="acento_asistente">#7A513E</color>
     <color name="acento_configuracion">#737373</color>
+    <color name="acento_almacenamiento">#475569</color>
 
     <!-- Estados de etiqueta -->
     <color name="estado_peligro">#B71C1C</color>
