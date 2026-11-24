@@ -42,6 +42,12 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, ConfiguracionActivity::class.java))
         }
 
+        // Feedback de presión en las tarjetas del menú
+        listOf(
+            R.id.btnIrVentas, R.id.btnVerReportes, R.id.btnIrInventario,
+            R.id.btnClientesExtra, R.id.btnIrFiados, R.id.btnConfiguracionExtra
+        ).forEach { id -> Motion.pressFeedback(findViewById(id)) }
+
         // ──────────────────────────────────────────
         // 2. BOTÓN ASISTENTE (Pérez AI)
         // ──────────────────────────────────────────
