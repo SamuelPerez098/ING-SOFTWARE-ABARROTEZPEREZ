@@ -8,6 +8,7 @@ import com.example.ing_software_abarrotezperez.ai.models.AssistantIntent
 import com.example.ing_software_abarrotezperez.ai.models.AssistantResponse
 import com.example.ing_software_abarrotezperez.ai.models.QueryParameters
 import com.example.ing_software_abarrotezperez.ai.models.ResultTable
+import com.example.ing_software_abarrotezperez.ai.models.TimePeriod
 import com.example.ing_software_abarrotezperez.ai.repository.AssistantRepository
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -113,6 +114,52 @@ class BusinessTools(
                 listOf("Cliente", "Debe"),
                 deudores.take(5).map { listOf(it.nombre, Fmt.money(it.monto)) }
             )
+        )
+    }
+
+    // ── Ticket promedio ──
+    // Solo lectura: total vendido / número de ventas del periodo (por defecto, los últimos 30 días,
+    // igual que el indicador "Ticket promedio" de la campanita) y comparación con el periodo anterior.
+    fun ticketPromedio(p: QueryParameters): AssistantResponse {
+        val per = Params.period(p.period, TimePeriod.lastDays(30, clock()))
+        val r = repo.resumenVentas(per.from.toString(), per.toExclusive.toString())
+        if (r.tickets == 0) {
+            return AssistantResponse(
+                AssistantIntent.TICKET_PROMEDIO,
+                "No hay ventas registradas ${per.inLabel}, así que no hay ticket promedio que calcular."
+            )
+        }
+        val promedio = r.total / r.tickets
+
+        val ant = per.previous()
+        val ra = repo.resumenVentas(ant.from.toString(), ant.toExclusive.toString())
+        val promedioAnterior = if (ra.tickets > 0) ra.total / ra.tickets else null
+        val cambio = if (promedioAnterior != null && promedioAnterior > 0.0)
+            (promedio - promedioAnterior) / promedioAnterior * 100.0 else null
+
+        val texto = buildString {
+            append("${per.inLabelCap} tu ticket promedio fue ${Fmt.money(promedio)} ")
+            append("(${r.tickets} ${Fmt.plural(r.tickets, "venta", "ventas")}, ${Fmt.money(r.total)} en total).")
+            if (promedioAnterior != null && cambio != null)
+                append(" Frente a ${Fmt.money(promedioAnterior)} ${ant.inLabel} (${Fmt.pct(cambio)}).")
+        }
+
+        val filas = mutableListOf<List<String>>()
+        filas.add(listOf("Ticket promedio", Fmt.money(promedio)))
+        filas.add(listOf("Número de ventas", r.tickets.toString()))
+        filas.add(listOf("Total vendido", Fmt.money(r.total)))
+        if (promedioAnterior != null) filas.add(listOf("Periodo anterior", Fmt.money(promedioAnterior)))
+
+        val notas = mutableListOf<String>()
+        if (r.fiado > 0) notas.add("Incluye ${Fmt.money(r.fiado)} vendidos a fiado (todavía sin cobrar).")
+        if (r.tickets < config.ventasMinimasHistorico)
+            notas.add("Con pocas ventas el promedio puede variar mucho.")
+
+        return AssistantResponse(
+            AssistantIntent.TICKET_PROMEDIO,
+            texto,
+            ResultTable(listOf("Concepto", "Valor"), filas),
+            notas
         )
     }
 

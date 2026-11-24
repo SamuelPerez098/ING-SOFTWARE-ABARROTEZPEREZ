@@ -72,7 +72,7 @@ class QueryParser(
         val base = build(intent, extractor.extract(t), t, confidence).params
         val now = clock()
         val usesDays = intent in setOf(EXPIRING_SOON, RESTOCK_NEEDS, NO_MOVEMENT, LOW_ROTATION)
-        val usesPeriod = intent in setOf(TOP_SELLING, LEAST_SELLING, SALES_TOTAL, SHRINKAGE, SALES_COMPARE)
+        val usesPeriod = intent in setOf(TOP_SELLING, LEAST_SELLING, SALES_TOTAL, SHRINKAGE, SALES_COMPARE, TICKET_PROMEDIO)
         val merged = base.copy(
             limit = base.limit ?: hint.limit,
             threshold = base.threshold ?: hint.threshold,
@@ -112,6 +112,7 @@ class QueryParser(
                     threshold = if (intent == RESTOCK_NEEDS) e.threshold else null
                 )
             TOP_SELLING, LEAST_SELLING -> QueryParameters(limit = e.limit, period = rolling())
+            TICKET_PROMEDIO -> QueryParameters(period = rolling())
             SALES_TOTAL -> QueryParameters(period = rolling())
             SHRINKAGE -> QueryParameters(period = rolling(), limit = e.limit)
             SALES_COMPARE -> QueryParameters(
@@ -128,7 +129,7 @@ class QueryParser(
         val THANKS = Regex("\\b(?:gracias|muchas gracias|mil gracias)\\b")
         val NOT_PER_PRODUCT = setOf(
             SALES_TOTAL, TOP_SELLING, LEAST_SELLING, SALES_COMPARE, EXPIRING_SOON, EXPIRED,
-            NO_MOVEMENT, LOW_ROTATION, SHRINKAGE, INVENTORY_VALUE
+            NO_MOVEMENT, LOW_ROTATION, SHRINKAGE, INVENTORY_VALUE, TICKET_PROMEDIO
         )
         val LABELS = mapOf(
             LOW_STOCK to "los productos con pocas existencias",
@@ -146,7 +147,7 @@ class QueryParser(
             LOW_ROTATION to "los productos de baja rotación",
             SHRINKAGE to "las mermas y pérdidas",
             HELP to "ayuda", UNKNOWN to "otra cosa", STORE_SUMMARY to "el resumen de tu tienda",
-            COBRANZA to "los fiados y adeudos"
+            COBRANZA to "los fiados y adeudos", TICKET_PROMEDIO to "tu ticket promedio"
         )
         val EXAMPLES = mapOf(
             LOW_STOCK to "productos con pocas existencias",
@@ -164,7 +165,7 @@ class QueryParser(
             LOW_ROTATION to "productos de baja rotación",
             SHRINKAGE to "mermas de este mes",
             HELP to "qué puedes hacer", UNKNOWN to "qué puedes hacer", STORE_SUMMARY to "cómo va la tienda",
-            COBRANZA to "quién me debe más"
+            COBRANZA to "quién me debe más", TICKET_PROMEDIO to "cuál es mi ticket promedio"
         )
     }
 }

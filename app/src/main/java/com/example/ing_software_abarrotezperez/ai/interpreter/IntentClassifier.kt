@@ -101,6 +101,13 @@ class IntentClassifier {
             "existencias de|stock de|cuanto hay|donde esta|que tanto",
             none = listOf("venta\\w*|vend\\w*|caduc\\w*|venc\\w*|merma\\w*|ganancia\\w*")),
 
+        // ── Ticket promedio ──
+        // "manda/imprime el ticket" es una acción, no una pregunta sobre la tienda.
+        rule(TICKET_PROMEDIO, 6, "tickets?|tikets?|tiquets?",
+            none = listOf("mand\\w*|envi\\w*|imprim\\w*|reimprim\\w*|gener\\w*")),
+        rule(TICKET_PROMEDIO, 5, "venta promedio|promedio de (?:la )?venta\\w*|promedio por venta|promedio del ticket"),
+        rule(TICKET_PROMEDIO, 5, "promedio", "cliente\\w*|gasta\\w*|deja\\w*"),
+
         // ── Cobranza / fiados ──
         rule(COBRANZA, 6, "fiad\\w*|adeudo\\w*|deud\\w*"),
         rule(COBRANZA, 5, "me debe|me deben|quien debe|quienes deben|debe dinero|deben dinero"),

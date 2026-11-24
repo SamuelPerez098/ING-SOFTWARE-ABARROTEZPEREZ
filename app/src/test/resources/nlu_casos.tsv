@@ -174,3 +174,20 @@ adeudos por cobrar	COBRANZA	cobranza
 qué clientes me deben	COBRANZA	cobranza
 cobranza pendiente	COBRANZA	cobranza
 a quién le debo cobrar	COBRANZA	cobranza
+# ── Ticket promedio (y negativos: acciones sobre un ticket no son consultas) ──
+¿cuál es mi ticket promedio?	TICKET_PROMEDIO	ticket
+ticket promedio de hoy	TICKET_PROMEDIO	ticket
+dime el ticket promedio de este mes	TICKET_PROMEDIO	ticket
+cuánto es el ticket promedio de la semana pasada	TICKET_PROMEDIO	ticket
+¿cuánto es mi venta promedio?	TICKET_PROMEDIO	ticket
+cuál es el promedio por venta	TICKET_PROMEDIO	ticket
+cuánto gasta cada cliente en promedio	TICKET_PROMEDIO	ticket
+cuánto me deja cada cliente en promedio	TICKET_PROMEDIO	ticket
+de cuánto es el ticket promedio	TICKET_PROMEDIO	ticket
+cuál fue mi ticket promedio de ayer	TICKET_PROMEDIO	ticket
+y el ticket promedio del mes pasado	TICKET_PROMEDIO	ticket
+ticket promedio de los últimos 7 días	TICKET_PROMEDIO	ticket
+cuál es el promedio de venta por cliente	TICKET_PROMEDIO	ticket
+tiket promedio de la semana	TICKET_PROMEDIO	ticket
+manda el ticket por whatsapp	NONE	fuera_de_alcance
+genera el ticket de doña mary	NONE	fuera_de_alcance

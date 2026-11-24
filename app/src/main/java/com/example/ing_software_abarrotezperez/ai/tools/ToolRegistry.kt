@@ -42,6 +42,7 @@ class ToolRegistry(
             AssistantIntent.SHRINKAGE -> stats.shrinkage(params)
             AssistantIntent.STORE_SUMMARY -> business.storeSummary(params)
             AssistantIntent.COBRANZA -> business.cobranza(params)
+            AssistantIntent.TICKET_PROMEDIO -> business.ticketPromedio(params)
             AssistantIntent.HELP -> help()
             AssistantIntent.UNKNOWN -> AssistantResponse(
                 AssistantIntent.UNKNOWN,
@@ -67,6 +68,9 @@ class ToolRegistry(
             "• Cuánto tengo invertido en inventario\n" +
             "• Qué productos necesito comprar\n" +
             "• Productos sin ventas el último mes\n" +
-            "• Mermas y pérdidas"
+            "• Mermas y pérdidas\n" +
+            "• Cómo va tu tienda (resumen)\n" +
+            "• Quién te debe y cuánto (fiados)\n" +
+            "• Tu ticket promedio"
     )
 }
