@@ -131,6 +131,8 @@ class AlmacenamientoActivity : AppCompatActivity() {
             uploadResult.fold(
                 onSuccess = { fileId ->
                     Log.d(TAG, "Respaldo exitoso. ID en Drive: $fileId")
+                    getSharedPreferences("prefs_respaldo", MODE_PRIVATE)
+                        .edit().putLong("ultimo_respaldo_millis", System.currentTimeMillis()).apply()
                     Aviso.exito(
                         this@AlmacenamientoActivity,
                         "Respaldo subido",

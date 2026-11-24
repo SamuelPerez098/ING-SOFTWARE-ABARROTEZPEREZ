@@ -61,8 +61,12 @@ class InsightsEngine(
         return out
     }
 
-    private fun id(slug: String, periodo: String, entidad: String = "") =
-        if (entidad.isEmpty()) "$slug:$periodo" else "$slug:$periodo:$entidad"
+    private fun id(slug: String, periodo: String = "", entidad: String = "") = when {
+        periodo.isNotEmpty() && entidad.isNotEmpty() -> "$slug:$periodo:$entidad"
+        periodo.isNotEmpty() -> "$slug:$periodo"
+        entidad.isNotEmpty() -> "$slug:$entidad"
+        else -> slug
+    }
 
     private fun semanaDe(d: LocalDate): String =
         "${d.get(WeekFields.ISO.weekBasedYear())}-W${d.get(WeekFields.ISO.weekOfWeekBasedYear())}"
@@ -74,7 +78,8 @@ class InsightsEngine(
         val (total, cuentas) = repo.fiadoPendiente()
         if (total > 0) {
             out += Insight(
-                id("fiado_pendiente", hoyIso), TipoInsight.COBRANZA, Severidad.ATENCION,
+                id("fiado_pendiente"), TipoInsight.COBRANZA,
+                if (total >= cfg.montoDeudaAlerta.toDouble()) Severidad.ATENCION else Severidad.INFO,
                 "Cobranza pendiente",
                 "$cuentas ${if (cuentas == 1) "fiado" else "fiados"} por cobrar · ${money(total)} en total.",
                 "¿Quién me debe dinero?"
@@ -84,7 +89,7 @@ class InsightsEngine(
         val limite = hoy.minusDays(cfg.diasDeudaAntigua.toLong()).toString()
         repo.fiadoAntiguo(limite).forEach { d ->
             out += Insight(
-                id("fiado_antiguo", hoyIso, "cliente${d.idCliente}"), TipoInsight.COBRANZA,
+                id("fiado_antiguo", entidad = "cliente${d.idCliente}"), TipoInsight.COBRANZA,
                 if (d.monto >= 100) Severidad.CRITICA else Severidad.ATENCION,
                 "Deuda antigua: ${d.nombre}",
                 "Debe ${money(d.monto)} desde hace más de ${cfg.diasDeudaAntigua} días.",
@@ -94,7 +99,8 @@ class InsightsEngine(
 
         repo.mayorDeudor()?.let { d ->
             out += Insight(
-                id("mayor_deudor", hoyIso, "cliente${d.idCliente}"), TipoInsight.COBRANZA, Severidad.INFO,
+                id("mayor_deudor", entidad = "cliente${d.idCliente}"), TipoInsight.COBRANZA,
+                if (d.monto >= cfg.montoDeudaAlerta.toDouble()) Severidad.ATENCION else Severidad.INFO,
                 "Mayor deudor: ${d.nombre}",
                 "Concentra ${money(d.monto)} de la deuda total.",
                 "¿Qué me debe ${d.nombre} y desde cuándo?"
@@ -134,7 +140,7 @@ class InsightsEngine(
         val treinta = repo.resumenVentas(hoy.minusDays(30).toString(), hoy.plusDays(1).toString())
         if (treinta.tickets > 0) {
             out += Insight(
-                id("ticket_promedio", "30d"), TipoInsight.VENTAS, Severidad.INFO,
+                id("ticket_promedio"), TipoInsight.VENTAS, Severidad.INFO,
                 "Ticket promedio (30 días)",
                 "${money(treinta.total / treinta.tickets)} por venta (${treinta.tickets} ventas).",
                 "¿Cuál es mi ticket promedio?"
@@ -169,7 +175,7 @@ class InsightsEngine(
             .forEach { p ->
                 val negativo = p.precioVenta < p.precioCompra
                 out += Insight(
-                    id("margen_bajo", p.codigo), TipoInsight.GANANCIA,
+                    id("margen_bajo", entidad = p.codigo), TipoInsight.GANANCIA,
                     if (negativo) Severidad.CRITICA else Severidad.ATENCION,
                     if (negativo) "Margen negativo: ${p.nombre}" else "Sin margen: ${p.nombre}",
                     "Venta ${money(p.precioVenta)} ≤ compra ${money(p.precioCompra)}.",
@@ -185,7 +191,7 @@ class InsightsEngine(
         val iniMesAnterior = iniMes.minusMonths(1)
         val actual = repo.mermas(iniMes.toString(), hoy.plusDays(1).toString(), 50, cfg.excludeTestProducts)
         val anterior = repo.mermas(iniMesAnterior.toString(), iniMes.toString(), 50, cfg.excludeTestProducts)
-        if (anterior.perdida > 0 && actual.perdida > anterior.perdida) {
+        if (anterior.perdida > 0 && actual.perdida > anterior.perdida && actual.perdida >= cfg.mermasPisoPesos.toDouble()) {
             out += Insight(
                 id("mermas_mes", mes), TipoInsight.MERMAS, Severidad.ATENCION,
                 "Mermas al alza este mes",
@@ -208,16 +214,16 @@ class InsightsEngine(
         val ultimo = ultimoRespaldoMillis()
         if (ultimo == null) {
             out += Insight(
-                id("respaldo", hoyIso), TipoInsight.RESPALDO, Severidad.INFO,
-                "Sin respaldo en la nube",
-                "Aún no se ha subido la base de datos a Drive.",
+                id("respaldo"), TipoInsight.RESPALDO, Severidad.INFO,
+                "Respaldo",
+                "Aún no hay registro de respaldos.",
                 "¿Cómo hago un respaldo?"
             )
         } else {
             val dias = (System.currentTimeMillis() - ultimo) / (1000L * 60 * 60 * 24)
             if (dias >= cfg.diasRespaldoAlerta) {
                 out += Insight(
-                    id("respaldo", hoyIso), TipoInsight.RESPALDO,
+                    id("respaldo"), TipoInsight.RESPALDO,
                     if (dias >= cfg.diasRespaldoAlerta * 2) Severidad.CRITICA else Severidad.ATENCION,
                     "Respaldo desactualizado",
                     "El último respaldo fue hace $dias días.",

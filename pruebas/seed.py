@@ -35,7 +35,8 @@ for vid,f,t,items in V:
     for pr,q,pu in items:
         c.execute("INSERT INTO detalle_venta(id_venta,id_producto,cantidad,precio_unitario) VALUES(?,?,?,?)",(vid,pr,q,pu))
 c.execute("INSERT INTO fiado(id_cliente,id_venta,saldo_pendiente) VALUES(1,7,30)")
-c.execute("INSERT INTO fiado(id_cliente,id_venta,saldo_pendiente) VALUES(1,8,100)")
+c.execute("INSERT INTO fiado(id_cliente,id_venta,saldo_pendiente) VALUES(1,8,60)")  # 100 - 40 de abono
+c.execute("INSERT INTO pago_fiado(id_pago,id_fiado,fecha_pago,monto) VALUES(1,2,'2026-11-21 15:00',40)")
 for m in [(3,2,"Caducado","2026-11-20 14:30"),(2,1,"Dañado","2026-11-05 09:00"),(1,1,"Roto","2026-10-30 10:00")]:
     c.execute("INSERT INTO merma(id_producto,cantidad,motivo,fecha) VALUES(?,?,?,?)", m)
 c.commit(); print("seed ok")

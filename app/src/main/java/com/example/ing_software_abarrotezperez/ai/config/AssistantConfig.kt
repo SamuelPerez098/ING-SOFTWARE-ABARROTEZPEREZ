@@ -43,6 +43,16 @@ class AssistantConfig(context: Context) {
         get() = prefs.getInt(KEY_RESPALDO_DIAS, DEFAULT_RESPALDO_DIAS).coerceIn(1, 365)
         set(v) { prefs.edit().putInt(KEY_RESPALDO_DIAS, v.coerceIn(1, 365)).apply() }
 
+    /** Monto total de deuda a partir del cual la cobranza sube a ATENCIÓN (en pesos). */
+    var montoDeudaAlerta: Float
+        get() = prefs.getFloat(KEY_DEUDA_ALERTA, DEFAULT_DEUDA_ALERTA).coerceAtLeast(0f)
+        set(v) { prefs.edit().putFloat(KEY_DEUDA_ALERTA, v.coerceAtLeast(0f)).apply() }
+
+    /** Piso absoluto en pesos para alertar por mermas (además del comparativo). */
+    var mermasPisoPesos: Float
+        get() = prefs.getFloat(KEY_MERMAS_PISO, DEFAULT_MERMAS_PISO).coerceAtLeast(0f)
+        set(v) { prefs.edit().putFloat(KEY_MERMAS_PISO, v.coerceAtLeast(0f)).apply() }
+
     companion object {
         const val DEFAULT_LOW_STOCK = 5
         const val DEFAULT_DEUDA_ANTIGUA = 30
@@ -50,6 +60,10 @@ class AssistantConfig(context: Context) {
         const val DEFAULT_HISTORIAL_DIAS = 14
         const val DEFAULT_VENTAS_MIN = 5
         const val DEFAULT_RESPALDO_DIAS = 7
+        const val DEFAULT_DEUDA_ALERTA = 200f
+        const val DEFAULT_MERMAS_PISO = 20f
+        private const val KEY_DEUDA_ALERTA = "monto_deuda_alerta"
+        private const val KEY_MERMAS_PISO = "mermas_piso_pesos"
         private const val KEY_LOW_STOCK = "low_stock_threshold"
         private const val KEY_EXCLUDE_TEST = "exclude_test_products"
         private const val KEY_DEUDA_ANTIGUA = "dias_deuda_antigua"
