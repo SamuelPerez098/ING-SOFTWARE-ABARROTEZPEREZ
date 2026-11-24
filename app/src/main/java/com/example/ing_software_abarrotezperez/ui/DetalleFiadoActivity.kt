@@ -70,23 +70,18 @@ class DetalleFiadoActivity : AppCompatActivity() {
             rvFiados.visibility = View.VISIBLE
             if (tvSinDeudas.visibility == View.VISIBLE) Motion.fadeOut(tvSinDeudas)
 
-            val textos = fiados.mapIndexed { index, fiado ->
-                "Deuda #${index + 1} — Saldo: $${"%.2f".format(fiado.saldoPendiente)}"
-            }
-
             rvFiados.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-                    val tv = TextView(parent.context).apply {
-                        setPadding(32, 24, 32, 24)
-                        textSize = 15f
-                        setTextColor(android.graphics.Color.parseColor("#212121"))
-                    }
-                    return object : RecyclerView.ViewHolder(tv) {}
+                    val view = LayoutInflater.from(parent.context)
+                        .inflate(R.layout.item_deuda, parent, false)
+                    return object : RecyclerView.ViewHolder(view) {}
                 }
                 override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-                    (holder.itemView as TextView).text = textos[position]
+                    val fiado = fiados[position]
+                    holder.itemView.findViewById<TextView>(R.id.tvDeudaTitulo).text = "Deuda #${position + 1}"
+                    holder.itemView.findViewById<TextView>(R.id.tvDeudaMonto).text = "$${"%.2f".format(fiado.saldoPendiente)}"
                 }
-                override fun getItemCount() = textos.size
+                override fun getItemCount() = fiados.size
             }
         }
     }
