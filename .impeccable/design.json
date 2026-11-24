@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-23T20:31:10-06:00",
+  "title": "Design System: Abarrotes Pérez",
+  "extensions": {
+    "colorMeta": {
+      "azul-sistema": {
+        "role": "primary",
+        "displayName": "Azul de Mostrador",
+        "canonical": "#3A5BA0",
+        "dark": "#5C8AE6",
+        "tonalRamp": [
+          "#1B2232",
+          "#293856",
+          "#354C7E",
+          "#3E60A8",
+          "#6D89C5",
+          "#9DAED2",
+          "#CAD2E2",
+          "#EFF1F5"
+        ]
+      },
+      "azul-contenedor": {
+        "role": "primary-container",
+        "displayName": "Azul Contenedor",
+        "canonical": "#D6E3FF",
+        "dark": "#1A2F5A",
+        "tonalRamp": [
+          "#101C2F",
+          "#182B4A",
+          "#233E68",
+          "#31548B",
+          "#5F7CAE",
+          "#8DA3C8",
+          "#BDC9E0",
+          "#EFF4FF"
+        ]
+      },
+      "fondo": {
+        "role": "neutral",
+        "displayName": "Fondo Frío",
+        "canonical": "#F4F5F9",
+        "dark": "#111318",
+        "tonalRamp": [
+          "#1F222D",
+          "#32374E",
+          "#424C70",
+          "#515F94",
+          "#7D88B5",
+          "#A7AEC8",
+          "#CED2DE",
+          "#F0F1F4"
+        ]
+      },
+      "superficie": {
+        "role": "neutral",
+        "displayName": "Superficie",
+        "canonical": "#FFFFFF",
+        "dark": "#1E2128",
+        "tonalRamp": [
+          "#272525",
+          "#423E3E",
+          "#5C5757",
+          "#766F6F",
+          "#9C9696",
+          "#BAB5B5",
+          "#D7D5D5",
+          "#F3F2F2"
+        ]
+      },
+      "superficie-variante": {
+        "role": "neutral",
+        "displayName": "Superficie Variante",
+        "canonical": "#E1E2EC",
+        "dark": "#2A2D36",
+        "tonalRamp": [
+          "#26262E",
+          "#3A3B46",
+          "#4F505E",
+          "#646577",
+          "#8E8F9F",
+          "#B4B5C1",
+          "#D3D4DC",
+          "#F4F4F8"
+        ]
+      },
+      "texto-principal": {
+        "role": "neutral",
+        "displayName": "Tinta",
+        "canonical": "#1A1C20",
+        "dark": "#E2E2E9",
+        "tonalRamp": [
+          "#121316",
+          "#1A1C20",
+          "#2B2E35",
+          "#3F434C",
+          "#5B6069",
+          "#858A94",
+          "#B4B8C0",
+          "#EDEEF1"
+        ]
+      },
+      "texto-secundario": {
+        "role": "neutral",
+        "displayName": "Tinta Suave",
+        "canonical": "#44464F",
+        "dark": "#C4C6D0",
+        "tonalRamp": [
+          "#1E1F24",
+          "#2C2E35",
+          "#3A3C45",
+          "#4A4C56",
+          "#666974",
+          "#8E919C",
+          "#B9BCC5",
+          "#EEEFF3"
+        ]
+      },
+      "contorno": {
+        "role": "neutral",
+        "displayName": "Contorno",
+        "canonical": "#74767F",
+        "dark": "#44474F",
+        "tonalRamp": [
+          "#27282C",
+          "#393A40",
+          "#4C4E55",
+          "#61636B",
+          "#7C7F88",
+          "#9EA1A9",
+          "#C4C6CC",
+          "#F0F0F3"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Error de Sistema",
+        "canonical": "#BA1A1A",
+        "dark": "#FFB4AB",
+        "tonalRamp": [
+          "#3A1010",
+          "#5E1414",
+          "#8A1717",
+          "#B71C1C",
+          "#D65050",
+          "#E48D8D",
+          "#EFC3C3",
+          "#FBEDED"
+        ]
+      },
+      "venta": {
+        "role": "secondary",
+        "displayName": "Verde Venta",
+        "canonical": "#00B259",
+        "dark": "#00B259",
+        "tonalRamp": [
+          "#0E3E26",
+          "#107040",
+          "#0CA759",
+          "#01E473",
+          "#3AF899",
+          "#7FF0B8",
+          "#BCF0D6",
+          "#ECF9F2"
+        ]
+      },
+      "inventario": {
+        "role": "secondary",
+        "displayName": "Terracota Inventario",
+        "canonical": "#C45B20",
+        "dark": "#C45B20",
+        "tonalRamp": [
+          "#382115",
+          "#62361D",
+          "#914A21",
+          "#C45C21",
+          "#DD8655",
+          "#E0AC8F",
+          "#E9D1C3",
+          "#F7F1EE"
+        ]
+      },
+      "reportes": {
+        "role": "secondary",
+        "displayName": "Azul Reportes",
+        "canonical": "#2C55A6",
+        "dark": "#2C55A6",
+        "tonalRamp": [
+          "#182234",
+          "#24375C",
+          "#2C4A86",
+          "#315DB5",
+          "#6287D0",
+          "#97ADD8",
+          "#C7D1E5",
+          "#EEF1F6"
+        ]
+      },
+      "fiado": {
+        "role": "secondary",
+        "displayName": "Violeta Fiado",
+        "canonical": "#5E17EB",
+        "dark": "#5E17EB",
+        "tonalRamp": [
+          "#20123B",
+          "#321868",
+          "#44189B",
+          "#5313D2",
+          "#7F49E9",
+          "#A888E7",
+          "#CFC0EC",
+          "#F0EDF8"
+        ]
+      },
+      "mermas": {
+        "role": "secondary",
+        "displayName": "Rojo Merma",
+        "canonical": "#B71C1C",
+        "dark": "#B71C1C",
+        "tonalRamp": [
+          "#381515",
+          "#631D1D",
+          "#922020",
+          "#C61F1F",
+          "#DF5353",
+          "#E18E8E",
+          "#E9C3C3",
+          "#F7EDED"
+        ]
+      },
+      "asistente": {
+        "role": "secondary",
+        "displayName": "Café Pérez AI",
+        "canonical": "#7A513E",
+        "dark": "#7A513E",
+        "tonalRamp": [
+          "#2E231E",
+          "#4F3A30",
+          "#735040",
+          "#98654E",
+          "#B88E7A",
+          "#CAB1A5",
+          "#DFD3CE",
+          "#F4F1F0"
+        ]
+      },
+      "configuracion": {
+        "role": "secondary",
+        "displayName": "Gris Configuración",
+        "canonical": "#737373",
+        "dark": "#737373",
+        "tonalRamp": [
+          "#262626",
+          "#3B3B3B",
+          "#525252",
+          "#6B6B6B",
+          "#8C8C8C",
+          "#ADADAD",
+          "#CDCDCD",
+          "#F2F2F2"
+        ]
+      },
+      "menu": {
+        "role": "secondary",
+        "displayName": "Azul Noche Menú",
+        "canonical": "#0F1123",
+        "dark": "#0F1123",
+        "tonalRamp": [
+          "#1D1F30",
+          "#2D3053",
+          "#3A4078",
+          "#454EA0",
+          "#737BBF",
+          "#A1A6CE",
+          "#CCCEE1",
+          "#F0F0F5"
+        ]
+      },
+      "dinero": {
+        "role": "tertiary",
+        "displayName": "Verde Dinero",
+        "canonical": "#4CAF50",
+        "dark": "#4CAF50",
+        "tonalRamp": [
+          "#10330F",
+          "#1B4D1C",
+          "#286A29",
+          "#358A38",
+          "#5EAB61",
+          "#8FC892",
+          "#C2E1C4",
+          "#EFF6EF"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Sólo el nombre de la tienda en el inicio de sesión (34sp, 700)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título dentro de la banda de color del módulo, en mayúsculas (22sp, 700)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Nombre de producto en tarjeta (18sp) y etiqueta del mosaico de módulos (24sp)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Listas, descripciones, chat y campos (16sp, 400)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Botones en mayúsculas, metadatos, hora del chat (11–12sp, 500/700)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "tarjeta-reposo",
+        "value": "0 2dp 4dp rgba(0,0,0,0.16)",
+        "purpose": "Elevación estándar de tarjetas (app:cardElevation=\"4dp\"). Techo del sistema."
+      },
+      {
+        "name": "barra-total-anclada",
+        "value": "0 6dp 10dp rgba(0,0,0,0.18)",
+        "purpose": "Barra de resumen fijo al pie (pérdida total en Mermas). Única superficie por encima de 4dp."
+      },
+      {
+        "name": "tarjeta-anidada",
+        "value": "none",
+        "purpose": "Tarjetas dentro de tarjetas: la separación la da el relleno colorSurfaceVariant."
+      },
+      {
+        "name": "dialogo",
+        "value": "0 8dp 24dp rgba(0,0,0,0.24)",
+        "purpose": "Sólo AlertDialog y hojas modales."
+      }
+    ],
+    "motion": [
+      {
+        "name": "atencion-campana",
+        "value": "ObjectAnimator(-25°, 25°) · 600ms · AccelerateDecelerateInterpolator · repeatCount 5",
+        "purpose": "Alerta de caducidades en Reportes. Finita (~3.6 s) y se detiene al salir de la pantalla."
+      },
+      {
+        "name": "transicion-ui",
+        "value": "150–300ms · DecelerateInterpolator",
+        "purpose": "Transiciones de estado de la UI. Nunca desde escala 0; se corta en seco si ValueAnimator.areAnimatorsEnabled() es false."
+      },
+      {
+        "name": "ripple",
+        "value": "?attr/selectableItemBackground / selectableItemBackgroundBorderless",
+        "purpose": "Único feedback de presión de la app; obligatorio en toda superficie tocable."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-phone",
+        "value": "0–599dp",
+        "purpose": "Único ancho soportado: una columna de contenido, mosaico de 2×3."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Mosaico de módulo",
+      "kind": "custom",
+      "refersTo": "mosaico-modulo",
+      "description": "Celda del menú principal: logo de 70dp, etiqueta de 24sp y el color del módulo.",
+      "html": "<button class=\"ds-tile\"><svg class=\"ds-tile-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M4 8h16l-1.5 12h-13L4 8Z\"/><path d=\"M9 8V6a3 3 0 0 1 6 0v2\"/></svg><span class=\"ds-tile-label\">Venta</span></button>",
+      "css": ".ds-tile { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; width:150px; height:140px; padding:16px; border:none; border-radius:16px; background:#00B259; color:#FFFFFF; font-family:Roboto,sans-serif; cursor:pointer; transition:background-color 180ms ease, transform 180ms ease; } .ds-tile-icon { width:56px; height:56px; } .ds-tile-label { font-size:22px; font-weight:700; letter-spacing:0; } .ds-tile:hover { background:#0CA759; } .ds-tile:active { transform:scale(0.97); } .ds-tile:focus-visible { outline:2px solid #001B4D; outline-offset:2px; }"
+    },
+    {
+      "name": "Banda de módulo",
+      "kind": "nav",
+      "refersTo": "letrero-modulo",
+      "description": "Cabecera propia de cada pantalla: 60–75dp del color del módulo, logo en blanco y título en mayúsculas.",
+      "html": "<header class=\"ds-band\"><svg class=\"ds-band-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M4 18V9l8-5 8 5v9\"/><path d=\"M9 18v-5h6v5\"/></svg><h1 class=\"ds-band-title\">INVENTARIO</h1><button class=\"ds-band-action\" aria-label=\"Alertas de caducidad\">&#128276;</button></header>",
+      "css": ".ds-band { display:flex; align-items:center; gap:12px; height:64px; padding:0 16px; background:#C45B20; color:#FFFFFF; font-family:Roboto,sans-serif; } .ds-band-icon { width:28px; height:28px; flex:none; } .ds-band-title { flex:1; margin:0; font-size:22px; font-weight:700; letter-spacing:0; } .ds-band-action { width:40px; height:40px; border:none; border-radius:20px; background:transparent; color:#FFFFFF; font-size:18px; cursor:pointer; } .ds-band-action:hover { background:rgba(255,255,255,0.16); } .ds-band-action:focus-visible { outline:2px solid #FFFFFF; outline-offset:2px; }"
+    },
+    {
+      "name": "Botón de módulo",
+      "kind": "button",
+      "refersTo": "boton-modulo",
+      "description": "Acción principal dentro de una pantalla de módulo: píldora del color del módulo con etiqueta en mayúsculas.",
+      "html": "<button class=\"ds-btn\">EDITAR</button>",
+      "css": ".ds-btn { height:40px; padding:0 24px; border:none; border-radius:20px; background:#5E17EB; color:#FFFFFF; font-family:Roboto,sans-serif; font-size:12px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; transition:background-color 150ms ease; } .ds-btn:hover { background:#5313D2; } .ds-btn:active { background:#44189B; } .ds-btn:focus-visible { outline:2px solid #001B4D; outline-offset:2px; } .ds-btn[disabled] { background:#C4C6D0; color:#74767F; cursor:not-allowed; }"
+    },
+    {
+      "name": "Tarjeta de producto",
+      "kind": "card",
+      "refersTo": "tarjeta-lista",
+      "description": "Fila de inventario: superficie blanca de 12dp, nombre en 18sp, precio en verde y stock en magenta.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-row\"><h3 class=\"ds-card-name\">Refresco 600 ml</h3><button class=\"ds-card-del\" aria-label=\"Eliminar\">&#128465;</button></div><p class=\"ds-card-code\">Código: 7501055300017</p><div class=\"ds-card-figures\"><span class=\"ds-price\">Precio: $18.50</span><span class=\"ds-stock\">Stock: 24</span></div><div class=\"ds-card-actions\"><button class=\"ds-mini\">EDITAR</button><button class=\"ds-mini ds-mini-alt\">PROMOCIÓN</button></div></article>",
+      "css": ".ds-card { display:block; box-sizing:border-box; width:320px; padding:16px; border-radius:12px; background:#FFFFFF; box-shadow:0 1px 3px rgba(0,0,0,0.18); font-family:Roboto,sans-serif; color:#1A1C20; } .ds-card-row { display:flex; align-items:center; gap:12px; } .ds-card-name { flex:1; margin:0; font-size:18px; font-weight:700; line-height:1.3; } .ds-card-del { width:32px; height:32px; border:none; border-radius:16px; background:transparent; color:#F44336; cursor:pointer; } .ds-card-del:hover { background:#F4F5F9; } .ds-card-code { margin:4px 0 0; font-size:14px; color:#44464F; } .ds-card-figures { display:flex; gap:12px; margin-top:8px; } .ds-price { flex:1; font-size:16px; font-weight:700; color:#4CAF50; } .ds-stock { flex:1; font-size:16px; font-weight:700; color:#E42566; } .ds-card-actions { display:flex; gap:8px; margin-top:12px; } .ds-mini { flex:1; height:36px; border:none; border-radius:18px; background:#2196F3; color:#FFFFFF; font-family:Roboto,sans-serif; font-size:12px; font-weight:600; letter-spacing:0.04em; cursor:pointer; } .ds-mini-alt { background:#D1004C; } .ds-mini:hover { filter:brightness(0.92); } .ds-mini:focus-visible { outline:2px solid #001B4D; outline-offset:2px; }"
+    },
+    {
+      "name": "Campo contorneado",
+      "kind": "input",
+      "refersTo": "campo-contorno",
+      "description": "TextInputLayout outlined con hint flotante: usuario, contraseña, búsqueda y datos de cliente.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Usuario</span><input class=\"ds-field-input\" type=\"text\" value=\"perez\"></label>",
+      "css": ".ds-field { position:relative; display:block; width:260px; font-family:Roboto,sans-serif; } .ds-field-label { position:absolute; top:-8px; left:12px; padding:0 4px; background:#FFFFFF; color:#3A5BA0; font-size:12px; font-weight:500; } .ds-field-input { box-sizing:border-box; width:100%; height:56px; padding:0 16px; border:1px solid #74767F; border-radius:4px; background:transparent; color:#1A1C20; font-family:Roboto,sans-serif; font-size:16px; } .ds-field-input:focus { outline:none; border:2px solid #3A5BA0; padding:0 15px; } .ds-field-input:hover { border-color:#1A1C20; }"
+    },
+    {
+      "name": "Chip de pregunta sugerida",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Consulta de Pérez AI en una fila horizontal: chip Material, 8dp de radio, envía al tocarlo.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\">Caducan en 3 semanas</button><button class=\"ds-chip\">Más vendidos</button><button class=\"ds-chip\">Pocas existencias</button></div>",
+      "css": ".ds-chips { display:flex; gap:8px; font-family:Roboto,sans-serif; } .ds-chip { height:32px; padding:0 12px; border:1px solid #74767F; border-radius:8px; background:#FFFFFF; color:#1A1C20; font-family:Roboto,sans-serif; font-size:14px; white-space:nowrap; cursor:pointer; transition:background-color 150ms ease; } .ds-chip:hover { background:#E1E2EC; } .ds-chip:focus-visible { outline:2px solid #3A5BA0; outline-offset:2px; }"
+    },
+    {
+      "name": "Burbuja del asistente",
+      "kind": "custom",
+      "refersTo": "burbuja-asistente",
+      "description": "Respuesta de Pérez AI sobre superficie con contorno de 1dp y cola inferior izquierda de 4dp.",
+      "html": "<div class=\"ds-msg\"><div class=\"ds-bubble-ai\">Tienes <strong>3 productos</strong> por caducar en las próximas 3 semanas.</div><span class=\"ds-msg-time\">14:32</span></div>",
+      "css": ".ds-msg { display:flex; flex-direction:column; align-items:flex-start; gap:2px; font-family:Roboto,sans-serif; } .ds-bubble-ai { max-width:260px; padding:12px; border:1px solid #E1E2EC; border-radius:20px 20px 20px 4px; background:#FFFFFF; color:#1A1C20; font-size:15px; line-height:1.4; } .ds-msg-time { margin-left:4px; font-size:11px; color:#44464F; }"
+    },
+    {
+      "name": "Burbuja del propietario",
+      "kind": "custom",
+      "refersTo": "burbuja-usuario",
+      "description": "Pregunta del dueño en café Pérez AI, alineada a la derecha, con cola inferior derecha.",
+      "html": "<div class=\"ds-msg ds-msg-end\"><div class=\"ds-bubble-user\">¿Qué necesito comprar?</div><span class=\"ds-msg-time\">14:33</span></div>",
+      "css": ".ds-msg { display:flex; flex-direction:column; gap:2px; font-family:Roboto,sans-serif; } .ds-msg-end { align-items:flex-end; } .ds-bubble-user { max-width:240px; padding:12px; border-radius:20px 20px 4px 20px; background:#7A513E; color:#FFFFFF; font-size:15px; line-height:1.4; } .ds-msg-time { margin-right:4px; font-size:11px; color:#44464F; }"
+    },
+    {
+      "name": "Ticket monoespaciado",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Reproducción del ticket térmico en 12sp monoespaciado sobre #FAFAFA; se comparte como PDF.",
+      "html": "<pre class=\"ds-ticket\">================================\n        ABARROTES PÉREZ\n================================\n--------------------------------\nCANT| DESCRIPCIÓN  | P.U. | IMP\n--------------------------------\n  2 | Refresco 600 | 18.50| 37.00\n--------------------------------\nTOTAL: $37.00</pre>",
+      "css": ".ds-ticket { box-sizing:border-box; width:280px; margin:0; padding:16px; border-radius:8px; background:#FAFAFA; color:#000000; font-family:\"Roboto Mono\",ui-monospace,monospace; font-size:12px; line-height:1.4; white-space:pre; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Mostrador Rotulado",
+    "overview": "La app se comporta como un mostrador de abarrotes bien organizado: cada área del negocio tiene su propio letrero pintado y su color de pasillo. Ventas es verde, inventario es terracota, reportes es azul, fiado es violeta, mermas es rojo, el asistente es café. El dueño no navega un menú abstracto: camina hasta el pasillo que ya conoce.\n\nEl sistema es de densidad alta y lectura inmediata. Se opera de pie, con una mano, a veces con un cliente esperando, así que los números son grandes y en negritas, los títulos van en mayúsculas y las etiquetas de acción son cortas. El cromo —barras de estado, iconos, adornos— es mínimo y siempre blanco sobre el color del módulo.\n\nLa base estructural es Material 3 con tema claro/oscuro real (themes.xml), y sobre esa base se permite una sola audacia: la saturación categórica de los letreros. No es una app expresiva; es una app que se lee de reojo. Los recursos de marca disponibles son los logos PNG por módulo y el café de Pérez AI; no hay fotografía ni ilustración propia, y no se inventa.",
+    "keyCharacteristics": [
+      "Un color saturado por módulo, con texto e iconografía siempre en blanco.",
+      "Títulos de pantalla en mayúsculas, 22sp, negritas, dentro de una banda de color de 60–75dp.",
+      "Tarjetas de superficie blanca con radio de 12–16dp sobre un fondo gris frío #F4F5F9.",
+      "Números primero: precio, total, stock y saldo van en 16–22sp negritas.",
+      "Todo el sistema tipográfico es Roboto; no hay segunda familia.",
+      "El modo oscuro y el tamaño de letra del sistema son ciudadanos de primera clase."
+    ],
+    "rules": [
+      {
+        "name": "La Regla del Letrero Único",
+        "body": "Una pantalla pertenece a un módulo y usa un solo color categórico. Si dos colores de módulo aparecen en la misma vista, uno de ellos está mal.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Blanco Roto",
+        "body": "Sobre cualquier relleno saturado, el texto y el icono son blancos. Nunca se escribe un color de módulo encima de otro color de módulo.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Semáforo",
+        "body": "El color significa antes que la etiqueta: verde = entra dinero, rojo = sale o se pierde, violeta = se fía, magenta #E42566 = existencias en riesgo. El texto confirma, no explica.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Puño Firme",
+        "body": "Todo lo que el dueño necesita leer de reojo —total, precio, stock, saldo, nombre de producto— va en negritas. Lo secundario va regular y en Tinta Suave.",
+        "section": "typography"
+      },
+      {
+        "name": "La Regla del Mono",
+        "body": "El monoespaciado se reserva al ticket impreso en pantalla. Fuera de él, toda la app es Roboto.",
+        "section": "typography"
+      },
+      {
+        "name": "La Regla del Techo de 4dp",
+        "body": "Ninguna superficie supera 4dp de elevación, salvo la barra de total anclada al pie (10dp). La profundidad se compra con color y relleno, no con sombra.",
+        "section": "elevation"
+      },
+      {
+        "name": "La Regla del Marco Pintado",
+        "body": "La estructura externa de un bloque puede ser una tarjeta de color del módulo con otra tarjeta de superficie blanca incrustada a 8dp. El marco da identidad, el interior da legibilidad.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do asignar a cada pantalla el color de su módulo y usarlo en la banda, en sus botones y en sus tarjetas destacadas.",
+      "Do escribir títulos de pantalla en mayúsculas, 22sp, 700, blanco sobre la banda.",
+      "Do poner las cifras que importan en 16–22sp negritas, alineadas a la derecha cuando son dinero.",
+      "Do mantener 4dp de elevación como máximo (10dp sólo en la barra de total anclada al pie) y 0dp en tarjetas anidadas.",
+      "Do usar 16dp de padding como ritmo base y 8–12dp entre elementos de una misma lista.",
+      "Do dar a cada objetivo táctil al menos 48dp, aunque el icono dibujado sea de 28–36dp.",
+      "Do verificar cada pantalla nueva en modo oscuro y con font_scale 1.3 antes de darla por terminada.",
+      "Do respetar ValueAnimator.areAnimatorsEnabled() y mantener cualquier animación entre 150 y 300 ms, con la campanita como única excepción (600 ms por ciclo, finita, con pausa)."
+    ],
+    "donts": [
+      "Don't introducir un segundo color de módulo en una misma pantalla, ni un degradado: el sistema es de rellenos planos.",
+      "Don't escribir texto gris o del color del módulo sobre un relleno saturado; ahí sólo va blanco.",
+      "Don't inventar hex nuevos para un botón o una tarjeta: se usa el color del módulo o un rol del tema (?attr/colorSurface, ?attr/colorOnSurfaceVariant).",
+      "Don't superar 16sp en un texto secundario ni bajar de 11sp en ningún texto.",
+      "Don't usar monoespaciado fuera del ticket ni una segunda familia tipográfica.",
+      "Don't añadir una barra de navegación inferior, un drawer o un segundo FAB: el mosaico de módulos es la navegación.",
+      "Don't poner sombras encima de las bandas de color; la banda es plana por definición.",
+      "Don't animar desde escala 0 ni dejar animaciones infinitas sin pausa."
+    ]
+  }
+}
