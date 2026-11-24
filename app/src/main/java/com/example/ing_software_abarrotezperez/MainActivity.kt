@@ -1,8 +1,9 @@
 package com.example.ing_software_abarrotezperez
 
+import com.example.ing_software_abarrotezperez.ui.Aviso
+
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.work.*
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(this, FiadoActivity::class.java))
             } catch (e: Exception) {
-                Toast.makeText(this, "Error al abrir Clientes: ${e.message}", Toast.LENGTH_LONG).show()
+                Aviso.error(this, "No se abrió Clientes", e.message ?: "Intenta de nuevo.")
             }
         }
 
