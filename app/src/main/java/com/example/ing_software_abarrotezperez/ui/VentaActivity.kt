@@ -85,7 +85,7 @@ class VentaActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
             if (concedido) seleccionarModo(Modo.CAMARA)
             else {
-                Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
+                Aviso.advertencia(this, "Permiso de cámara", "Actívalo para escanear con el teléfono.")
                 seleccionarModo(Modo.BLUETOOTH)
             }
         }
@@ -140,7 +140,7 @@ class VentaActivity : AppCompatActivity() {
 
         btnCobrar.setOnClickListener {
             if (itemsVenta.isEmpty()) {
-                Toast.makeText(this, "No hay productos escaneados", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Carrito vacío", "Escanea al menos un producto antes de cobrar.")
                 return@setOnClickListener
             }
             confirmarVenta()
@@ -267,14 +267,14 @@ class VentaActivity : AppCompatActivity() {
         }
 
         if (producto.stock <= 0) {
-            Toast.makeText(this, "⚠ Sin stock: ${producto.nombre}", Toast.LENGTH_SHORT).show()
+            Aviso.advertencia(this, "Sin existencias", producto.nombre)
             return
         }
 
         val existente = itemsVenta.find { it.producto.codigoBarras == codigo }
         if (existente != null) {
             if (existente.cantidad >= existente.producto.stock) {
-                Toast.makeText(this, "Stock máximo alcanzado (${existente.producto.stock})", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Stock máximo", "${existente.producto.nombre} · ${existente.producto.stock} disponibles")
                 return
             }
             existente.cantidad++
@@ -302,7 +302,7 @@ class VentaActivity : AppCompatActivity() {
         val recibido = if (recibidoStr.isEmpty()) 0.0 else (recibidoStr.toDoubleOrNull() ?: 0.0)
 
         if (recibidoStr.isNotEmpty() && recibido < total) {
-            Toast.makeText(this, "El monto recibido es menor al TOTAL", Toast.LENGTH_SHORT).show()
+            Aviso.advertencia(this, "Monto insuficiente", "Recibido ${"$%.2f".format(recibido)} · Total ${"$%.2f".format(total)}")
             return
         }
 
@@ -368,7 +368,7 @@ class VentaActivity : AppCompatActivity() {
                     // Envia directo porque ya tiene teléfono guardado
                     enviarTicketPorWhatsAppTexto(clienteSeleccionado.telefono, mensajeTicketListo)
                 } else {
-                    Toast.makeText(this, "Este cliente no tiene teléfono. Ingresa uno.", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this, "Sin teléfono", "${clienteSeleccionado.nombre}. Ingresa uno para el ticket.")
                     solicitarNumeroParaTicket(mensajeTicketListo)
                 }
             }
@@ -402,13 +402,14 @@ class VentaActivity : AppCompatActivity() {
     private fun ejecutarVenta() {
         val idVenta = vm.db.registrarVenta(itemsVenta)
         if (idVenta > 0) {
-            Toast.makeText(this, "✓ Venta registrada #$idVenta", Toast.LENGTH_LONG).show()
+            val totalVenta = itemsVenta.sumOf { it.subtotal }
+            Aviso.exito(this, "Venta registrada", "Venta #$idVenta · ${"$%.2f".format(totalVenta)}")
             itemsVenta.clear()
             etRecibido.text.clear()
             adapter.notifyDataSetChanged()
             actualizarTotal()
         } else {
-            Toast.makeText(this, "Error al registrar la venta", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "No se registró la venta", "Intenta de nuevo.")
         }
     }
 
@@ -453,7 +454,7 @@ class VentaActivity : AppCompatActivity() {
             .setPositiveButton("Guardar") { _, _ ->
                 val nombre = input.text.toString().trim()
                 if (nombre.isEmpty()) {
-                    Toast.makeText(this, "Escribe el nombre del cliente", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this, "Falta el nombre", "Escribe el nombre del cliente.")
                     return@setPositiveButton
                 }
                 registrarFiado(nombre)
@@ -477,7 +478,7 @@ class VentaActivity : AppCompatActivity() {
 
         val idVenta = vm.db.registrarVenta(itemsVenta)
         if (idVenta < 0) {
-            Toast.makeText(this, "Error en la venta", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "No se registró el fiado", "La venta no se completó.")
             return
         }
 
@@ -489,7 +490,7 @@ class VentaActivity : AppCompatActivity() {
         }
         db.insert("fiado", null, cvFiado)
 
-        Toast.makeText(this, "✓ Fiado guardado para $nombreCliente", Toast.LENGTH_LONG).show()
+        Aviso.exito(this, "Fiado guardado", "$nombreCliente · ${"$%.2f".format(total)}")
         itemsVenta.clear()
         etRecibido.text.clear()
         adapter.notifyDataSetChanged()
@@ -521,7 +522,7 @@ class VentaActivity : AppCompatActivity() {
             .setPositiveButton("Enviar") { _, _ ->
                 val telefonoIngresado = campoTelefono.text.toString().trim()
                 if (telefonoIngresado.isEmpty()) {
-                    Toast.makeText(this, "Por favor ingresa un número", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this, "Falta el número", "Escribe el celular de 10 dígitos.")
                 } else {
                     enviarTicketPorWhatsAppTexto(telefonoIngresado, mensajeTicket)
                 }
@@ -589,7 +590,7 @@ Vuelva pronto a Abarrotes Pérez.
         val telefonoLimpio = telefono10Digitos.replace(Regex("[^\\d]"), "")
 
         if (telefonoLimpio.length != 10) {
-            Toast.makeText(this, "Ingresa un número celular válido de 10 dígitos", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "Número inválido", "Recibidos ${telefonoLimpio.length} dígitos; se necesitan 10.")
             return
         }
 
@@ -613,7 +614,7 @@ Vuelva pronto a Abarrotes Pérez.
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error al abrir WhatsApp: ${e.message}", Toast.LENGTH_LONG).show()
+            Aviso.error(this, "No se abrió WhatsApp", "Revisa que WhatsApp esté instalado.")
         }
     }
 
@@ -684,7 +685,7 @@ Vuelva pronto a Abarrotes Pérez.
                     notifyItemChanged(position)
                     onChange()
                 } else {
-                    Toast.makeText(holder.itemView.context, "Stock máximo", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this@VentaActivity, "Stock máximo", item.producto.nombre)
                 }
             }
             holder.btnMenos.setOnClickListener {
