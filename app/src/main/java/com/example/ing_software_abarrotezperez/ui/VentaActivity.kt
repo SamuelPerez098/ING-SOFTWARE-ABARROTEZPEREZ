@@ -33,6 +33,7 @@ import com.example.ing_software_abarrotezperez.scanner.LectoresConectados
 import com.example.ing_software_abarrotezperez.scanner.VigilanteLectores
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import java.io.File
 import java.io.FileOutputStream
@@ -333,7 +334,7 @@ class VentaActivity : AppCompatActivity() {
         val tvTicketRecibido = ticketView.findViewById<TextView>(R.id.tvTicketRecibido)
         val tvTicketCambio   = ticketView.findViewById<TextView>(R.id.tvTicketCambio)
         val btnWhatsApp      = ticketView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerarPdfWhatsApp)
-        val spinnerClientes  = ticketView.findViewById<Spinner>(R.id.spinnerClientesTicket)
+        val autoCompleteClientes = ticketView.findViewById<MaterialAutoCompleteTextView>(R.id.spinnerClientesTicket)
 
         val sdf = SimpleDateFormat("dd/MM/yyyy   HH:mm", Locale.getDefault())
         tvFechaHora.text = "Fecha: ${sdf.format(Date())}"
@@ -357,36 +358,35 @@ class VentaActivity : AppCompatActivity() {
         tvTicketRecibido.text = "RECIBIDO: ${String.format(Locale.US, "$%.2f", recibido)}"
         tvTicketCambio.text   = "CAMBIO: ${String.format(Locale.US, "$%.2f", cambio)}"
 
-        // --- CONFIGURACIÓN DEL SPINNER DE CLIENTES ---
-        // Cargamos los clientes con la función que modificaste en el paso anterior
+        // --- SELECTOR DE CLIENTES (desplegable de Material) ---
         val listaClientes = vm.db.getAllClientes()
+        var clienteElegido: DatabaseHelper.Cliente? = null
 
-        // Creamos la lista visual para el Spinner. La primera opción será manual.
-        val opcionesSpinner = mutableListOf("Ingresar número manualmente...")
-        opcionesSpinner.addAll(listaClientes.map {
-            "${it.nombre} ${if(it.telefono.isNotEmpty()) "(Tel: ${it.telefono})" else "(Sin tel)"}"
-        })
-
-        val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesSpinner)
-        spinnerClientes.adapter = adapterSpinner
+        if (listaClientes.isEmpty()) {
+            autoCompleteClientes.setText("Sin clientes registrados", false)
+            autoCompleteClientes.isEnabled = false
+        } else {
+            val nombres = listaClientes.map { it.nombre }.toTypedArray()
+            val adapterAuto = ArrayAdapter(this, android.R.layout.simple_list_item_1, nombres)
+            autoCompleteClientes.setAdapter(adapterAuto)
+            autoCompleteClientes.setOnItemClickListener { _, _, position, _ ->
+                clienteElegido = listaClientes[position]
+            }
+        }
 
         btnWhatsApp.isEnabled = false
 
         btnWhatsApp.setOnClickListener {
-            val posicion = spinnerClientes.selectedItemPosition
-            if (posicion == 0) {
-                // Eligieron "Ingresar número manualmente..." -> Abre el cuadro de texto
-                solicitarNumeroParaTicket(mensajeTicketListo)
-            } else {
-                // Eligieron un cliente de la lista. Restamos 1 por la opción manual inicial.
-                val clienteSeleccionado = listaClientes[posicion - 1]
-                if (clienteSeleccionado.telefono.isNotEmpty()) {
-                    // Envia directo porque ya tiene teléfono guardado
-                    enviarTicketPorWhatsAppTexto(clienteSeleccionado.telefono, mensajeTicketListo)
+            val cliente = clienteElegido
+            if (cliente != null) {
+                if (cliente.telefono.isNotEmpty()) {
+                    enviarTicketPorWhatsAppTexto(cliente.telefono, mensajeTicketListo)
                 } else {
-                    Aviso.advertencia(this, "Sin teléfono", "${clienteSeleccionado.nombre}. Ingresa uno para el ticket.")
+                    Aviso.advertencia(this, "Sin teléfono", "${cliente.nombre}. Ingresa uno para el ticket.")
                     solicitarNumeroParaTicket(mensajeTicketListo)
                 }
+            } else {
+                solicitarNumeroParaTicket(mensajeTicketListo)
             }
         }
 

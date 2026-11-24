@@ -100,22 +100,23 @@
     </com.google.android.material.card.MaterialCardView>
 
     <!-- Selector de cliente para WhatsApp -->
-    <TextView
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Enviar ticket a"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="12sp" />
+        android:hint="Enviar ticket a"
+        app:boxCornerRadiusBottomEnd="12dp"
+        app:boxCornerRadiusBottomStart="12dp"
+        app:boxCornerRadiusTopEnd="12dp"
+        app:boxCornerRadiusTopStart="12dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-    <Spinner
-        android:id="@+id/spinnerClientesTicket"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="4dp"
-        android:background="@drawable/bg_spinner_outline"
-        android:paddingHorizontal="12dp"
-        android:popupBackground="@drawable/bg_popup_redondeado" />
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/spinnerClientesTicket"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Botón de WhatsApp -->
     <com.google.android.material.button.MaterialButton
