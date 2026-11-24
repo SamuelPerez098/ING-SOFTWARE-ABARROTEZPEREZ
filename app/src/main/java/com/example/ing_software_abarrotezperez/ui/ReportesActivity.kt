@@ -297,7 +297,7 @@ class ReportesActivity : AppCompatActivity() {
 
         btnPromocionar.setOnClickListener {
             btnPromocionar.visibility = View.GONE
-            llPromocion.visibility = View.VISIBLE
+            Motion.fadeInUp(llPromocion, 6f * llPromocion.resources.displayMetrics.density)
             etPorcentaje.requestFocus()
         }
 
