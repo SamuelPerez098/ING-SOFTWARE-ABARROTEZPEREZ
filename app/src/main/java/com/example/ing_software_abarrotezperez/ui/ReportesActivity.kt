@@ -197,7 +197,6 @@ class ReportesActivity : AppCompatActivity() {
 
         val yAxisLeft = lineChart.axisLeft
         yAxisLeft.axisMinimum = 0f
-        yAxisLeft.axisMaximum = 700f
         lineChart.axisRight.isEnabled = false
     }
 
