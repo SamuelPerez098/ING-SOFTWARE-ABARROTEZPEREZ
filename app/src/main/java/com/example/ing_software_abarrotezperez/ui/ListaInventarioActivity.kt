@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -52,7 +51,7 @@ class ListaInventarioActivity : AppCompatActivity() {
         if (!yaCargados) {
             dbHelper.insertar300ProductosDePrueba()
             prefs.edit().putBoolean("productos_cargados", true).apply()
-            Toast.makeText(this, " 300 Productos de prueba cargados", Toast.LENGTH_LONG).show()
+            Aviso.info(this, "Productos de prueba cargados", "Se agregaron 300 productos de ejemplo.")
         }
     }
 

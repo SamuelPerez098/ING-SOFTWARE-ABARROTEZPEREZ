@@ -1,5 +1,6 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.text.InputType
@@ -10,7 +11,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView // <-- Importante para el icono de basura
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
@@ -21,6 +21,10 @@ class ProductoAdapter(
     private var listaProductos: MutableList<DatabaseHelper.Producto>,
     private val dbHelper: DatabaseHelper
 ) : RecyclerView.Adapter<ProductoAdapter.ProductoViewHolder>() {
+
+    private fun avisar(accion: (Activity) -> Unit) {
+        (context as? Activity)?.let(accion)
+    }
 
     class ProductoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvNombre: TextView = view.findViewById(R.id.tvItemNombre)
@@ -86,11 +90,7 @@ class ProductoAdapter(
 
                     // --- NUEVA VALIDACIÓN: PRECIO DE COMPRA ---
                     if (nuevoPrecio < producto.precioCompra) {
-                        Toast.makeText(
-                            context,
-                            "⚠ Error: El precio no puede ser menor al de compra ($${producto.precioCompra})",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        avisar { Aviso.error(it, "Precio inválido", "No puede ser menor a la compra: ${"$%.2f".format(producto.precioCompra)}") }
                         return@setPositiveButton // Detiene la ejecución aquí, no guarda en BD
                     }
                     // ------------------------------------------
@@ -102,9 +102,9 @@ class ProductoAdapter(
                         // Actualizar la lista visualmente
                         producto.precioVenta = nuevoPrecio
                         notifyItemChanged(position)
-                        Toast.makeText(context, "Precio actualizado a $${nuevoPrecio}", Toast.LENGTH_SHORT).show()
+                        avisar { Aviso.exito(it, "Precio actualizado", "${producto.nombre} · ${"$%.2f".format(nuevoPrecio)}") }
                     } else {
-                        Toast.makeText(context, "Error al actualizar precio", Toast.LENGTH_SHORT).show()
+                        avisar { Aviso.error(it, "No se actualizó el precio", producto.nombre) }
                     }
                 }
             }
@@ -128,9 +128,9 @@ class ProductoAdapter(
                     notifyItemRemoved(position)
                     // Notificar el cambio de posiciones para evitar crasheos de la lista
                     notifyItemRangeChanged(position, listaProductos.size)
-                    Toast.makeText(context, "Producto eliminado", Toast.LENGTH_SHORT).show()
+                    avisar { Aviso.exito(it, "Producto eliminado", producto.nombre) }
                 } else {
-                    Toast.makeText(context, "Error al eliminar el producto", Toast.LENGTH_SHORT).show()
+                    avisar { Aviso.error(it, "No se eliminó el producto", producto.nombre) }
                 }
             }
             builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }

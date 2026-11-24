@@ -323,21 +323,21 @@ class InventarioActivity : AppCompatActivity() {
             habilitarCamposModoNuevo(false)
 
             if (esSoloEdicion) {
-                Toast.makeText(this, "Editando: ${existente.nombre}", Toast.LENGTH_SHORT).show()
+                Aviso.info(this, "Editando producto", existente.nombre)
             } else {
-                Toast.makeText(this, "Producto conocido. Stock: $stockAMostrar", Toast.LENGTH_SHORT).show()
+                Aviso.info(this, "Producto encontrado", "${existente.nombre} · stock $stockAMostrar")
             }
         } else {
             limpiarSoloCampos()
             etStock.setText("1")
             habilitarCamposModoNuevo(true)
-            Toast.makeText(this, "Producto nuevo. Registre los datos.", Toast.LENGTH_SHORT).show()
+            Aviso.info(this, "Producto nuevo", "Registra nombre, precios y stock.")
         }
     }
 
     private fun guardarProducto() {
         if (codigoActual.isEmpty()) {
-            Toast.makeText(this, "Escanea un código primero", Toast.LENGTH_SHORT).show()
+            Aviso.advertencia(this, "Falta el código", "Escanea el producto antes de guardar.")
             return
         }
         val nombre = actvNombre.text.toString().trim()
@@ -350,7 +350,7 @@ class InventarioActivity : AppCompatActivity() {
         if (precioC <= 0) { etPrecioCompra.error = "Precio de compra requerido"; return }
 
         if (precioC >= precioV) {
-            Toast.makeText(this, "Error: Compra no puede ser >= Venta", Toast.LENGTH_LONG).show()
+            Aviso.advertencia(this, "Precios inválidos", "Compra ${"$%.2f".format(precioC)} · Venta ${"$%.2f".format(precioV)}")
             etPrecioCompra.error = "Revisa los precios"
             vibrarError()
             return
@@ -363,7 +363,7 @@ class InventarioActivity : AppCompatActivity() {
         if (esPerecedero) {
             val textoCaducidad = etCaducidad.text.toString().trim()
             if (textoCaducidad.length != 8 || etCaducidad.currentTextColor == Color.RED) {
-                Toast.makeText(this, "Caducidad obligatoria", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Falta la caducidad", "Completa la fecha DDMMAAAA.")
                 vibrarError()
                 return
             }
@@ -384,7 +384,7 @@ class InventarioActivity : AppCompatActivity() {
         )
 
         if (vm.db.upsertProducto(producto) >= 0) {
-            Toast.makeText(this, "✓ Guardado", Toast.LENGTH_SHORT).show()
+            Aviso.exito(this, "Producto guardado", nombre)
             configurarSugerenciasNombres()
             limpiarFormulario()
         }
