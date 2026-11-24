@@ -16,7 +16,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -321,7 +320,7 @@ class ReportesActivity : AppCompatActivity() {
         btnAceptar.setOnClickListener {
             val pct = etPorcentaje.text.toString().toDoubleOrNull()
             if (pct == null || pct < 0 || pct > 100) {
-                Toast.makeText(this, "Ingresa un porcentaje entre 0 y 100", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Porcentaje inválido", "Debe estar entre 0 y 100.")
                 return@setOnClickListener
             }
             val nuevoPrecio = precioOriginal * (1 - pct / 100.0)
@@ -329,11 +328,11 @@ class ReportesActivity : AppCompatActivity() {
             // ⚠ Necesitas este método en DatabaseHelper (mira la nota al final)
             dbHelper.actualizarPrecioProducto(producto.idProducto, nuevoPrecio)
 
-            Toast.makeText(
+            Aviso.exito(
                 this,
-                "Precio actualizado a $${String.format("%.2f", nuevoPrecio)}",
-                Toast.LENGTH_SHORT
-            ).show()
+                "Precio actualizado",
+                "${producto.nombre} · ${"$%.2f".format(nuevoPrecio)}"
+            )
 
             dialog.dismiss()
             cargarDatosDeReportes()
