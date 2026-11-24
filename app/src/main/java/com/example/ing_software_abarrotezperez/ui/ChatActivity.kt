@@ -93,6 +93,9 @@ class ChatActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Pregunta enviada desde el panel de resumen
+        intent.getStringExtra("pregunta")?.let { vm.send(it) }
     }
 
     /** Siempre indica que funciona sin Internet; añade si la IA local está disponible. */
