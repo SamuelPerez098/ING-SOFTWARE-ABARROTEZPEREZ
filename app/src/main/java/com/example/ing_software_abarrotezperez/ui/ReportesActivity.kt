@@ -1,5 +1,6 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import android.animation.ObjectAnimator
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
@@ -46,6 +47,9 @@ class ReportesActivity : AppCompatActivity() {
     private lateinit var rvCaducidad: RecyclerView
     private lateinit var lineChart: LineChart
 
+    private lateinit var btnCampanita: ImageButton
+    private var animadorCampana: ObjectAnimator? = null
+
     // Fecha actual (YYYY-MM-DD) para los reportes del día
     private var fechaFiltro: String = ""
 
@@ -61,7 +65,7 @@ class ReportesActivity : AppCompatActivity() {
         rvCaducidad = findViewById(R.id.rvCaducidad)
         lineChart = findViewById(R.id.lineChartGanancias)
 
-        val btnCampanita = findViewById<ImageButton>(R.id.btnCampanita)
+        btnCampanita = findViewById(R.id.btnCampanita)
         val btnRegresar = findViewById<ImageView>(R.id.btnRegresarReportes)
 
         rvCaducidad.layoutManager = LinearLayoutManager(this)
@@ -80,36 +84,24 @@ class ReportesActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         cargarDatosDeReportes()
+        actualizarCampanita()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        detenerCampanita()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        detenerCampanita()
     }
 
     // ======================================================================
     // CAMPANITA: productos caducados o por caducar en <= 3 días
     // ======================================================================
     private fun mostrarProductosPrioritarios() {
-        val todos = dbHelper.getAllProductos()
-        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-        val hoy = Date()
-        val limite = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 3) }.time
-
-        val prioritarios = todos
-            .filter { prod ->
-                if (prod.fechaCaducidad.isNullOrEmpty()) return@filter false
-                try {
-                    val f = sdf.parse(prod.fechaCaducidad!!) ?: return@filter false
-                    // Caducados (before hoy) O dentro de los próximos 3 días
-                    f.before(limite)
-                } catch (e: Exception) {
-                    false
-                }
-            }
-            .sortedBy { prod ->
-                try {
-                    sdf.parse(prod.fechaCaducidad!!)
-                } catch (e: Exception) {
-                    Date(Long.MAX_VALUE)
-                }
-            }
-            .toMutableList()
+        val prioritarios = productosPrioritarios()
 
         if (prioritarios.isEmpty()) {
             AlertDialog.Builder(this)
@@ -131,6 +123,51 @@ class ReportesActivity : AppCompatActivity() {
             .setView(dialogView)
             .setPositiveButton("Cerrar", null)
             .show()
+    }
+
+    /** Productos caducados o por caducar en ≤3 días (solo lectura). */
+    private fun productosPrioritarios(): MutableList<DatabaseHelper.Producto> {
+        val todos = dbHelper.getAllProductos()
+        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
+        val limite = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 3) }.time
+
+        return todos
+            .filter { prod ->
+                if (prod.fechaCaducidad.isNullOrEmpty()) return@filter false
+                try {
+                    val f = sdf.parse(prod.fechaCaducidad!!) ?: return@filter false
+                    // Caducados o dentro de los próximos 3 días
+                    f.before(limite)
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            .sortedBy { prod ->
+                try {
+                    sdf.parse(prod.fechaCaducidad!!)
+                } catch (e: Exception) {
+                    Date(Long.MAX_VALUE)
+                }
+            }
+            .toMutableList()
+    }
+
+    /** La campanita solo se mueve si hay productos prioritarios. */
+    private fun actualizarCampanita() {
+        if (productosPrioritarios().isEmpty()) {
+            detenerCampanita()
+            return
+        }
+        if (animadorCampana?.isRunning != true) {
+            animadorCampana = CampanaAnimator.iniciar(btnCampanita)
+        }
+    }
+
+    private fun detenerCampanita() {
+        if (::btnCampanita.isInitialized) {
+            CampanaAnimator.detener(btnCampanita, animadorCampana)
+        }
+        animadorCampana = null
     }
 
     // ======================================================================

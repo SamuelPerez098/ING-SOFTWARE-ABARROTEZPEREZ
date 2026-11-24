@@ -101,17 +101,22 @@ object Motion {
     }
 
     /**
-     * Salida: funde a opacidad 0 sin tocar la visibilidad (la decide el llamador).
+     * Salida: funde a opacidad 0 y oculta la vista (GONE) al terminar.
      */
     fun fadeOut(view: View) {
         if (!ValueAnimator.areAnimatorsEnabled()) {
             view.alpha = 0f
+            view.visibility = View.GONE
             return
         }
         view.animate()
             .alpha(0f)
             .setDuration(DUR_MEDIUM.toLong())
             .setInterpolator(salida)
+            .withEndAction {
+                view.visibility = View.GONE
+                view.alpha = 1f
+            }
             .start()
     }
 

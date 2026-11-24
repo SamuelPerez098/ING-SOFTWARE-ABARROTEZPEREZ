@@ -77,7 +77,14 @@ class ChatActivity : AppCompatActivity() {
                 }
                 launch {
                     vm.thinking.collect { pensando ->
-                        layoutPensando.visibility = if (pensando) View.VISIBLE else View.GONE
+                        if (pensando) {
+                            Motion.fadeInUp(
+                                layoutPensando,
+                                8f * resources.displayMetrics.density
+                            )
+                        } else {
+                            Motion.fadeOut(layoutPensando)
+                        }
                         btnEnviar.isEnabled = !pensando
                         if (pensando && adapter.itemCount > 0) rvChat.scrollToPosition(adapter.itemCount - 1)
                     }
