@@ -70,7 +70,7 @@ class LoginActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         } else {
-            tvError.visibility = TextView.VISIBLE
+            Motion.fadeErrorIn(tvError)
         }
     }
     // No permitir regresar al menú sin iniciar sesión
