@@ -277,8 +277,8 @@ class InventarioActivity : AppCompatActivity() {
     private fun vibrarError() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
-        } else vibrator.vibrate(300)
+            vibrator.vibrate(VibrationEffect.createOneShot(70, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else vibrator.vibrate(70)
     }
 
     private fun configurarSugerenciasNombres() {
