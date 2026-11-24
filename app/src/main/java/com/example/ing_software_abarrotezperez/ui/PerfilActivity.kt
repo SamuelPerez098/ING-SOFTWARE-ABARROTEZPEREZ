@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -93,7 +95,7 @@ class PerfilActivity : AppCompatActivity() {
 
     private fun mostrarOpcionesImagen() {
         val opciones = arrayOf("Cámara", "Galería", "Cancelar")
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Seleccionar foto")
             .setItems(opciones) { _, i ->
                 when (i) {
@@ -131,7 +133,7 @@ class PerfilActivity : AppCompatActivity() {
     }
 
     private fun mostrarAlertaExito(esExitoso: Boolean) {
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle(if (esExitoso) "¡Éxito!" else "Error")
             .setMessage(if (esExitoso) "Tus datos se guardaron correctamente." else "Error al guardar la imagen.")
             .setPositiveButton("Aceptar") { _, _ -> if (esExitoso) finish() }

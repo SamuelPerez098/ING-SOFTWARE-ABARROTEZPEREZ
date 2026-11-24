@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.content.ComponentCallbacks2
 import android.content.Intent
 import android.os.Bundle
@@ -138,11 +140,11 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun confirmarBorrado() {
-        AlertDialog.Builder(this)
-            .setTitle("Borrar historial")
-            .setMessage("Se borrará la conversación guardada en este teléfono. Tus ventas e inventario no se tocan.")
-            .setPositiveButton("Borrar") { _, _ -> vm.clearHistory() }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        Dialogos.confirmar(
+            this,
+            "Borrar historial",
+            "Se borrará la conversación guardada en este teléfono. Tus ventas e inventario no se tocan.",
+            "Borrar"
+        ) { vm.clearHistory() }
     }
 }
