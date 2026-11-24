@@ -110,6 +110,7 @@ class VentaActivity : AppCompatActivity() {
         adapter = VentaAdapter(itemsVenta) { actualizarTotal() }
         rvItems.layoutManager = LinearLayoutManager(this)
         rvItems.adapter = adapter
+        Motion.sinAnimacionDeInsercion(rvItems)
 
         // Selector de modo
         btnModoBluetooth = findViewById(R.id.btnModoBluetooth)

@@ -8,6 +8,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.Interpolator
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Punto único de animación de la app.
@@ -155,6 +156,14 @@ object Motion {
             .setDuration(DUR_FAST.toLong())
             .setInterpolator(if (enabled) entrada else salida)
             .start()
+    }
+
+    /**
+     * Para listas de alta frecuencia (carrito de Venta): el ítem entra sin
+     * animación; el escaneo ya confirma por vibración y estado.
+     */
+    fun sinAnimacionDeInsercion(recyclerView: RecyclerView) {
+        recyclerView.itemAnimator = null
     }
 }
 
