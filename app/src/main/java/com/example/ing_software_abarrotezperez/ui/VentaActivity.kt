@@ -371,7 +371,6 @@ class VentaActivity : AppCompatActivity() {
         spinnerClientes.adapter = adapterSpinner
 
         btnWhatsApp.isEnabled = false
-        btnWhatsApp.text = "COBRA PARA ENVIAR TICKET"
 
         btnWhatsApp.setOnClickListener {
             val posicion = spinnerClientes.selectedItemPosition
@@ -408,7 +407,7 @@ class VentaActivity : AppCompatActivity() {
             ejecutarVenta()
 
             btnWhatsApp.isEnabled = true
-            btnWhatsApp.text = "ENVIAR POR WHATSAPP"
+            btnWhatsApp.text = "Enviar por WhatsApp"
 
             btnConfirmar.isEnabled = false
             btnFiado.visibility = View.GONE
