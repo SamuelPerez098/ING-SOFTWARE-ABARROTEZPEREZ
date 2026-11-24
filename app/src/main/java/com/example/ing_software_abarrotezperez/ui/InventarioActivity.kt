@@ -360,6 +360,8 @@ class InventarioActivity : AppCompatActivity() {
         var caducidad: String? = null
         var stockGuardar = etStock.text.toString().toIntOrNull() ?: 0
 
+        if (stockGuardar < 0) { etStock.error = "Stock inválido"; return }
+
         if (esPerecedero) {
             val textoCaducidad = etCaducidad.text.toString().trim()
             if (textoCaducidad.length != 8 || etCaducidad.currentTextColor == Color.RED) {
@@ -369,7 +371,6 @@ class InventarioActivity : AppCompatActivity() {
             }
             caducidad = textoCaducidad
         } else {
-            if (stockGuardar < 0) { etStock.error = "Stock inválido"; return }
             caducidad = null
         }
 
