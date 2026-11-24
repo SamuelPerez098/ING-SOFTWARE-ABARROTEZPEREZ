@@ -164,3 +164,13 @@ cómo va el negocio	STORE_SUMMARY	resumen
 cómo está la tienda	STORE_SUMMARY	resumen
 cómo anda todo	STORE_SUMMARY	resumen
 qué balance tengo	STORE_SUMMARY	resumen
+¿quién me debe más?	COBRANZA	cobranza
+¿cuánto me debe doña mary?	COBRANZA	cobranza
+fiados pendientes	COBRANZA	cobranza
+¿quién me debe dinero?	COBRANZA	cobranza
+cuánto me debe juan	COBRANZA	cobranza
+adeudos por cobrar	COBRANZA	cobranza
+¿cuánto me deben en total?	COBRANZA	cobranza
+qué clientes me deben	COBRANZA	cobranza
+cobranza pendiente	COBRANZA	cobranza
+a quién le debo cobrar	COBRANZA	cobranza

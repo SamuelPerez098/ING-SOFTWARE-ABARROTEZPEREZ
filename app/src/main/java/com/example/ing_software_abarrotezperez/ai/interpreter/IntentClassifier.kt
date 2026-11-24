@@ -101,6 +101,11 @@ class IntentClassifier {
             "existencias de|stock de|cuanto hay|donde esta|que tanto",
             none = listOf("venta\\w*|vend\\w*|caduc\\w*|venc\\w*|merma\\w*|ganancia\\w*")),
 
+        // ── Cobranza / fiados ──
+        rule(COBRANZA, 6, "fiad\\w*|adeudo\\w*|deud\\w*"),
+        rule(COBRANZA, 5, "me debe|me deben|quien debe|quienes deben|debe dinero|deben dinero"),
+        rule(COBRANZA, 4, "cobrar|cobranza"),
+
         // ── Resumen de tienda ──
         rule(STORE_SUMMARY, 6, "resumen"),
         rule(STORE_SUMMARY, 6, "balance|panorama"),

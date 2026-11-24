@@ -115,7 +115,7 @@ class InsightsEngine(
                 if (d.monto >= cfg.montoDeudaAlerta.toDouble()) Severidad.ATENCION else Severidad.INFO,
                 "Mayor deudor: ${d.nombre}",
                 "Concentra ${money(d.monto)} de la deuda total.",
-                "¿Qué me debe ${d.nombre} y desde cuándo?"
+                "¿Quién me debe más?"
             )
         }
     }

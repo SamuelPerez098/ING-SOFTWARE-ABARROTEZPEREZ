@@ -41,6 +41,7 @@ class ToolRegistry(
             AssistantIntent.LOW_ROTATION -> stats.lowRotation(params)
             AssistantIntent.SHRINKAGE -> stats.shrinkage(params)
             AssistantIntent.STORE_SUMMARY -> business.storeSummary(params)
+            AssistantIntent.COBRANZA -> business.cobranza(params)
             AssistantIntent.HELP -> help()
             AssistantIntent.UNKNOWN -> AssistantResponse(
                 AssistantIntent.UNKNOWN,

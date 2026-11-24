@@ -13,5 +13,5 @@ enum class AssistantIntent {
     // Conversación
     HELP, UNKNOWN,
     // Resumen de tienda (paso 4)
-    STORE_SUMMARY
+    STORE_SUMMARY, COBRANZA
 }

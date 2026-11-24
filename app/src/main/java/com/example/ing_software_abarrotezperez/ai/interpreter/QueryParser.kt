@@ -33,12 +33,6 @@ class QueryParser(
         val top = cls.top
         val products = catalog.matching(e.residual)
 
-        // Fiados: aún no hay herramienta; se dice con claridad en vez de adivinar.
-        if (FIADOS.containsMatchIn(t) && (top == null || top.score < CONFIDENT_STRONG))
-            return InterpretationResult(UNKNOWN, clarification =
-                "Por ahora consulto inventario, caducidades, ventas y mermas. " +
-                    "Los fiados y adeudos los puedes ver en la sección Clientes del menú.")
-
         // Producto mencionado sin otra intención clara: se interpreta como búsqueda de producto.
         if (products.isNotEmpty() && (cls.status == ClassificationStatus.NONE || cls.status == ClassificationStatus.WEAK ||
                     top?.intent == SEARCH_PRODUCT))
@@ -124,15 +118,14 @@ class QueryParser(
                 period = e.periods.getOrNull(0)?.period, comparePeriod = e.periods.getOrNull(1)?.period
             )
             SEARCH_PRODUCT -> QueryParameters(productQuery = e.residual.joinToString(" ").ifBlank { null }, limit = e.limit)
+            COBRANZA -> QueryParameters(productQuery = e.residual.joinToString(" ").ifBlank { null })
             STORE_SUMMARY, HELP, UNKNOWN -> QueryParameters()
         }
         return InterpretationResult(intent, params, confidence)
     }
 
     private companion object {
-        const val CONFIDENT_STRONG = 5
         val THANKS = Regex("\\b(?:gracias|muchas gracias|mil gracias)\\b")
-        val FIADOS = Regex("\\b(?:fiad\\w*|deuda\\w*|deben|debe|adeudo\\w*|cobrar|abono\\w*)\\b")
         val NOT_PER_PRODUCT = setOf(
             SALES_TOTAL, TOP_SELLING, LEAST_SELLING, SALES_COMPARE, EXPIRING_SOON, EXPIRED,
             NO_MOVEMENT, LOW_ROTATION, SHRINKAGE, INVENTORY_VALUE
@@ -152,7 +145,8 @@ class QueryParser(
             NO_MOVEMENT to "los productos sin ventas",
             LOW_ROTATION to "los productos de baja rotación",
             SHRINKAGE to "las mermas y pérdidas",
-            HELP to "ayuda", UNKNOWN to "otra cosa", STORE_SUMMARY to "el resumen de tu tienda"
+            HELP to "ayuda", UNKNOWN to "otra cosa", STORE_SUMMARY to "el resumen de tu tienda",
+            COBRANZA to "los fiados y adeudos"
         )
         val EXAMPLES = mapOf(
             LOW_STOCK to "productos con pocas existencias",
@@ -169,7 +163,8 @@ class QueryParser(
             NO_MOVEMENT to "productos sin ventas el último mes",
             LOW_ROTATION to "productos de baja rotación",
             SHRINKAGE to "mermas de este mes",
-            HELP to "qué puedes hacer", UNKNOWN to "qué puedes hacer", STORE_SUMMARY to "cómo va la tienda"
+            HELP to "qué puedes hacer", UNKNOWN to "qué puedes hacer", STORE_SUMMARY to "cómo va la tienda",
+            COBRANZA to "quién me debe más"
         )
     }
 }

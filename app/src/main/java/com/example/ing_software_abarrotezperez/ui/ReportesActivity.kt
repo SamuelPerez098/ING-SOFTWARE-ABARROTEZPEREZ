@@ -266,14 +266,12 @@ class ReportesActivity : AppCompatActivity() {
     }
 
     private fun textoAccion(i: Insight): String = when (i.tipo) {
-        TipoInsight.COBRANZA -> "Ver fiados"
         TipoInsight.RESPALDO -> "Ir a respaldo"
         TipoInsight.MERMAS -> "Ver mermas"
         else -> "Preguntar a Pérez AI"
     }
 
     private fun accion(i: Insight): () -> Unit = when (i.tipo) {
-        TipoInsight.COBRANZA -> { { startActivity(Intent(this@ReportesActivity, FiadoActivity::class.java)) } }
         TipoInsight.RESPALDO -> { { startActivity(Intent(this@ReportesActivity, AlmacenamientoActivity::class.java)) } }
         TipoInsight.MERMAS -> { { startActivity(Intent(this@ReportesActivity, MermasActivity::class.java)) } }
         else -> { { startActivity(Intent(this@ReportesActivity, ChatActivity::class.java).putExtra("pregunta", i.preguntaSugerida)) } }

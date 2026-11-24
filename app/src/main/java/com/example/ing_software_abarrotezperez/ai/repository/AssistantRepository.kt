@@ -67,6 +67,7 @@ interface AssistantRepository {
     fun fiadoPendiente(): Pair<Double, Int>
     fun fiadoAntiguo(limiteIso: String): List<DeudaRow>
     fun mayorDeudor(): DeudaRow?
+    fun deudores(limite: Int): List<DeudaRow>
     fun perdidaMargenNegativo(desde: String, hastaExclusivo: String): Double
 }
 
@@ -211,6 +212,11 @@ class SqliteAssistantRepository(private val dbProvider: () -> SQLiteDatabase) : 
         query(AssistantSql.MAYOR_DEUDOR, false, emptyList()) {
             DeudaRow(it.getInt(0), it.str(1), it.getDouble(2))
         }.firstOrNull()
+
+    override fun deudores(limite: Int): List<DeudaRow> =
+        query(AssistantSql.DEUDORES, false, listOf(limite)) {
+            DeudaRow(it.getInt(0), it.str(1), it.getDouble(2))
+        }
 
     override fun perdidaMargenNegativo(desde: String, hastaExclusivo: String): Double =
         one(AssistantSql.MARGEN_NEGATIVO, false, listOf(desde, hastaExclusivo)) { it.getDouble(0) }

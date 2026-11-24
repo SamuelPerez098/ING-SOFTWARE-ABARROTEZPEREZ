@@ -52,6 +52,7 @@ class InsightsEngineTest {
         override fun fiadoPendiente() = fiados.sumOf { it.monto } to fiados.size
         override fun fiadoAntiguo(limiteIso: String) = fiados
         override fun mayorDeudor() = mayor
+        override fun deudores(limite: Int) = fiados
         override fun listarProductos(excluirPrueba: Boolean) = productos
         override fun mermas(desde: String, hastaExclusivo: String, limite: Int, excluirPrueba: Boolean) = mermasResultado
         override fun perdidaMargenNegativo(desde: String, hastaExclusivo: String) = perdidaMargen

@@ -180,6 +180,11 @@ GROUP BY f.id_cliente ORDER BY 3 DESC"""
 FROM fiado f JOIN cliente c ON c.id_cliente = f.id_cliente
 WHERE f.saldo_pendiente > 0 GROUP BY f.id_cliente ORDER BY 3 DESC LIMIT 1"""
 
+    // ?1 = límite; todos los clientes con saldo pendiente, del mayor al menor.
+    const val DEUDORES = """SELECT c.id_cliente, c.nombre, COALESCE(SUM(f.saldo_pendiente),0)
+FROM fiado f JOIN cliente c ON c.id_cliente = f.id_cliente
+WHERE f.saldo_pendiente > 0 GROUP BY f.id_cliente ORDER BY 3 DESC LIMIT ?1"""
+
     // ?1 = desde, ?2 = hasta (exclusivo); pérdida de vender bajo el costo en el periodo.
     const val MARGEN_NEGATIVO = """SELECT COALESCE(SUM((p.precio_compra - dv.precio_unitario) * dv.cantidad),0)
 FROM detalle_venta dv JOIN venta v ON v.id_venta = dv.id_venta
