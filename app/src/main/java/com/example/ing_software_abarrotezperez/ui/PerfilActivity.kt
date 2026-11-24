@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
@@ -33,7 +32,7 @@ class PerfilActivity : AppCompatActivity() {
 
     private val requestCameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) { abrirCamara() }
-        else { Toast.makeText(this, "Permiso denegado", Toast.LENGTH_SHORT).show() }
+        else { Aviso.advertencia(this, "Permiso de cámara", "Actívalo para cambiar la foto.") }
     }
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -74,7 +73,7 @@ class PerfilActivity : AppCompatActivity() {
             val nombre = etNombrePerfil.text.toString().trim()
 
             if (nombre.isEmpty()) {
-                Toast.makeText(this, "Por favor ingresa un nombre", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Falta el nombre", "Escribe el nombre del perfil.")
                 return@setOnClickListener
             }
 
