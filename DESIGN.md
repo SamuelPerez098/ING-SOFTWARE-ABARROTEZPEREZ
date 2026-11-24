@@ -290,6 +290,17 @@ Los avisos transitorios son un componente propio (`ui/Aviso.kt`), no un Toast: u
 
 **Accesibilidad:** anuncia título y detalle con `announceForAccessibility`; respeta `areAnimatorsEnabled()` a través de `Motion`.
 
+## Fichas de lista
+
+Tarjetas de fila para las listas (producto, cliente, fiado, merma, carrito):
+
+- **Contenedor:** radio 16dp, margen 16dp horizontal y 6dp vertical, padding interno 16dp.
+- **Profundidad:** sin sombra; borde de 1dp (`colorOutlineVariant`) o elevación ≤ 2dp. El Techo de 4dp sigue mandando.
+- **Tipografía:** título 16sp bold, texto secundario 13sp, cifra destacada 16–18sp bold.
+- **Acento por módulo:** Inventario `#C45B20`, Fiado `#5E17EB`, Merma `#B71C1C`, Venta `#00B259`, Reportes `#2C55A6`, Pérez AI `#7A513E`. Un solo acento por ficha; el resto usa roles del tema.
+- **Claro y oscuro:** fondo `?attr/colorSurface`, textos con `?attr/colorOnSurface` / `colorOnSurfaceVariant`.
+- **Acciones:** `Widget.Abarrotes.IconAccion` (MaterialButton IconButton, táctil 48dp, icono 20dp, `contentDescription` en español). Estados con `Widget.Abarrotes.Estado.{Peligro,Advertencia,Neutro}`.
+
 ## Do's and Don'ts
 
 ### Do:
