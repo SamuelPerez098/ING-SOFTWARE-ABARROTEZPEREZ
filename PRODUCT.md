@@ -37,7 +37,7 @@ Aplicación de punto de venta y gestión de inventario para "Abarrotes Pérez". 
 
 **Capacidades confirmadas por el código:** alta/edición de productos y clientes, control de caducidades, ventas con selección de clientes y teléfonos, compras, fiados, mermas, reportes con gráficas, personalización de umbrales del asistente, respaldo/restauración en Drive.
 
-** decisiones abiertas / sin confirmar:**
+**Decisiones abiertas / sin confirmar:**
 - Despliegue comercial real: la entrevista confirma al dueño/gerente como usuario de referencia, pero el repositorio conserva señales de proyecto de curso (paquete `com.example`, `versionName 1.0`, volcado `todo_mi_codigo.txt`). No se confirmó distribución ni uso en una tienda concreta; no inventar clientes, métricas ni testimonios.
 - El archivo del modelo local no se distribuye en el APK; se instala manualmente con `adb`. No se requiere que la app lo descargue.
 - Alcance de tabletas: el código declara `android:supportsRtl="true"` pero no hay restricciones confirmadas de tamaño; Material 3 exige navegación adecuada a cada tamaño.
