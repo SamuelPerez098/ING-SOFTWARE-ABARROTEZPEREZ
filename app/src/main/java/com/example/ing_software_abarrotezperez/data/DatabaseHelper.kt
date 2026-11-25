@@ -353,8 +353,14 @@ class DatabaseHelper(context: Context) :
                 }
                 db.insert(TABLE_DETALLE_VENTA, null, cvDetalle)
 
-                db.execSQL("UPDATE producto SET stock = stock - ? WHERE id_producto = ?",
-                    arrayOf(item.cantidad, item.producto.idProducto))
+                val filas = db.compileStatement(
+                    "UPDATE producto SET stock = stock - ? WHERE id_producto = ? AND stock >= ?"
+                ).apply {
+                    bindLong(1, item.cantidad.toLong())
+                    bindLong(2, item.producto.idProducto.toLong())
+                    bindLong(3, item.cantidad.toLong())
+                }.executeUpdateDelete()
+                if (filas == 0) return -2L
 
                 var restante = item.cantidad
                 val cursorLote = db.rawQuery(

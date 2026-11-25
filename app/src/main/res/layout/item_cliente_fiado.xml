@@ -1,70 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="?attr/colorSurfaceVariant"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="0dp">
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorOutlineVariant"
+    app:strokeWidth="1dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp">
+        android:padding="16dp">
 
-        <ImageView
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:src="@drawable/clientes_logo"
-            app:tint="#5E17EB" />
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_avatar_fiado">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/clientes_logo"
+                app:tint="#5E17EB" />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tvNombreCliente"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Nombre del cliente"
-                android:textColor="?android:attr/textColorPrimary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvSaldoPendiente"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
                 android:text="Saldo: $0.00"
-                android:textColor="#D32F2F"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- NUEVO: Botón de editar (Lápiz) -->
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEditarCliente"
+            style="@style/Widget.Abarrotes.IconAccion"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_edit"
-            app:tint="#5E17EB" />
+            android:layout_marginStart="8dp"
+            android:contentDescription="Editar cliente"
+            app:icon="@drawable/ic_lapiz"
+            app:iconTint="@color/acento_fiado" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnVerDetalle"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            android:backgroundTint="#5E17EB"
+            android:layout_marginStart="8dp"
+            android:minWidth="0dp"
+            android:paddingHorizontal="16dp"
             android:text="VER"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/acento_fiado"
             android:textStyle="bold"
-            app:cornerRadius="15dp" />
+            app:backgroundTint="#EDE3FB"
+            app:cornerRadius="16dp" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

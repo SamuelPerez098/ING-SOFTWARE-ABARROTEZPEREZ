@@ -1,13 +1,13 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.app.AlertDialog
 import android.os.Bundle
 import android.os.Environment
 import android.os.StatFs
 import android.util.Log
-import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -49,12 +49,11 @@ class AlmacenamientoActivity : AppCompatActivity() {
 
         } catch (e: ApiException) {
             Log.e(TAG, "Sign-In fallido. Código de error: ${e.statusCode}", e)
-            Toast.makeText(
+            Aviso.error(
                 this,
-                "Error al iniciar sesión con Google (código: ${e.statusCode}). " +
-                        "Verifica tu configuración en Google Cloud Console.",
-                Toast.LENGTH_LONG
-            ).show()
+                "No se inició sesión",
+                "Código ${e.statusCode}. Revisa tu configuración de Google."
+            )
         }
     }
 
@@ -71,16 +70,11 @@ class AlmacenamientoActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, signInOptions)
 
         val btnRespaldo = findViewById<MaterialCardView>(R.id.btnRealizarRespaldo)
-        val btnRegresar = findViewById<Button>(R.id.btnRegresarAlmacenamiento)
 
         calcularEspacio()
 
         btnRespaldo.setOnClickListener {
             iniciarRespaldoDrive()
-        }
-
-        btnRegresar.setOnClickListener {
-            finish()
         }
     }
 
@@ -90,7 +84,7 @@ class AlmacenamientoActivity : AppCompatActivity() {
 
         if (lastAccount != null && GoogleSignIn.hasPermissions(lastAccount, driveScope)) {
             val email = lastAccount.email ?: run {
-                Toast.makeText(this, "No se pudo obtener el correo de la cuenta.", Toast.LENGTH_SHORT).show()
+                Aviso.error(this, "Cuenta sin correo", "No se pudo obtener el correo de la cuenta.")
                 return
             }
             DriveHelper.saveAccountEmail(applicationContext, email)
@@ -106,16 +100,15 @@ class AlmacenamientoActivity : AppCompatActivity() {
     private fun performDriveUpload(accountEmail: String) {
         val dbFile = applicationContext.getDatabasePath(DriveHelper.DB_NAME)
         if (!dbFile.exists()) {
-            Toast.makeText(
+            Aviso.error(
                 this,
-                "No se encontró la base de datos '${DriveHelper.DB_NAME}'.\n" +
-                        "Ruta esperada: ${dbFile.absolutePath}",
-                Toast.LENGTH_LONG
-            ).show()
+                "No se encontró la base de datos",
+                "Archivo: ${DriveHelper.DB_NAME}"
+            )
             return
         }
 
-        val progressDialog = AlertDialog.Builder(this)
+        val progressDialog = MaterialAlertDialogBuilder(this)
             .setTitle("Subiendo respaldo…")
             .setMessage("Conectando con Google Drive.\nPor favor espera.")
             .setCancelable(false)
@@ -138,29 +131,33 @@ class AlmacenamientoActivity : AppCompatActivity() {
             uploadResult.fold(
                 onSuccess = { fileId ->
                     Log.d(TAG, "Respaldo exitoso. ID en Drive: $fileId")
-                    Toast.makeText(
+                    getSharedPreferences("prefs_respaldo", MODE_PRIVATE)
+                        .edit().putLong("ultimo_respaldo_millis", System.currentTimeMillis()).apply()
+                    Aviso.exito(
                         this@AlmacenamientoActivity,
-                        "✅ Respaldo subido correctamente a Google Drive.\nCuenta: $accountEmail",
-                        Toast.LENGTH_LONG
-                    ).show()
+                        "Respaldo subido",
+                        accountEmail
+                    )
                 },
                 onFailure = { error ->
                     Log.e(TAG, "Error al subir respaldo: ${error.message}", error)
-                    Toast.makeText(
+                    Aviso.error(
                         this@AlmacenamientoActivity,
-                        "❌ Error al subir el respaldo:\n${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                        "No se subió el respaldo",
+                        error.message ?: "Intenta de nuevo."
+                    )
                 }
             )
         }
     }
 
     private fun calcularEspacio() {
-        val progressApp    = findViewById<CircularProgressIndicator>(R.id.progressAppUsage)
-        val tvPorcentaje   = findViewById<TextView>(R.id.tvPorcentajeUso)
-        val tvEspacioApp   = findViewById<TextView>(R.id.tvEspacioApp)
-        val tvEspacioLibre = findViewById<TextView>(R.id.tvEspacioLibre)
+        val progressApp       = findViewById<CircularProgressIndicator>(R.id.progressAppUsage)
+        val tvPorcentaje      = findViewById<TextView>(R.id.tvPorcentajeUso)
+        val tvEspacioApp      = findViewById<TextView>(R.id.tvEspacioApp)
+        val tvEspacioAppValor = findViewById<TextView>(R.id.tvEspacioAppValor)
+        val tvEspacioLibre    = findViewById<TextView>(R.id.tvEspacioLibre)
+        val tvEspacioLibreValor = findViewById<TextView>(R.id.tvEspacioLibreValor)
 
         val dbFile = getDatabasePath(DriveHelper.DB_NAME)
         val dbSize = if (dbFile.exists()) dbFile.length() else 0L
@@ -190,8 +187,10 @@ class AlmacenamientoActivity : AppCompatActivity() {
         val porcentajeUsoTelefono =
             ((bytesUsadosTelefono.toDouble() / totalBytesTelefono.toDouble()) * 100).toInt()
 
-        tvEspacioApp.text   = "App y Base de Datos: ${String.format("%.2f", appMegabytes)} MB"
-        tvEspacioLibre.text = "Espacio libre en teléfono: ${String.format("%.2f", gigabytesLibres)} GB"
+        tvEspacioApp.text        = "App y Base de Datos"
+        tvEspacioAppValor.text   = "${String.format("%.2f", appMegabytes)} MB"
+        tvEspacioLibre.text      = "Espacio libre en teléfono"
+        tvEspacioLibreValor.text = "${String.format("%.2f", gigabytesLibres)} GB"
         tvPorcentaje.text   = "$porcentajeUsoTelefono%"
         progressApp.setProgressCompat(porcentajeUsoTelefono, true)
     }

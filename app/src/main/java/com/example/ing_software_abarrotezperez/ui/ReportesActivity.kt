@@ -1,5 +1,8 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
+import android.animation.ObjectAnimator
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
@@ -15,9 +18,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
@@ -31,9 +32,28 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import com.example.ing_software_abarrotezperez.ai.config.AssistantConfig
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.color.MaterialColors
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.MaterialDatePicker
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import androidx.lifecycle.lifecycleScope
+import com.example.ing_software_abarrotezperez.ai.insights.Insight
+import com.example.ing_software_abarrotezperez.ai.insights.InsightsEngine
+import com.example.ing_software_abarrotezperez.ai.insights.Severidad
+import com.example.ing_software_abarrotezperez.ai.insights.TipoInsight
+import com.example.ing_software_abarrotezperez.ai.insights.Visto
+import com.example.ing_software_abarrotezperez.ai.repository.SqliteAssistantRepository
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import java.time.LocalDateTime
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class ReportesActivity : AppCompatActivity() {
@@ -46,8 +66,43 @@ class ReportesActivity : AppCompatActivity() {
     private lateinit var rvCaducidad: RecyclerView
     private lateinit var lineChart: LineChart
 
+    private lateinit var btnCampanita: ImageButton
+    private var animadorCampana: ObjectAnimator? = null
+
     // Fecha actual (YYYY-MM-DD) para los reportes del día
     private var fechaFiltro: String = ""
+
+    private lateinit var tvFechaReporte: TextView
+    private lateinit var btnSeleccionarDia: MaterialButton
+    private lateinit var tvTituloTabla: TextView
+    private lateinit var tvColumnaDerecha: TextView
+    private lateinit var btnModoCaducidad: MaterialButton
+    private lateinit var btnModoStock: MaterialButton
+    private lateinit var llGraficaVacia: View
+    private lateinit var llTablaVacia: View
+    private lateinit var tvTextoVacio: TextView
+
+    private enum class ModoTabla { CADUCIDAD, STOCK }
+    private var modoTabla = ModoTabla.CADUCIDAD
+    private var listaCaducidad: List<DatabaseHelper.Producto> = emptyList()
+    private var listaBajoStock: List<DatabaseHelper.Producto> = emptyList()
+
+    private lateinit var badgeCampanita: View
+    private val prefsInsights by lazy { getSharedPreferences("insights_visto", MODE_PRIVATE) }
+    private var calculando = false
+    private var sheetResumen: BottomSheetDialog? = null
+    private var rvResumen: RecyclerView? = null
+    private var vacioResumen: View? = null
+    private var tvVacioResumen: TextView? = null
+    private val engine by lazy {
+        InsightsEngine(
+            SqliteAssistantRepository { dbHelper.readableDatabase },
+            AssistantConfig(this),
+            { LocalDateTime.now() },
+            { getSharedPreferences("prefs_respaldo", MODE_PRIVATE).getLong("ultimo_respaldo_millis", -1L).takeIf { it > 0 } }
+        )
+    }
+    private var ultimosInsights: List<Insight> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,8 +116,19 @@ class ReportesActivity : AppCompatActivity() {
         rvCaducidad = findViewById(R.id.rvCaducidad)
         lineChart = findViewById(R.id.lineChartGanancias)
 
-        val btnCampanita = findViewById<ImageButton>(R.id.btnCampanita)
+        btnCampanita = findViewById(R.id.btnCampanita)
+        badgeCampanita = findViewById(R.id.badgeCampanita)
         val btnRegresar = findViewById<ImageView>(R.id.btnRegresarReportes)
+
+        tvFechaReporte = findViewById(R.id.tvFechaReporte)
+        btnSeleccionarDia = findViewById(R.id.btnSeleccionarDia)
+        tvTituloTabla = findViewById(R.id.tvTituloTabla)
+        tvColumnaDerecha = findViewById(R.id.tvColumnaDerecha)
+        btnModoCaducidad = findViewById(R.id.btnModoCaducidad)
+        btnModoStock = findViewById(R.id.btnModoStock)
+        llGraficaVacia = findViewById(R.id.llGraficaVacia)
+        llTablaVacia = findViewById(R.id.llTablaVacia)
+        tvTextoVacio = findViewById(R.id.tvTextoVacio)
 
         rvCaducidad.layoutManager = LinearLayoutManager(this)
 
@@ -70,8 +136,13 @@ class ReportesActivity : AppCompatActivity() {
 
         btnRegresar.setOnClickListener { finish() }
 
-        // La campanita abre el diálogo de productos prioritarios
-        btnCampanita.setOnClickListener { mostrarProductosPrioritarios() }
+        // La campanita abre el panel de resumen
+        btnCampanita.setOnClickListener { abrirPanel() }
+
+        btnSeleccionarDia.setOnClickListener { mostrarSelectorFecha() }
+        btnModoCaducidad.setOnClickListener { cambiarModoTabla(ModoTabla.CADUCIDAD) }
+        btnModoStock.setOnClickListener { cambiarModoTabla(ModoTabla.STOCK) }
+        actualizarTextoFecha()
 
         configurarGrafico()
         cargarDatosDeReportes()
@@ -80,57 +151,170 @@ class ReportesActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         cargarDatosDeReportes()
+        calcularInsights()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        detenerCampanita()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        detenerCampanita()
     }
 
     // ======================================================================
-    // CAMPANITA: productos caducados o por caducar en <= 3 días
+    // RESUMEN + CAMPANITA (motor de insights)
     // ======================================================================
-    private fun mostrarProductosPrioritarios() {
-        val todos = dbHelper.getAllProductos()
-        val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-        val hoy = Date()
-        val limite = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, 3) }.time
-
-        val prioritarios = todos
-            .filter { prod ->
-                if (prod.fechaCaducidad.isNullOrEmpty()) return@filter false
-                try {
-                    val f = sdf.parse(prod.fechaCaducidad!!) ?: return@filter false
-                    // Caducados (before hoy) O dentro de los próximos 3 días
-                    f.before(limite)
-                } catch (e: Exception) {
-                    false
+    private fun calcularInsights() {
+        calculando = true
+        lifecycleScope.launch {
+            val insights = engine.calcular()
+            ultimosInsights = insights
+            calculando = false
+            val visto = cargarVisto()
+            if (Visto.haySinVer(visto, insights)) {
+                if (animadorCampana?.isRunning != true) {
+                    animadorCampana = CampanaAnimator.iniciar(btnCampanita)
                 }
+                badgeCampanita.visibility = View.VISIBLE
+            } else {
+                detenerCampanita()
+                badgeCampanita.visibility = View.GONE
             }
-            .sortedBy { prod ->
-                try {
-                    sdf.parse(prod.fechaCaducidad!!)
-                } catch (e: Exception) {
-                    Date(Long.MAX_VALUE)
-                }
-            }
-            .toMutableList()
+            refrescarPanelSiAbierto()
+        }
+    }
 
-        if (prioritarios.isEmpty()) {
-            AlertDialog.Builder(this)
-                .setTitle("Sin alertas")
-                .setMessage("No hay productos caducados ni próximos a caducar en 3 días.")
-                .setPositiveButton("OK", null)
-                .show()
-            return
+    private fun refrescarPanelSiAbierto() {
+        val rv = rvResumen ?: return
+        val vacio = vacioResumen ?: return
+        val tv = tvVacioResumen ?: return
+        if (sheetResumen?.isShowing != true) return
+        val insights = ultimosInsights
+        if (insights.isEmpty()) {
+            rv.visibility = View.GONE
+            vacio.visibility = View.VISIBLE
+            tv.text = if (calculando) "Calculando…" else "Todo en orden"
+        } else {
+            rv.visibility = View.VISIBLE
+            vacio.visibility = View.GONE
+            rv.adapter = ResumenAdapter(insights)
+        }
+    }
+
+    private fun cargarVisto(): Map<String, Severidad> {
+        val set = prefsInsights.getStringSet("visto", emptySet()) ?: emptySet()
+        val m = mutableMapOf<String, Severidad>()
+        for (s in set) {
+            val i = s.indexOf('=')
+            if (i > 0) m[s.substring(0, i)] = Severidad.valueOf(s.substring(i + 1))
+        }
+        return m
+    }
+
+    private fun guardarVisto(m: Map<String, Severidad>) {
+        prefsInsights.edit().putStringSet("visto", m.map { "${it.key}=${it.value}" }.toSet()).apply()
+    }
+
+    private fun abrirPanel() {
+        val insights = ultimosInsights
+        guardarVisto(Visto.marcarVisto(cargarVisto(), insights))
+        detenerCampanita()
+        badgeCampanita.visibility = View.GONE
+        mostrarPanel(insights)
+    }
+
+    private fun mostrarPanel(insights: List<Insight>) {
+        val vista = LayoutInflater.from(this).inflate(R.layout.dialog_resumen, null)
+        val rv = vista.findViewById<RecyclerView>(R.id.rvInsights)
+        val vacio = vista.findViewById<View>(R.id.llResumenVacio)
+        val tvHora = vista.findViewById<TextView>(R.id.tvHoraActualizacion)
+        val tvVacio = vista.findViewById<TextView>(R.id.tvResumenVacio)
+        rv.layoutManager = LinearLayoutManager(this)
+        rvResumen = rv
+        vacioResumen = vacio
+        tvVacioResumen = tvVacio
+        if (insights.isEmpty()) {
+            rv.visibility = View.GONE
+            vacio.visibility = View.VISIBLE
+            tvVacio.text = if (calculando) "Calculando…" else "Todo en orden"
+        } else {
+            rv.visibility = View.VISIBLE
+            vacio.visibility = View.GONE
+            rv.adapter = ResumenAdapter(insights)
+        }
+        tvHora.text = "Actualizado: ${SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())}"
+
+        val sheet = BottomSheetDialog(this)
+        sheetResumen = sheet
+        sheet.setContentView(vista)
+        sheet.setOnDismissListener {
+            sheetResumen = null
+            rvResumen = null; vacioResumen = null; tvVacioResumen = null
+            btnCampanita.requestFocus()
+        }
+        sheet.show()
+    }
+
+    private fun detenerCampanita() {
+        if (::btnCampanita.isInitialized) {
+            CampanaAnimator.detener(btnCampanita, animadorCampana)
+        }
+        animadorCampana = null
+    }
+
+    private fun textoAccion(i: Insight): String = when (i.tipo) {
+        TipoInsight.RESPALDO -> "Ir a respaldo"
+        TipoInsight.MERMAS -> "Ver mermas"
+        else -> "Preguntar a Pérez AI"
+    }
+
+    private fun accion(i: Insight): () -> Unit = when (i.tipo) {
+        TipoInsight.RESPALDO -> { { startActivity(Intent(this@ReportesActivity, AlmacenamientoActivity::class.java)) } }
+        TipoInsight.MERMAS -> { { startActivity(Intent(this@ReportesActivity, MermasActivity::class.java)) } }
+        else -> { { startActivity(Intent(this@ReportesActivity, ChatActivity::class.java).putExtra("pregunta", i.preguntaSugerida)) } }
+    }
+
+    inner class ResumenAdapter(private val items: List<Insight>) :
+        RecyclerView.Adapter<ResumenAdapter.VH>() {
+
+        inner class VH(view: View) : RecyclerView.ViewHolder(view) {
+            val icono: ImageView = view.findViewById(R.id.ivSeveridad)
+            val severidad: TextView = view.findViewById(R.id.tvSeveridad)
+            val titulo: TextView = view.findViewById(R.id.tvTituloInsight)
+            val detalle: TextView = view.findViewById(R.id.tvDetalleInsight)
+            val preguntar: Button = view.findViewById(R.id.btnPreguntar)
         }
 
-        val dialogView = LayoutInflater.from(this)
-            .inflate(R.layout.dialog_productos_prioritarios, null)
-        val rv = dialogView.findViewById<RecyclerView>(R.id.rvProductosPrioritarios)
-        rv.layoutManager = LinearLayoutManager(this)
-        rv.adapter = CaducidadAdapter(prioritarios)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+            VH(LayoutInflater.from(parent.context).inflate(R.layout.item_insight, parent, false))
 
-        AlertDialog.Builder(this)
-            .setTitle("⚠ Productos prioritarios")
-            .setView(dialogView)
-            .setPositiveButton("Cerrar", null)
-            .show()
+        override fun onBindViewHolder(holder: VH, position: Int) {
+            val i = items[position]
+            holder.titulo.text = i.titulo
+            holder.detalle.text = i.detalle
+            val (icono, color, etiqueta) = when (i.severidad) {
+                Severidad.CRITICA -> Triple(R.drawable.ic_aviso_error, Color.parseColor("#B71C1C"), "CRÍTICO")
+                Severidad.ATENCION -> Triple(R.drawable.ic_aviso_advertencia, Color.parseColor("#92400E"), "ATENCIÓN")
+                Severidad.INFO -> Triple(R.drawable.ic_aviso_info, Color.parseColor("#2563EB"), "INFO")
+                Severidad.POSITIVA -> Triple(R.drawable.ic_aviso_exito, Color.parseColor("#00793A"), "BIEN")
+            }
+            holder.icono.setImageResource(icono)
+            holder.icono.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN)
+            holder.severidad.text = etiqueta
+            holder.severidad.setTextColor(color)
+            holder.itemView.contentDescription = "$etiqueta: ${i.titulo}. ${i.detalle}"
+
+            // Sin pregunta sugerida (y sin navegación propia) no hay botón: no prometemos una respuesta que no existe.
+            val tieneAccion = i.tipo == TipoInsight.RESPALDO || i.tipo == TipoInsight.MERMAS || i.preguntaSugerida.isNotBlank()
+            holder.preguntar.visibility = if (tieneAccion) View.VISIBLE else View.GONE
+            holder.preguntar.text = textoAccion(i)
+            holder.preguntar.setOnClickListener { accion(i)() }
+        }
+
+        override fun getItemCount() = items.size
     }
 
     // ======================================================================
@@ -158,7 +342,6 @@ class ReportesActivity : AppCompatActivity() {
 
         val yAxisLeft = lineChart.axisLeft
         yAxisLeft.axisMinimum = 0f
-        yAxisLeft.axisMaximum = 700f
         lineChart.axisRight.isEnabled = false
     }
 
@@ -176,36 +359,34 @@ class ReportesActivity : AppCompatActivity() {
 
         // Lista de caducidades
         val todosLosProductos = dbHelper.getAllProductos()
-        val productosConCaducidad = todosLosProductos.filter { !it.fechaCaducidad.isNullOrEmpty() }
-
         val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
         val hoy = Date()
 
-        val listaOrdenada = productosConCaducidad.sortedBy { producto ->
-            try {
-                sdf.parse(producto.fechaCaducidad!!)
-            } catch (e: Exception) {
-                Date(Long.MAX_VALUE)
+        val listaProcesada = todosLosProductos
+            .filter { !it.fechaCaducidad.isNullOrEmpty() }
+            .sortedBy { producto ->
+                try { sdf.parse(producto.fechaCaducidad!!) } catch (e: Exception) { Date(Long.MAX_VALUE) }
             }
-        }
-
-        val listaProcesada = mutableListOf<DatabaseHelper.Producto>()
-
-        for (prod in listaOrdenada) {
-            var productoProcesado = prod
-            try {
-                val fechaCad = sdf.parse(prod.fechaCaducidad!!)
-                if (fechaCad != null && fechaCad.before(hoy)) {
-                    if (prod.stock > 0) {
-                        dbHelper.registrarMerma(prod.idProducto, prod.stock, "Caducado")
-                        productoProcesado = prod.copy(stock = 0)
+            .map { prod ->
+                var productoProcesado = prod
+                try {
+                    val fechaCad = sdf.parse(prod.fechaCaducidad!!)
+                    if (fechaCad != null && fechaCad.before(hoy)) {
+                        if (prod.stock > 0) {
+                            dbHelper.registrarMerma(prod.idProducto, prod.stock, "Caducado")
+                            productoProcesado = prod.copy(stock = 0)
+                        }
                     }
-                }
-            } catch (e: Exception) { }
-            listaProcesada.add(productoProcesado)
-        }
+                } catch (e: Exception) { }
+                productoProcesado
+            }
+            .toMutableList()
+        listaCaducidad = listaProcesada
 
-        rvCaducidad.adapter = CaducidadAdapter(listaProcesada)
+        val umbral = AssistantConfig(this).lowStockThreshold
+        listaBajoStock = todosLosProductos.filter { it.stock <= umbral }.sortedBy { it.stock }
+
+        cambiarModoTabla(modoTabla)
     }
 
     private fun cargarDatosGrafico() {
@@ -217,15 +398,19 @@ class ReportesActivity : AppCompatActivity() {
             entries.add(Entry(hora.toFloat(), ganancia))
         }
 
+        val sinDatos = entries.all { it.y == 0f }
+        llGraficaVacia.visibility = if (sinDatos) View.VISIBLE else View.GONE
+        lineChart.visibility = if (sinDatos) View.GONE else View.VISIBLE
+
         val dataSet = LineDataSet(entries, "Ganancias")
-        dataSet.color = Color.parseColor("#3A5BA0")
-        dataSet.setCircleColor(Color.parseColor("#3A5BA0"))
+        dataSet.color = Color.parseColor("#2563EB")
+        dataSet.setCircleColor(Color.parseColor("#2563EB"))
         dataSet.lineWidth = 3f
         dataSet.circleRadius = 5f
         dataSet.setDrawCircleHole(true)
         dataSet.valueTextSize = 10f
         dataSet.setDrawFilled(true)
-        dataSet.fillColor = Color.parseColor("#803A5BA0")
+        dataSet.fillColor = Color.parseColor("#802563EB")
 
         val lineData = LineData(dataSet)
         lineChart.data = lineData
@@ -261,7 +446,7 @@ class ReportesActivity : AppCompatActivity() {
 
         btnPromocionar.setOnClickListener {
             btnPromocionar.visibility = View.GONE
-            llPromocion.visibility = View.VISIBLE
+            Motion.fadeInUp(llPromocion, 6f * llPromocion.resources.displayMetrics.density)
             etPorcentaje.requestFocus()
         }
 
@@ -277,14 +462,14 @@ class ReportesActivity : AppCompatActivity() {
             }
         })
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .create()
 
         btnAceptar.setOnClickListener {
             val pct = etPorcentaje.text.toString().toDoubleOrNull()
             if (pct == null || pct < 0 || pct > 100) {
-                Toast.makeText(this, "Ingresa un porcentaje entre 0 y 100", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Porcentaje inválido", "Debe estar entre 0 y 100.")
                 return@setOnClickListener
             }
             val nuevoPrecio = precioOriginal * (1 - pct / 100.0)
@@ -292,11 +477,11 @@ class ReportesActivity : AppCompatActivity() {
             // ⚠ Necesitas este método en DatabaseHelper (mira la nota al final)
             dbHelper.actualizarPrecioProducto(producto.idProducto, nuevoPrecio)
 
-            Toast.makeText(
+            Aviso.exito(
                 this,
-                "Precio actualizado a $${String.format("%.2f", nuevoPrecio)}",
-                Toast.LENGTH_SHORT
-            ).show()
+                "Precio actualizado",
+                "${producto.nombre} · ${"$%.2f".format(nuevoPrecio)}"
+            )
 
             dialog.dismiss()
             cargarDatosDeReportes()
@@ -310,56 +495,151 @@ class ReportesActivity : AppCompatActivity() {
     // ======================================================================
     // Adapter reutilizado en la lista y en el diálogo de la campanita
     // ======================================================================
-    inner class CaducidadAdapter(private var productos: MutableList<DatabaseHelper.Producto>) :
-        RecyclerView.Adapter<CaducidadAdapter.CaducidadViewHolder>() {
+    private object ProductoDiff : DiffUtil.ItemCallback<DatabaseHelper.Producto>() {
+        override fun areItemsTheSame(a: DatabaseHelper.Producto, b: DatabaseHelper.Producto) =
+            a.idProducto == b.idProducto
+        override fun areContentsTheSame(a: DatabaseHelper.Producto, b: DatabaseHelper.Producto) = a == b
+    }
 
-        inner class CaducidadViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val tvNombre: TextView = itemView.findViewById(R.id.tvNombreProductoItem)
-            val tvFecha: TextView = itemView.findViewById(R.id.tvFechaCaducidadItem)
-            val tvStock: TextView = itemView.findViewById(R.id.tvStockItem)
+    private fun parseFechaCaducidad(s: String?): Date? {
+        if (s.isNullOrEmpty()) return null
+        for (fmt in listOf("dd/MM/yyyy", "dd/MM/yy")) {
+            try { return SimpleDateFormat(fmt, Locale.getDefault()).parse(s) } catch (e: Exception) { }
         }
+        return null
+    }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CaducidadViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_producto_caducidad, parent, false)
-            return CaducidadViewHolder(view)
+    private fun pintarInsignia(tv: TextView, ambar: Boolean) {
+        if (ambar) {
+            tv.setBackgroundResource(R.drawable.bg_insignia_ambar)
+            tv.setTextColor(ContextCompat.getColor(tv.context, R.color.insignia_ambar_texto))
+        } else {
+            tv.setBackgroundResource(R.drawable.bg_insignia_roja)
+            tv.setTextColor(ContextCompat.getColor(tv.context, R.color.insignia_roja_texto))
         }
+    }
 
-        override fun onBindViewHolder(holder: CaducidadViewHolder, position: Int) {
-            val producto = productos[position]
-            val sdf = SimpleDateFormat("dd/MM/yy", Locale.getDefault())
-            var estaCaducado = false
+    private fun mostrarSelectorFecha() {
+        val hoy = MaterialDatePicker.todayInUtcMilliseconds()
+        val constraints = CalendarConstraints.Builder().setEnd(hoy).build()
+        val picker = MaterialDatePicker.Builder.datePicker()
+            .setCalendarConstraints(constraints)
+            .build()
+        picker.addOnPositiveButtonClickListener { millis ->
+            val cal = Calendar.getInstance().apply { timeInMillis = millis }
+            fechaFiltro = String.format(
+                Locale.US, "%04d-%02d-%02d",
+                cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH)
+            )
+            actualizarTextoFecha()
+            cargarDatosDeReportes()
+        }
+        picker.show(supportFragmentManager, "fechaReporte")
+    }
 
+    private fun actualizarTextoFecha() {
+        val hoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        if (fechaFiltro == hoy) {
+            tvFechaReporte.text = "Hoy"
+        } else {
             try {
-                val fecha = sdf.parse(producto.fechaCaducidad!!)
-                if (fecha != null && fecha.before(Date())) {
-                    estaCaducado = true
-                }
-            } catch (e: Exception) { }
+                val d = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(fechaFiltro)
+                tvFechaReporte.text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(d ?: Date())
+            } catch (e: Exception) {
+                tvFechaReporte.text = fechaFiltro
+            }
+        }
+    }
 
+    private fun cambiarModoTabla(modo: ModoTabla) {
+        modoTabla = modo
+        if (modo == ModoTabla.CADUCIDAD) {
+            tvTituloTabla.text = "Caducidad próxima"
+            tvColumnaDerecha.text = "Caducidad"
+            rvCaducidad.adapter = CaducidadAdapter(listaCaducidad)
+            llTablaVacia.visibility = if (listaCaducidad.isEmpty()) View.VISIBLE else View.GONE
+            tvTextoVacio.text = "Nada por caducar"
+        } else {
+            tvTituloTabla.text = "Bajo stock"
+            tvColumnaDerecha.text = "Stock"
+            rvCaducidad.adapter = StockAdapter(listaBajoStock)
+            llTablaVacia.visibility = if (listaBajoStock.isEmpty()) View.VISIBLE else View.GONE
+            tvTextoVacio.text = "Todo el stock en orden"
+        }
+        marcarModoActivo()
+    }
+
+    private fun marcarModoActivo() {
+        val activo = if (modoTabla == ModoTabla.CADUCIDAD) btnModoCaducidad else btnModoStock
+        val inactivo = if (modoTabla == ModoTabla.CADUCIDAD) btnModoStock else btnModoCaducidad
+        val gris = MaterialColors.getColor(btnModoCaducidad, com.google.android.material.R.attr.colorOnSurfaceVariant)
+        activo.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#1A2563EB"))
+        activo.iconTint = ColorStateList.valueOf(Color.parseColor("#2563EB"))
+        inactivo.backgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+        inactivo.iconTint = ColorStateList.valueOf(gris)
+    }
+
+    inner class CaducidadAdapter(list: List<DatabaseHelper.Producto>) :
+        ListAdapter<DatabaseHelper.Producto, CaducidadAdapter.VH>(ProductoDiff) {
+
+        init { submitList(list) }
+
+        inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvNombre: TextView = itemView.findViewById(R.id.tvNombreCaducidad)
+            val tvStock: TextView = itemView.findViewById(R.id.tvStockCaducidad)
+            val tvInsignia: TextView = itemView.findViewById(R.id.tvInsigniaCaducidad)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+            VH(LayoutInflater.from(parent.context).inflate(R.layout.item_caducidad, parent, false))
+
+        override fun onBindViewHolder(holder: VH, position: Int) {
+            val producto = getItem(position)
             holder.tvNombre.text = producto.nombre
             holder.tvStock.text = "Stock: ${producto.stock}"
-            holder.tvFecha.text = "Caduca: ${producto.fechaCaducidad}"
 
-            val card = holder.itemView as CardView
-            if (estaCaducado) {
-                card.setCardBackgroundColor(Color.parseColor("#FFCDD2"))
-                holder.tvNombre.setTextColor(Color.parseColor("#B71C1C"))
-                holder.tvFecha.setTextColor(Color.parseColor("#B71C1C"))
-                holder.tvStock.setTextColor(Color.parseColor("#B71C1C"))
+            val fecha = parseFechaCaducidad(producto.fechaCaducidad)
+            if (fecha == null) {
+                holder.tvInsignia.text = producto.fechaCaducidad ?: "—"
+                pintarInsignia(holder.tvInsignia, ambar = true)
             } else {
-                card.setCardBackgroundColor(Color.WHITE)
-                holder.tvNombre.setTextColor(Color.parseColor("#212121"))
-                holder.tvFecha.setTextColor(Color.DKGRAY)
-                holder.tvStock.setTextColor(Color.parseColor("#2C55A6"))
+                val hoy = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                }.time
+                val dias = ((fecha.time - hoy.time) / (1000 * 60 * 60 * 24)).toInt()
+                when {
+                    dias < 0 -> { holder.tvInsignia.text = "Vencido"; pintarInsignia(holder.tvInsignia, ambar = false) }
+                    dias == 0 -> { holder.tvInsignia.text = "Vence hoy"; pintarInsignia(holder.tvInsignia, ambar = false) }
+                    else -> { holder.tvInsignia.text = "$dias ${if (dias == 1) "día" else "días"}"; pintarInsignia(holder.tvInsignia, ambar = true) }
+                }
             }
+            holder.itemView.setOnClickListener { mostrarDetalleProducto(producto) }
+        }
+    }
 
-            // Al tocar cualquier producto -> detalle + promocionar
-            holder.itemView.setOnClickListener {
-                mostrarDetalleProducto(producto)
-            }
+    inner class StockAdapter(list: List<DatabaseHelper.Producto>) :
+        ListAdapter<DatabaseHelper.Producto, StockAdapter.VH>(ProductoDiff) {
+
+        init { submitList(list) }
+
+        inner class VH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvNombre: TextView = itemView.findViewById(R.id.tvNombreStock)
+            val tvCodigo: TextView = itemView.findViewById(R.id.tvCodigoStock)
+            val tvInsignia: TextView = itemView.findViewById(R.id.tvInsigniaStock)
         }
 
-        override fun getItemCount(): Int = productos.size
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
+            VH(LayoutInflater.from(parent.context).inflate(R.layout.item_stock, parent, false))
+
+        override fun onBindViewHolder(holder: VH, position: Int) {
+            val producto = getItem(position)
+            holder.tvNombre.text = producto.nombre
+            holder.tvCodigo.text = "Código: ${producto.codigoBarras}"
+            val u = producto.stock
+            holder.tvInsignia.text = if (u == 1) "1 ud" else "$u uds"
+            pintarInsignia(holder.tvInsignia, ambar = u > 0)
+            holder.itemView.setOnClickListener { mostrarDetalleProducto(producto) }
+        }
     }
 }

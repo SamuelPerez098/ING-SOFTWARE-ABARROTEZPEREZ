@@ -33,6 +33,9 @@ class ConfiguracionActivity : AppCompatActivity() {
             startActivity(Intent(this, AlmacenamientoActivity::class.java))
         }
 
+        Motion.pressFeedback(cardMiPerfil)
+        Motion.pressFeedback(cardAlmacenamiento)
+
         // ── 3. Botón "Cerrar Sesión" — SIN CAMBIOS ────────────────
         val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
         btnCerrarSesion.setOnClickListener {

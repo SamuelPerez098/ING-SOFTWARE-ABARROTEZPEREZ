@@ -15,12 +15,14 @@ class ToolRegistry(
     repo: AssistantRepository,
     config: AssistantConfig,
     clock: Clock = { LocalDate.now() },
+    private val ultimoRespaldoMillis: () -> Long? = { null },
     private val logError: (String, Throwable) -> Unit = { _, _ -> }
 ) {
     private val inventory = InventoryTools(repo, config, clock)
     private val expiration = ExpirationTools(repo, config, clock)
     private val sales = SalesTools(repo, config, clock)
     private val stats = StatisticsTools(repo, config, clock)
+    private val business = BusinessTools(repo, config, clock, ultimoRespaldoMillis)
 
     fun execute(intent: AssistantIntent, params: QueryParameters): AssistantResponse = try {
         when (intent) {
@@ -38,6 +40,9 @@ class ToolRegistry(
             AssistantIntent.NO_MOVEMENT -> stats.noMovement(params)
             AssistantIntent.LOW_ROTATION -> stats.lowRotation(params)
             AssistantIntent.SHRINKAGE -> stats.shrinkage(params)
+            AssistantIntent.STORE_SUMMARY -> business.storeSummary(params)
+            AssistantIntent.COBRANZA -> business.cobranza(params)
+            AssistantIntent.TICKET_PROMEDIO -> business.ticketPromedio(params)
             AssistantIntent.HELP -> help()
             AssistantIntent.UNKNOWN -> AssistantResponse(
                 AssistantIntent.UNKNOWN,
@@ -63,6 +68,9 @@ class ToolRegistry(
             "• Cuánto tengo invertido en inventario\n" +
             "• Qué productos necesito comprar\n" +
             "• Productos sin ventas el último mes\n" +
-            "• Mermas y pérdidas"
+            "• Mermas y pérdidas\n" +
+            "• Cómo va tu tienda (resumen)\n" +
+            "• Quién te debe y cuánto (fiados)\n" +
+            "• Tu ticket promedio"
     )
 }

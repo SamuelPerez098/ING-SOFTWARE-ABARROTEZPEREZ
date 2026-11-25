@@ -2,10 +2,11 @@ package com.example.ing_software_abarrotezperez.ui
 
 import android.view.LayoutInflater
 import android.view.View
+import android.graphics.Color
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.ImageButton
 import android.widget.TextView
+import com.google.android.material.color.MaterialColors
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
@@ -21,7 +22,7 @@ class ClienteAdapter(
         val tvNombre: TextView = view.findViewById(R.id.tvNombreCliente)
         val tvSaldo: TextView = view.findViewById(R.id.tvSaldoPendiente)
         val btnVer: Button = view.findViewById(R.id.btnVerDetalle)
-        val btnEditar: ImageButton = view.findViewById(R.id.btnEditarCliente)
+        val btnEditar: Button = view.findViewById(R.id.btnEditarCliente)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -36,6 +37,10 @@ class ClienteAdapter(
 
         holder.tvNombre.text = cliente.nombre
         holder.tvSaldo.text = "Saldo: $${"%.2f".format(saldo)}"
+        holder.tvSaldo.setTextColor(
+            if (saldo > 0) Color.parseColor("#B71C1C")
+            else MaterialColors.getColor(holder.tvSaldo, com.google.android.material.R.attr.colorOnSurfaceVariant)
+        )
 
         holder.btnVer.setOnClickListener { onVerClick(cliente) }
         holder.btnEditar.setOnClickListener { onEditarClick(cliente) }

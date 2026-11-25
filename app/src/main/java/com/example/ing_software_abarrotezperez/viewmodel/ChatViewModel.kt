@@ -44,7 +44,14 @@ class ChatViewModel(app: Application) : AndroidViewModel(app) {
     private val engine = AssistantEngine(
         // El catálogo permite reconocer nombres de productos en las preguntas (se recarga cada minuto).
         QueryParser(ProductCatalog(ProductNameSource { repo.listarProductos(config.excludeTestProducts).map { it.nombre } })),
-        ToolRegistry(repo, config, logError = { msg, e -> Log.e(TAG, msg, e) }),
+        ToolRegistry(
+            repo, config,
+            ultimoRespaldoMillis = {
+                app.getSharedPreferences("prefs_respaldo", android.content.Context.MODE_PRIVATE)
+                    .getLong("ultimo_respaldo_millis", -1L).takeIf { it > 0 }
+            },
+            logError = { msg, e -> Log.e(TAG, msg, e) }
+        ),
         LlmInterpreter(llm)
     )
 

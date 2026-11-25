@@ -1,0 +1,197 @@
+# Frase	Intento	Categoria
+# Intento: nombre del enum AssistantIntent. NONE = sin intencion (fuera de alcance).
+# Categoria: inventario, caducidades, ventas, analisis, ayuda, fuera_de_alcance.
+qué productos tienen pocas existencias	LOW_STOCK	inventario
+cuáles se están acabando	LOW_STOCK	inventario
+productos con stock bajo	LOW_STOCK	inventario
+productos con existencias escasas	LOW_STOCK	inventario
+productos con menos de 5 unidades	LOW_STOCK	inventario
+productos con menos de cinco unidades	LOW_STOCK	inventario
+qué se está por agotar	LOW_STOCK	inventario
+cuáles están por terminarse	LOW_STOCK	inventario
+qué tengo con pocas piezas	LOW_STOCK	inventario
+que tengo pokas existencias	LOW_STOCK	inventario
+qué productos están agotados	OUT_OF_STOCK	inventario
+cuáles se me acabaron	OUT_OF_STOCK	inventario
+productos sin stock	OUT_OF_STOCK	inventario
+productos que ya no tengo	OUT_OF_STOCK	inventario
+ya no hay nada en la tienda	OUT_OF_STOCK	inventario
+se agotó el arroz	OUT_OF_STOCK	inventario
+estoy en cero de refrescos	OUT_OF_STOCK	inventario
+ya no me queda ninguno	OUT_OF_STOCK	inventario
+se terminaron las papas	OUT_OF_STOCK	inventario
+sin existencias de leche	OUT_OF_STOCK	inventario
+cuánto tengo invertido en inventario	INVENTORY_VALUE	inventario
+cuánto vale mi inventario	INVENTORY_VALUE	inventario
+cuánto dinero tengo en mercancía	INVENTORY_VALUE	inventario
+cuánta lana tengo invertida	INVENTORY_VALUE	inventario
+cuánto es mi capital	INVENTORY_VALUE	inventario
+cuánto cuesta todo mi almacén	INVENTORY_VALUE	inventario
+cuánto hay en productos	INVENTORY_VALUE	inventario
+cuánto vale mi bodega	INVENTORY_VALUE	inventario
+cuántos pesos tengo en mercancía	INVENTORY_VALUE	inventario
+cuanto tengo invertido en mercancia	INVENTORY_VALUE	inventario
+cuántas cocas tengo	SEARCH_PRODUCT	inventario
+cuánto cuesta el jabón	SEARCH_PRODUCT	inventario
+cuánto hay de arroz	SEARCH_PRODUCT	inventario
+tienes leche	SEARCH_PRODUCT	inventario
+qué precio tiene la coca	SEARCH_PRODUCT	inventario
+dónde está el azúcar	SEARCH_PRODUCT	inventario
+cuántas me quedan de papas	SEARCH_PRODUCT	inventario
+tengo de sabritas	SEARCH_PRODUCT	inventario
+cuánto stock de refresco tengo	SEARCH_PRODUCT	inventario
+cuánto queda de frijol	SEARCH_PRODUCT	inventario
+qué productos necesito comprar	RESTOCK_NEEDS	inventario
+qué me hace falta surtir	RESTOCK_NEEDS	inventario
+qué debo reabastecer	RESTOCK_NEEDS	inventario
+qué conviene pedir	RESTOCK_NEEDS	inventario
+qué me falta en la tienda	RESTOCK_NEEDS	inventario
+qué tengo que surtir	RESTOCK_NEEDS	inventario
+qué necesito reponer	RESTOCK_NEEDS	inventario
+hazme un pedido de lo que falta	RESTOCK_NEEDS	inventario
+qué debo abastecer	RESTOCK_NEEDS	inventario
+que productos me faltan	RESTOCK_NEEDS	inventario
+qué productos caducan pronto	EXPIRING_SOON	caducidades
+cuáles están por caducar	EXPIRING_SOON	caducidades
+qué está próximo a vencer	EXPIRING_SOON	caducidades
+productos con vencimiento cercano	EXPIRING_SOON	caducidades
+qué caduca esta semana	EXPIRING_SOON	caducidades
+qué vence en 3 días	EXPIRING_SOON	caducidades
+cuáles expiran mañana	EXPIRING_SOON	caducidades
+qué se va a vencer	EXPIRING_SOON	caducidades
+productos a punto de caducar	EXPIRING_SOON	caducidades
+qué tengo por vencer	EXPIRING_SOON	caducidades
+cuáles caducan dentro de una semana	EXPIRING_SOON	caducidades
+que caduque pronto	EXPIRING_SOON	caducidades
+qué productos están caducados	EXPIRED	caducidades
+cuáles ya vencieron	EXPIRED	caducidades
+qué está vencido	EXPIRED	caducidades
+qué se me caducó	EXPIRED	caducidades
+productos ya expirados	EXPIRED	caducidades
+cuáles ya caducaron	EXPIRED	caducidades
+productos pasados de fecha	EXPIRED	caducidades
+qué ya venció	EXPIRED	caducidades
+cuáles están expirados	EXPIRED	caducidades
+qué tengo caducado	EXPIRED	caducidades
+cuáles son mis productos más vendidos	TOP_SELLING	ventas
+qué se vende más	TOP_SELLING	ventas
+cuáles son mis mejores productos	TOP_SELLING	ventas
+qué es lo más popular	TOP_SELLING	ventas
+cuáles son mis tops	TOP_SELLING	ventas
+qué producto es mi estrella	TOP_SELLING	ventas
+qué es lo que más se vende	TOP_SELLING	ventas
+cuál es el favorito de la gente	TOP_SELLING	ventas
+qué productos vendo más	TOP_SELLING	ventas
+cuáles son los más vendidos del mes	TOP_SELLING	ventas
+cuáles son los menos vendidos	LEAST_SELLING	ventas
+qué se vende menos	LEAST_SELLING	ventas
+cuáles venden poco	LEAST_SELLING	ventas
+cuáles son los peores vendidos	LEAST_SELLING	ventas
+cuáles tienen menor salida	LEAST_SELLING	ventas
+cuáles se venden poco	LEAST_SELLING	ventas
+qué es lo que menos vendo	LEAST_SELLING	ventas
+cuáles son los de menor venta	LEAST_SELLING	ventas
+qué productos vendí menos este mes	LEAST_SELLING	ventas
+cuáles venden menos	LEAST_SELLING	ventas
+cuánto vendí hoy	SALES_TOTAL	ventas
+cuánto he vendido esta semana	SALES_TOTAL	ventas
+cuánto es mi ganancia de hoy	SALES_TOTAL	ventas
+cuánto facturé este mes	SALES_TOTAL	ventas
+cuánto hice de caja hoy	SALES_TOTAL	ventas
+cuánto ingresó hoy	SALES_TOTAL	ventas
+cuánto he sacado hoy	SALES_TOTAL	ventas
+cuánto gané ayer	SALES_TOTAL	ventas
+cómo van mis ventas de hoy	SALES_TOTAL	ventas
+kuanto vendi en los ultimos siete dias	SALES_TOTAL	ventas
+compara las ventas de este mes con el mes pasado	SALES_COMPARE	ventas
+cuánto vendí esta semana vs la pasada	SALES_COMPARE	ventas
+cómo van mis ventas contra la semana pasada	SALES_COMPARE	ventas
+compara hoy con ayer	SALES_COMPARE	ventas
+mis ventas de hoy respecto a las de ayer	SALES_COMPARE	ventas
+cómo estoy frente a la semana anterior	SALES_COMPARE	ventas
+compara este mes contra el anterior	SALES_COMPARE	ventas
+cuánto vendí en relación con el mes pasado	SALES_COMPARE	ventas
+qué productos no se han vendido	NO_MOVEMENT	analisis
+cuáles no tienen movimiento	NO_MOVEMENT	analisis
+qué tengo estancado	NO_MOVEMENT	analisis
+cuáles están dormidos	NO_MOVEMENT	analisis
+qué productos no tienen salida	NO_MOVEMENT	analisis
+cuáles no se mueven	NO_MOVEMENT	analisis
+qué hay sin ventas desde hace rato	NO_MOVEMENT	analisis
+qué productos tienen baja rotación	LOW_ROTATION	analisis
+cuáles tienen rotación lenta	LOW_ROTATION	analisis
+qué se vende despacio	LOW_ROTATION	analisis
+cuáles son de poca rotación	LOW_ROTATION	analisis
+qué tengo con sobre stock	LOW_ROTATION	analisis
+cuáles están lentos en salir	LOW_ROTATION	analisis
+qué productos tienen exceso	LOW_ROTATION	analisis
+cuáles son las mermas de este mes	SHRINKAGE	analisis
+cuánto he perdido en mermas	SHRINKAGE	analisis
+cuánto perdimos en desperdicios	SHRINKAGE	analisis
+cuántas mermas hubo la semana pasada	SHRINKAGE	analisis
+qué productos salieron rotos	SHRINKAGE	analisis
+qué productos están dañados	SHRINKAGE	analisis
+productos echados a perder	SHRINKAGE	analisis
+cuánto se perdió por mermas	SHRINKAGE	analisis
+qué puedes hacer	HELP	ayuda
+ayuda	HELP	ayuda
+en qué me ayudas	HELP	ayuda
+hola	HELP	ayuda
+buenas tardes	HELP	ayuda
+qué comandos tienes	HELP	ayuda
+cuál es el clima de hoy	NONE	fuera_de_alcance
+quién ganó el partido	NONE	fuera_de_alcance
+receta de pozole	NONE	fuera_de_alcance
+dame un chiste	NONE	fuera_de_alcance
+cómo está el dólar	NONE	fuera_de_alcance
+qué película me recomiendas	NONE	fuera_de_alcance
+cierra la tienda	NONE	fuera_de_alcance
+ponme una alarma	NONE	fuera_de_alcance
+quién es el presidente	NONE	fuera_de_alcance
+cuánto mide la luna	NONE	fuera_de_alcance
+recomiéndame una canción	NONE	fuera_de_alcance
+qué hora es	NONE	fuera_de_alcance
+cuánto vendí hoy y qué me falta comprar	SALES_TOTAL	ventas
+dime las mermas y los agotados	SHRINKAGE	analisis
+qué se me va a caducar y cuánto vendí	EXPIRING_SOON	caducidades
+cuánto vale mi inventario y qué debo comprar	INVENTORY_VALUE	inventario
+productos agotados o con pocas existencias	OUT_OF_STOCK	inventario
+¿cómo va la tienda?	STORE_SUMMARY	resumen
+resumen de hoy	STORE_SUMMARY	resumen
+resumen de la tienda	STORE_SUMMARY	resumen
+dame un resumen	STORE_SUMMARY	resumen
+cómo va el negocio	STORE_SUMMARY	resumen
+cómo está la tienda	STORE_SUMMARY	resumen
+cómo anda todo	STORE_SUMMARY	resumen
+qué balance tengo	STORE_SUMMARY	resumen
+¿quién me debe más?	COBRANZA	cobranza
+¿cuánto me debe doña mary?	COBRANZA	cobranza
+fiados pendientes	COBRANZA	cobranza
+¿quién me debe dinero?	COBRANZA	cobranza
+cuánto me debe juan	COBRANZA	cobranza
+adeudos por cobrar	COBRANZA	cobranza
+¿cuánto me deben en total?	COBRANZA	cobranza
+qué clientes me deben	COBRANZA	cobranza
+cobranza pendiente	COBRANZA	cobranza
+a quién le debo cobrar	COBRANZA	cobranza
+# ── Ticket promedio (y negativos: acciones sobre un ticket no son consultas) ──
+¿cuál es mi ticket promedio?	TICKET_PROMEDIO	ticket
+ticket promedio de hoy	TICKET_PROMEDIO	ticket
+dime el ticket promedio de este mes	TICKET_PROMEDIO	ticket
+cuánto es el ticket promedio de la semana pasada	TICKET_PROMEDIO	ticket
+¿cuánto es mi venta promedio?	TICKET_PROMEDIO	ticket
+cuál es el promedio por venta	TICKET_PROMEDIO	ticket
+cuánto gasta cada cliente en promedio	TICKET_PROMEDIO	ticket
+cuánto me deja cada cliente en promedio	TICKET_PROMEDIO	ticket
+de cuánto es el ticket promedio	TICKET_PROMEDIO	ticket
+cuál fue mi ticket promedio de ayer	TICKET_PROMEDIO	ticket
+y el ticket promedio del mes pasado	TICKET_PROMEDIO	ticket
+ticket promedio de los últimos 7 días	TICKET_PROMEDIO	ticket
+cuál es el promedio de venta por cliente	TICKET_PROMEDIO	ticket
+tiket promedio de la semana	TICKET_PROMEDIO	ticket
+manda el ticket por whatsapp	NONE	fuera_de_alcance
+genera el ticket de doña mary	NONE	fuera_de_alcance
+# ── Pasado de caducar/vencer y plural de top ──
+qué producto se venció	EXPIRED	caducidades
+¿qué se me expiró?	EXPIRED	caducidades
+mis tops de la semana	TOP_SELLING	ventas

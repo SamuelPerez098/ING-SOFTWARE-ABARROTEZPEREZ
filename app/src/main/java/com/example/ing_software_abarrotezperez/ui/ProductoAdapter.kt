@@ -1,5 +1,8 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.text.InputType
@@ -8,12 +11,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView // <-- Importante para el icono de basura
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import com.example.ing_software_abarrotezperez.R
+import com.example.ing_software_abarrotezperez.ai.config.AssistantConfig
 import com.example.ing_software_abarrotezperez.data.DatabaseHelper
 
 class ProductoAdapter(
@@ -22,6 +24,33 @@ class ProductoAdapter(
     private val dbHelper: DatabaseHelper
 ) : RecyclerView.Adapter<ProductoAdapter.ProductoViewHolder>() {
 
+    private fun avisar(accion: (Activity) -> Unit) {
+        (context as? Activity)?.let(accion)
+    }
+
+    private val umbralBajo = AssistantConfig(context).lowStockThreshold
+
+    private fun aplicarEstadoStock(tv: TextView, stock: Int) {
+        val bg: Int
+        val estilo: Int
+        when {
+            stock <= 0 -> {
+                bg = R.drawable.bg_estado_peligro
+                estilo = R.style.Widget_Abarrotes_Estado_Peligro
+            }
+            stock <= umbralBajo -> {
+                bg = R.drawable.bg_estado_advertencia
+                estilo = R.style.Widget_Abarrotes_Estado_Advertencia
+            }
+            else -> {
+                bg = R.drawable.bg_estado_neutro
+                estilo = R.style.Widget_Abarrotes_Estado_Neutro
+            }
+        }
+        tv.setBackgroundResource(bg)
+        tv.setTextAppearance(estilo)
+    }
+
     class ProductoViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvNombre: TextView = view.findViewById(R.id.tvItemNombre)
         val tvCodigo: TextView = view.findViewById(R.id.tvItemCodigo)
@@ -29,7 +58,7 @@ class ProductoAdapter(
         val tvStock: TextView = view.findViewById(R.id.tvItemStock)
         val btnEditar: Button = view.findViewById(R.id.btnItemEditar)
         val btnPromo: Button = view.findViewById(R.id.btnItemPromo)
-        val btnEliminar: ImageView = view.findViewById(R.id.btnItemEliminar) // <-- Cambiado a ImageView
+        val btnEliminar: Button = view.findViewById(R.id.btnItemEliminar)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductoViewHolder {
@@ -46,6 +75,7 @@ class ProductoAdapter(
         holder.tvCodigo.text = "Código: ${producto.codigoBarras}"
         holder.tvPrecio.text = "Precio: $${producto.precioVenta}"
         holder.tvStock.text = "Stock: ${producto.stock}"
+        aplicarEstadoStock(holder.tvStock, producto.stock)
 
         // LÓGICA DEL BOTÓN EDITAR
         holder.btnEditar.setOnClickListener {
@@ -68,7 +98,7 @@ class ProductoAdapter(
 
         // LÓGICA DEL BOTÓN PROMOCIÓN / PRECIO EXACTO
         holder.btnPromo.setOnClickListener {
-            val builder = AlertDialog.Builder(context)
+            val builder = MaterialAlertDialogBuilder(context)
             builder.setTitle("Modificar Precio / Promoción")
             builder.setMessage("Ingresa el NUEVO PRECIO exacto para ${producto.nombre}.\n\n(Para quitar una promoción, simplemente ingresa el precio normal).")
 
@@ -86,11 +116,7 @@ class ProductoAdapter(
 
                     // --- NUEVA VALIDACIÓN: PRECIO DE COMPRA ---
                     if (nuevoPrecio < producto.precioCompra) {
-                        Toast.makeText(
-                            context,
-                            "⚠ Error: El precio no puede ser menor al de compra ($${producto.precioCompra})",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        avisar { Aviso.error(it, "Precio inválido", "No puede ser menor a la compra: ${"$%.2f".format(producto.precioCompra)}") }
                         return@setPositiveButton // Detiene la ejecución aquí, no guarda en BD
                     }
                     // ------------------------------------------
@@ -102,9 +128,9 @@ class ProductoAdapter(
                         // Actualizar la lista visualmente
                         producto.precioVenta = nuevoPrecio
                         notifyItemChanged(position)
-                        Toast.makeText(context, "Precio actualizado a $${nuevoPrecio}", Toast.LENGTH_SHORT).show()
+                        avisar { Aviso.exito(it, "Precio actualizado", "${producto.nombre} · ${"$%.2f".format(nuevoPrecio)}") }
                     } else {
-                        Toast.makeText(context, "Error al actualizar precio", Toast.LENGTH_SHORT).show()
+                        avisar { Aviso.error(it, "No se actualizó el precio", producto.nombre) }
                     }
                 }
             }
@@ -114,27 +140,24 @@ class ProductoAdapter(
 
         // LÓGICA DEL BOTÓN ELIMINAR (BASURERO)
         holder.btnEliminar.setOnClickListener {
-            val builder = AlertDialog.Builder(context)
-            builder.setTitle("Eliminar Producto")
-            builder.setMessage("¿Estás seguro de que quieres eliminar '${producto.nombre}' definitivamente del inventario?")
-
-            builder.setPositiveButton("Sí, eliminar") { _, _ ->
-                // Borrar de la base de datos
-                val exito = dbHelper.eliminarProducto(producto.codigoBarras)
-
-                if (exito) {
-                    // Borrar de la lista visual
-                    listaProductos.removeAt(position)
-                    notifyItemRemoved(position)
-                    // Notificar el cambio de posiciones para evitar crasheos de la lista
-                    notifyItemRangeChanged(position, listaProductos.size)
-                    Toast.makeText(context, "Producto eliminado", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Error al eliminar el producto", Toast.LENGTH_SHORT).show()
+            avisar { activity ->
+                Dialogos.confirmar(
+                    activity,
+                    "Eliminar producto",
+                    "¿Eliminar '${producto.nombre}' definitivamente del inventario?",
+                    "Sí, eliminar"
+                ) {
+                    val exito = dbHelper.eliminarProducto(producto.codigoBarras)
+                    if (exito) {
+                        listaProductos.removeAt(position)
+                        notifyItemRemoved(position)
+                        notifyItemRangeChanged(position, listaProductos.size)
+                        Aviso.exito(activity, "Producto eliminado", producto.nombre)
+                    } else {
+                        Aviso.error(activity, "No se eliminó el producto", producto.nombre)
+                    }
                 }
             }
-            builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }
-            builder.show()
         }
     }
 

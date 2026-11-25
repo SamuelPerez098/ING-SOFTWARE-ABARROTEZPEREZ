@@ -32,6 +32,7 @@ data class MermasResultado(
     val items: List<MermaRow>, val registros: Int, val unidades: Int, val perdida: Double,
     val porMotivo: List<MotivoRow>
 )
+data class DeudaRow(val idCliente: Int, val nombre: String, val monto: Double)
 
 /**
  * Acceso de SOLO LECTURA a los datos del punto de venta.
@@ -61,6 +62,13 @@ interface AssistantRepository {
     ): List<RotacionRow>
 
     fun mermas(desde: String, hastaExclusivo: String, limite: Int, excluirPrueba: Boolean): MermasResultado
+
+    // ── Resumen de tienda (fiado) ──
+    fun fiadoPendiente(): Pair<Double, Int>
+    fun fiadoAntiguo(limiteIso: String): List<DeudaRow>
+    fun mayorDeudor(): DeudaRow?
+    fun deudores(limite: Int): List<DeudaRow>
+    fun perdidaMargenNegativo(desde: String, hastaExclusivo: String): Double
 }
 
 /**
@@ -190,4 +198,26 @@ class SqliteAssistantRepository(private val dbProvider: () -> SQLiteDatabase) : 
             MermasResultado(items, it.getInt(0), it.getInt(1), it.getDouble(2), motivos)
         }
     }
+
+    // ── Resumen de tienda (fiado) ──
+    override fun fiadoPendiente(): Pair<Double, Int> =
+        one(AssistantSql.FIADO_TOTAL, false, emptyList()) { it.getDouble(0) to it.getInt(1) }
+
+    override fun fiadoAntiguo(limiteIso: String): List<DeudaRow> =
+        query(AssistantSql.FIADO_ANTIGUO, false, listOf(limiteIso)) {
+            DeudaRow(it.getInt(0), it.str(1), it.getDouble(2))
+        }
+
+    override fun mayorDeudor(): DeudaRow? =
+        query(AssistantSql.MAYOR_DEUDOR, false, emptyList()) {
+            DeudaRow(it.getInt(0), it.str(1), it.getDouble(2))
+        }.firstOrNull()
+
+    override fun deudores(limite: Int): List<DeudaRow> =
+        query(AssistantSql.DEUDORES, false, listOf(limite)) {
+            DeudaRow(it.getInt(0), it.str(1), it.getDouble(2))
+        }
+
+    override fun perdidaMargenNegativo(desde: String, hastaExclusivo: String): Double =
+        one(AssistantSql.MARGEN_NEGATIVO, false, listOf(desde, hastaExclusivo)) { it.getDouble(0) }
 }

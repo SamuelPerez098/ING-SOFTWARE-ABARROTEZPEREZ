@@ -11,5 +11,7 @@ enum class AssistantIntent {
     // Análisis comercial
     NO_MOVEMENT, LOW_ROTATION, SHRINKAGE,
     // Conversación
-    HELP, UNKNOWN
+    HELP, UNKNOWN,
+    // Resumen de tienda (paso 4)
+    STORE_SUMMARY, COBRANZA, TICKET_PROMEDIO
 }

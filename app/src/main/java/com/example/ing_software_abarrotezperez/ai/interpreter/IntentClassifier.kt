@@ -35,7 +35,7 @@ class IntentClassifier {
         Rule(i, w, all.map(::re), none.map(::re))
 
     private val forward = "proxim\\w*|pronto|por caducar|por vencer|a punto de (?:caducar|vencer)|caducan|caduquen|vencen|caducaran|venceran|dentro de"
-    private val expiredWord = "caducad\\w*|vencid\\w*|expirad\\w*|caducaron|vencieron|pasad\\w* de (?:fecha|caducidad)"
+    private val expiredWord = "caducad\\w*|vencid\\w*|expirad\\w*|caducaron|vencieron|caduco|vencio|expiro|pasad\\w* de (?:fecha|caducidad)"
     private val salesWord = "venta\\w*|vend\\w*|ingres\\w*|gane|ganancia\\w*|ganado|factur\\w*"
 
     private val rules: List<Rule> = listOf(
@@ -93,13 +93,30 @@ class IntentClassifier {
         rule(LEAST_SELLING, 5, "(?:se )?vende(?:n)? poco"),
         rule(TOP_SELLING, 6, "mas (?:se )?vend\\w*|mas venta\\w*|(?:mejor(?:es)?|mayor(?:es)?) (?:venta|vendido)\\w*|mas popular\\w*|mas salida"),
         rule(TOP_SELLING, 6, "vend\\w* mas", none = listOf("cuanto|cuanta")),
-        rule(TOP_SELLING, 5, "estrella\\w*|favorit\\w*|mejores productos|top|los que mas (?:salen|se mueven|se llevan)"),
+        rule(TOP_SELLING, 5, "estrella\\w*|favorit\\w*|mejores productos|tops?|los que mas (?:salen|se mueven|se llevan)"),
         rule(SALES_TOTAL, 3, "$salesWord|corte de caja|cuanto (?:he )?(?:hecho|entrado|sacado)|caja"),
 
         // ── Búsqueda de producto ──
         rule(SEARCH_PRODUCT, 3, "busca\\w*|encuentra\\w*|precio\\w*|cuesta\\w*|cuantos|cuantas|hay de|tengo de|tienes|tienen|queda\\w*|" +
             "existencias de|stock de|cuanto hay|donde esta|que tanto",
             none = listOf("venta\\w*|vend\\w*|caduc\\w*|venc\\w*|merma\\w*|ganancia\\w*")),
+
+        // ── Ticket promedio ──
+        // "manda/imprime el ticket" es una acción, no una pregunta sobre la tienda.
+        rule(TICKET_PROMEDIO, 6, "tickets?|tikets?|tiquets?",
+            none = listOf("mand\\w*|envi\\w*|imprim\\w*|reimprim\\w*|gener\\w*")),
+        rule(TICKET_PROMEDIO, 5, "venta promedio|promedio de (?:la )?venta\\w*|promedio por venta|promedio del ticket"),
+        rule(TICKET_PROMEDIO, 5, "promedio", "cliente\\w*|gasta\\w*|deja\\w*"),
+
+        // ── Cobranza / fiados ──
+        rule(COBRANZA, 6, "fiad\\w*|adeudo\\w*|deud\\w*"),
+        rule(COBRANZA, 5, "me debe|me deben|quien debe|quienes deben|debe dinero|deben dinero"),
+        rule(COBRANZA, 4, "cobrar|cobranza"),
+
+        // ── Resumen de tienda ──
+        rule(STORE_SUMMARY, 6, "resumen"),
+        rule(STORE_SUMMARY, 6, "balance|panorama"),
+        rule(STORE_SUMMARY, 5, "como (?:va|esta|anda|vamos)\\w*", "tienda|negocio|local|todo"),
 
         // ── Ayuda ──
         rule(HELP, 6, "que puedes|que sabes|como funciona|en que me ayudas|que haces|ayuda|ayudame|comandos|opciones|que preguntas|que te puedo")

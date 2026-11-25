@@ -1,0 +1,25 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "PROVEEDOR/deepseek-v4-pro",
+  "instructions": ["AGENTS.md"],
+  "mcp": {
+    "figma": {
+      "type": "remote",
+      "url": "https://mcp.figma.com/mcp",
+      "enabled": false,
+      "oauth": {}
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest"],
+      "enabled": false
+    }
+  },
+  "agent": {
+    "ui-revisor": {
+      "mode": "subagent",
+      "description": "Revisa interfaces Android sin editar archivos",
+      "permission": { "edit": "deny" }
+    }
+  }
+}

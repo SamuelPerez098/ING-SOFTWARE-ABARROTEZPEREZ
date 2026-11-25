@@ -4,13 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true"
     android:orientation="vertical">
 
-    <!-- Encabezado superior con imagen y título -->
+    <!-- Franja de encabezado -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:background="#959595"
+        android:layout_height="75dp"
+        android:background="#52525B"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingHorizontal="16dp">
@@ -19,13 +20,12 @@
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_marginEnd="12dp"
-            android:src="@drawable/configuracion_logo"
+            android:src="@drawable/ic_usuario"
             app:tint="#FFFFFF" />
 
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="PERFIL"
             android:textColor="#FFFFFF"
             android:textSize="22sp"
@@ -43,44 +43,65 @@
             android:orientation="vertical"
             android:padding="24dp">
 
+            <!-- Avatar -->
             <RelativeLayout
-                android:layout_width="140dp"
-                android:layout_height="140dp"
-                android:layout_marginBottom="32dp">
+                android:layout_width="112dp"
+                android:layout_height="112dp"
+                android:layout_marginBottom="24dp">
 
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="130dp"
-                    android:layout_height="130dp"
+                    android:layout_width="112dp"
+                    android:layout_height="112dp"
                     android:layout_centerInParent="true"
-                    app:cardCornerRadius="65dp"
-                    app:cardElevation="4dp">
+                    app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                    app:cardCornerRadius="56dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="?attr/colorOutlineVariant"
+                    app:strokeWidth="1dp">
 
                     <ImageView
                         android:id="@+id/ivFotoPerfil"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
+                        android:contentDescription="Foto de perfil"
                         android:scaleType="centerCrop"
-                        android:src="@android:drawable/ic_menu_camera" />
+                        android:src="@drawable/ic_foto_placeholder" />
                 </com.google.android.material.card.MaterialCardView>
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCambiarFoto"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_alignParentBottom="true"
-                    android:src="@android:drawable/ic_menu_gallery"
-                    app:backgroundTint="#959595"
-                    app:fabSize="mini"
-                    app:tint="#FFFFFF" />
+                    android:layout_alignParentEnd="true"
+                    android:insetTop="6dp"
+                    android:insetBottom="6dp"
+                    android:insetLeft="6dp"
+                    android:insetRight="6dp"
+                    android:contentDescription="Cambiar foto"
+                    app:backgroundTint="@color/badge_foto"
+                    app:cornerRadius="18dp"
+                    app:icon="@drawable/ic_camara"
+                    app:iconGravity="textStart"
+                    app:iconSize="18dp"
+                    app:iconTint="#FFFFFF"
+                    app:strokeColor="?android:attr/colorBackground"
+                    app:strokeWidth="2dp" />
             </RelativeLayout>
 
+            <!-- Rol actual (solo lectura) -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Rol actual">
+                android:hint="Rol actual"
+                app:boxBackgroundColor="?attr/colorSurfaceVariant"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etRolPerfil"
@@ -90,12 +111,17 @@
                     android:text="Administrador" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Nombre completo -->
             <com.google.android.material.textfield.TextInputLayout
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
-                android:hint="Nombre completo">
+                android:hint="Nombre completo"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etNombrePerfil"
@@ -104,28 +130,17 @@
                     android:inputType="textPersonName" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <Button
+            <!-- Guardar Cambios -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnGuardarPerfil"
                 android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:layout_marginBottom="12dp"
-                android:backgroundTint="#959595"
+                android:layout_height="52dp"
                 android:text="Guardar Cambios"
+                android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                app:cornerRadius="12dp" />
-
-            <Button
-                android:id="@+id/btnRegresarConfig"
-                android:layout_width="match_parent"
-                android:layout_height="55dp"
-                android:backgroundTint="#F5F5F5"
-                android:text="Regresar"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="16sp"
-                app:cornerRadius="12dp"
-                app:strokeColor="#BDBDBD"
-                app:strokeWidth="1dp" />
+                app:backgroundTint="@color/boton_primario"
+                app:cornerRadius="14dp" />
 
         </LinearLayout>
     </ScrollView>

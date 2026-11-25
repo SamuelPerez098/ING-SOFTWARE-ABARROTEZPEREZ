@@ -1,11 +1,12 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -61,29 +62,26 @@ class DetalleFiadoActivity : AppCompatActivity() {
         val fiados = db.getFiadosActivosPorCliente(idCliente)
 
         if (fiados.isEmpty()) {
-            rvFiados.visibility    = View.GONE
-            tvSinDeudas.visibility = View.VISIBLE
-        } else {
-            rvFiados.visibility    = View.VISIBLE
-            tvSinDeudas.visibility = View.GONE
-
-            val textos = fiados.mapIndexed { index, fiado ->
-                "Deuda #${index + 1} — Saldo: $${"%.2f".format(fiado.saldoPendiente)}"
+            rvFiados.visibility = View.GONE
+            if (tvSinDeudas.visibility != View.VISIBLE) {
+                Motion.fadeInUp(tvSinDeudas, 6f * tvSinDeudas.resources.displayMetrics.density)
             }
+        } else {
+            rvFiados.visibility = View.VISIBLE
+            if (tvSinDeudas.visibility == View.VISIBLE) Motion.fadeOut(tvSinDeudas)
 
             rvFiados.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-                    val tv = TextView(parent.context).apply {
-                        setPadding(32, 24, 32, 24)
-                        textSize = 15f
-                        setTextColor(android.graphics.Color.parseColor("#212121"))
-                    }
-                    return object : RecyclerView.ViewHolder(tv) {}
+                    val view = LayoutInflater.from(parent.context)
+                        .inflate(R.layout.item_deuda, parent, false)
+                    return object : RecyclerView.ViewHolder(view) {}
                 }
                 override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-                    (holder.itemView as TextView).text = textos[position]
+                    val fiado = fiados[position]
+                    holder.itemView.findViewById<TextView>(R.id.tvDeudaTitulo).text = "Deuda #${position + 1}"
+                    holder.itemView.findViewById<TextView>(R.id.tvDeudaMonto).text = "$${"%.2f".format(fiado.saldoPendiente)}"
                 }
-                override fun getItemCount() = textos.size
+                override fun getItemCount() = fiados.size
             }
         }
     }
@@ -100,31 +98,37 @@ class DetalleFiadoActivity : AppCompatActivity() {
         tilDesc?.hint = "Descripción (ej: leche, pan...)"
         etDesc.hint = ""
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val desc  = etDesc.text.toString().trim()
             val monto = etMonto.text.toString().toDoubleOrNull()
 
             if (desc.isEmpty() || monto == null || monto <= 0) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Por favor completa todos los campos"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
+            registrando = true
+            btnGuardar.isEnabled = false
             val ok = db.registrarFiado(idCliente, monto)
+            registrando = false
             if (ok) {
-                Toast.makeText(this, "Deuda registrada", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Deuda registrada", "$desc · ${"$%.2f".format(monto)}")
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Error al guardar, intenta de nuevo"
+                Motion.fadeErrorIn(tvError)
+                btnGuardar.isEnabled = true
             }
         }
 
@@ -134,7 +138,7 @@ class DetalleFiadoActivity : AppCompatActivity() {
     private fun mostrarDialogoPago(tvSaldoTotal: TextView, rvFiados: RecyclerView, tvSinDeudas: TextView) {
         val fiados = db.getFiadosActivosPorCliente(idCliente)
         if (fiados.isEmpty()) {
-            Toast.makeText(this, "Este cliente no tiene deudas activas", Toast.LENGTH_SHORT).show()
+            Aviso.info(this, "Sin deudas", "Este cliente no tiene deudas activas.")
             return
         }
 
@@ -155,19 +159,21 @@ class DetalleFiadoActivity : AppCompatActivity() {
         tilMonto?.hint = "Monto a pagar (máx: $${"%.2f".format(saldoTotalMaximo)})"
         etMonto.hint = ""
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val monto = etMonto.text.toString().toDoubleOrNull()
 
             if (monto == null || monto <= 0) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Ingresa un monto válido"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
@@ -175,11 +181,13 @@ class DetalleFiadoActivity : AppCompatActivity() {
             val saldoMaximo = "%.2f".format(saldoTotalMaximo).toDouble()
 
             if (montoPago > saldoMaximo) {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "El monto no puede ser mayor al saldo total ($${"%.2f".format(saldoMaximo)})"
+                Motion.fadeErrorIn(tvError)
                 return@setOnClickListener
             }
 
+            registrando = true
+            btnGuardar.isEnabled = false
             var exitoEnPagos = true
             for (fiado in fiados) {
                 if (montoPago <= 0.0) break
@@ -194,14 +202,16 @@ class DetalleFiadoActivity : AppCompatActivity() {
                     break
                 }
             }
+            registrando = false
 
             if (exitoEnPagos) {
-                Toast.makeText(this, "Pago registrado", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Pago registrado", "${"$%.2f".format(monto)}")
                 cargarDetalle(tvSaldoTotal, rvFiados, tvSinDeudas)
                 dialog.dismiss()
             } else {
-                tvError.visibility = View.VISIBLE
                 tvError.text = "Error al procesar parte del pago, intenta de nuevo"
+                Motion.fadeErrorIn(tvError)
+                btnGuardar.isEnabled = true
             }
         }
 

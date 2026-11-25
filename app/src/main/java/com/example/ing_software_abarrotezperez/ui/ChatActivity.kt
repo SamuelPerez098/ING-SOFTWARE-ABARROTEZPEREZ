@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.content.ComponentCallbacks2
 import android.content.Intent
 import android.os.Bundle
@@ -77,12 +79,25 @@ class ChatActivity : AppCompatActivity() {
                 }
                 launch {
                     vm.thinking.collect { pensando ->
-                        layoutPensando.visibility = if (pensando) View.VISIBLE else View.GONE
-                        btnEnviar.isEnabled = !pensando
+                        if (pensando) {
+                            Motion.fadeInUp(
+                                layoutPensando,
+                                8f * resources.displayMetrics.density
+                            )
+                        } else {
+                            Motion.fadeOut(layoutPensando)
+                        }
+                        Motion.setEnabledAnimated(btnEnviar, !pensando)
                         if (pensando && adapter.itemCount > 0) rvChat.scrollToPosition(adapter.itemCount - 1)
                     }
                 }
             }
+        }
+
+        // Pregunta enviada desde el panel de resumen: se consume una sola vez
+        // (no se reenvía al rotar ni al recrear la Activity).
+        if (savedInstanceState == null) {
+            intent.getStringExtra("pregunta")?.let { vm.send(it) }
         }
     }
 
@@ -131,11 +146,11 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun confirmarBorrado() {
-        AlertDialog.Builder(this)
-            .setTitle("Borrar historial")
-            .setMessage("Se borrará la conversación guardada en este teléfono. Tus ventas e inventario no se tocan.")
-            .setPositiveButton("Borrar") { _, _ -> vm.clearHistory() }
-            .setNegativeButton("Cancelar", null)
-            .show()
+        Dialogos.confirmar(
+            this,
+            "Borrar historial",
+            "Se borrará la conversación guardada en este teléfono. Tus ventas e inventario no se tocan.",
+            "Borrar"
+        ) { vm.clearHistory() }
     }
 }

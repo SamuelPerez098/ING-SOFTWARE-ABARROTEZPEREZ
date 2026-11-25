@@ -2,4 +2,24 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Acentos por módulo (DESIGN.md) -->
+    <color name="acento_venta">#00B259</color>
+    <color name="acento_inventario">#C45B20</color>
+    <color name="acento_fiado">#5E17EB</color>
+    <color name="acento_merma">#B71C1C</color>
+    <color name="acento_asistente">#7A513E</color>
+    <color name="acento_configuracion">#737373</color>
+    <color name="acento_almacenamiento">#475569</color>
+    <color name="boton_primario">#27272A</color>
+    <color name="badge_foto">#334155</color>
+    <color name="acento_reportes">#2563EB</color>
+    <color name="reportes_azul">#2563EB</color>
+    <color name="insignia_ambar_texto">#92400E</color>
+    <color name="insignia_roja_texto">#B91C1C</color>
+
+    <!-- Estados de etiqueta -->
+    <color name="estado_peligro">#B71C1C</color>
+    <color name="estado_advertencia">#FFC107</color>
+    <color name="estado_advertencia_texto">#1A1C20</color>
 </resources>

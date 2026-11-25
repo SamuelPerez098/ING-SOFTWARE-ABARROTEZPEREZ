@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -31,6 +33,7 @@ import com.example.ing_software_abarrotezperez.scanner.LectoresConectados
 import com.example.ing_software_abarrotezperez.scanner.VigilanteLectores
 import com.example.ing_software_abarrotezperez.viewmodel.ScannerViewModel
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
 import java.io.File
 import java.io.FileOutputStream
@@ -80,12 +83,13 @@ class VentaActivity : AppCompatActivity() {
     private var modo = Modo.BLUETOOTH
     private var enPrimerPlano = false
     private var dialogoNoEncontradoVisible = false
+    private var registrandoVenta = false
 
     private val pedirPermisoCamara =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { concedido ->
             if (concedido) seleccionarModo(Modo.CAMARA)
             else {
-                Toast.makeText(this, "Se necesita permiso de cámara para escanear", Toast.LENGTH_LONG).show()
+                Aviso.advertencia(this, "Permiso de cámara", "Actívalo para escanear con el teléfono.")
                 seleccionarModo(Modo.BLUETOOTH)
             }
         }
@@ -110,6 +114,7 @@ class VentaActivity : AppCompatActivity() {
         adapter = VentaAdapter(itemsVenta) { actualizarTotal() }
         rvItems.layoutManager = LinearLayoutManager(this)
         rvItems.adapter = adapter
+        Motion.sinAnimacionDeInsercion(rvItems)
 
         // Selector de modo
         btnModoBluetooth = findViewById(R.id.btnModoBluetooth)
@@ -140,7 +145,7 @@ class VentaActivity : AppCompatActivity() {
 
         btnCobrar.setOnClickListener {
             if (itemsVenta.isEmpty()) {
-                Toast.makeText(this, "No hay productos escaneados", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Carrito vacío", "Escanea al menos un producto antes de cobrar.")
                 return@setOnClickListener
             }
             confirmarVenta()
@@ -217,7 +222,7 @@ class VentaActivity : AppCompatActivity() {
                     "entregando las teclas a la app (revisa el modo HID / la conexión del lector)."
         }
         refrescar()
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Diagnóstico del lector")
             .setView(ScrollView(this).apply { addView(tv) })
             .setNeutralButton("Cerrar", null)
@@ -254,7 +259,7 @@ class VentaActivity : AppCompatActivity() {
         if (producto == null) {
             if (dialogoNoEncontradoVisible) return
             dialogoNoEncontradoVisible = true
-            AlertDialog.Builder(this)
+            MaterialAlertDialogBuilder(this)
                 .setTitle("Producto no encontrado")
                 .setMessage("Código: $codigo\n¿Deseas registrarlo primero en inventario?")
                 .setPositiveButton("Ir a Inventario") { _, _ ->
@@ -267,14 +272,14 @@ class VentaActivity : AppCompatActivity() {
         }
 
         if (producto.stock <= 0) {
-            Toast.makeText(this, "⚠ Sin stock: ${producto.nombre}", Toast.LENGTH_SHORT).show()
+            Aviso.advertencia(this, "Sin existencias", producto.nombre)
             return
         }
 
         val existente = itemsVenta.find { it.producto.codigoBarras == codigo }
         if (existente != null) {
             if (existente.cantidad >= existente.producto.stock) {
-                Toast.makeText(this, "Stock máximo alcanzado (${existente.producto.stock})", Toast.LENGTH_SHORT).show()
+                Aviso.advertencia(this, "Stock máximo", "${existente.producto.nombre} · ${existente.producto.stock} disponibles")
                 return
             }
             existente.cantidad++
@@ -298,15 +303,29 @@ class VentaActivity : AppCompatActivity() {
     private fun confirmarVenta() {
         val total = itemsVenta.sumOf { it.subtotal }
         val recibidoStr = etRecibido.text?.toString()?.trim() ?: ""
+        val recibido = recibidoStr.toDoubleOrNull()
 
-        val recibido = if (recibidoStr.isEmpty()) 0.0 else (recibidoStr.toDoubleOrNull() ?: 0.0)
-
-        if (recibidoStr.isNotEmpty() && recibido < total) {
-            Toast.makeText(this, "El monto recibido es menor al TOTAL", Toast.LENGTH_SHORT).show()
+        // Efectivo exige monto recibido ≥ total: vacío, 0 o menor bloquea.
+        if (recibido == null) {
+            Aviso.error(
+                this,
+                "Falta el monto recibido",
+                "Escribe cuánto pagó el cliente (total ${"$%.2f".format(total)})."
+            )
+            return
+        }
+        val totalCentavos = Math.round(total * 100)
+        val recibidoCentavos = Math.round(recibido * 100)
+        if (recibidoCentavos < totalCentavos) {
+            Aviso.advertencia(
+                this,
+                "Monto insuficiente",
+                "Recibido ${"$%.2f".format(recibido)} · Total ${"$%.2f".format(total)}"
+            )
             return
         }
 
-        val cambio = if (recibido >= total) recibido - total else 0.0
+        val cambio = (recibidoCentavos - totalCentavos) / 100.0
         val mensajeTicketListo = construirTextoTicket(total, recibido, cambio)
 
         val ticketView = layoutInflater.inflate(R.layout.dialog_ticket, null)
@@ -316,7 +335,7 @@ class VentaActivity : AppCompatActivity() {
         val tvTicketRecibido = ticketView.findViewById<TextView>(R.id.tvTicketRecibido)
         val tvTicketCambio   = ticketView.findViewById<TextView>(R.id.tvTicketCambio)
         val btnWhatsApp      = ticketView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerarPdfWhatsApp)
-        val spinnerClientes  = ticketView.findViewById<Spinner>(R.id.spinnerClientesTicket)
+        val autoCompleteClientes = ticketView.findViewById<MaterialAutoCompleteTextView>(R.id.spinnerClientesTicket)
 
         val sdf = SimpleDateFormat("dd/MM/yyyy   HH:mm", Locale.getDefault())
         tvFechaHora.text = "Fecha: ${sdf.format(Date())}"
@@ -340,41 +359,39 @@ class VentaActivity : AppCompatActivity() {
         tvTicketRecibido.text = "RECIBIDO: ${String.format(Locale.US, "$%.2f", recibido)}"
         tvTicketCambio.text   = "CAMBIO: ${String.format(Locale.US, "$%.2f", cambio)}"
 
-        // --- CONFIGURACIÓN DEL SPINNER DE CLIENTES ---
-        // Cargamos los clientes con la función que modificaste en el paso anterior
+        // --- SELECTOR DE CLIENTES (desplegable de Material) ---
         val listaClientes = vm.db.getAllClientes()
+        var clienteElegido: DatabaseHelper.Cliente? = null
 
-        // Creamos la lista visual para el Spinner. La primera opción será manual.
-        val opcionesSpinner = mutableListOf("Ingresar número manualmente...")
-        opcionesSpinner.addAll(listaClientes.map {
-            "${it.nombre} ${if(it.telefono.isNotEmpty()) "(Tel: ${it.telefono})" else "(Sin tel)"}"
-        })
-
-        val adapterSpinner = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, opcionesSpinner)
-        spinnerClientes.adapter = adapterSpinner
-
-        btnWhatsApp.isEnabled = false
-        btnWhatsApp.text = "COBRA PARA ENVIAR TICKET"
-
-        btnWhatsApp.setOnClickListener {
-            val posicion = spinnerClientes.selectedItemPosition
-            if (posicion == 0) {
-                // Eligieron "Ingresar número manualmente..." -> Abre el cuadro de texto
-                solicitarNumeroParaTicket(mensajeTicketListo)
-            } else {
-                // Eligieron un cliente de la lista. Restamos 1 por la opción manual inicial.
-                val clienteSeleccionado = listaClientes[posicion - 1]
-                if (clienteSeleccionado.telefono.isNotEmpty()) {
-                    // Envia directo porque ya tiene teléfono guardado
-                    enviarTicketPorWhatsAppTexto(clienteSeleccionado.telefono, mensajeTicketListo)
-                } else {
-                    Toast.makeText(this, "Este cliente no tiene teléfono. Ingresa uno.", Toast.LENGTH_SHORT).show()
-                    solicitarNumeroParaTicket(mensajeTicketListo)
-                }
+        if (listaClientes.isEmpty()) {
+            autoCompleteClientes.setText("Sin clientes registrados", false)
+            autoCompleteClientes.isEnabled = false
+        } else {
+            val nombres = listaClientes.map { it.nombre }.toTypedArray()
+            val adapterAuto = ArrayAdapter(this, android.R.layout.simple_list_item_1, nombres)
+            autoCompleteClientes.setAdapter(adapterAuto)
+            autoCompleteClientes.setOnItemClickListener { _, _, position, _ ->
+                clienteElegido = listaClientes[position]
             }
         }
 
-        val dialog = AlertDialog.Builder(this)
+        btnWhatsApp.isEnabled = false
+
+        btnWhatsApp.setOnClickListener {
+            val cliente = clienteElegido
+            if (cliente != null) {
+                if (cliente.telefono.isNotEmpty()) {
+                    enviarTicketPorWhatsAppTexto(cliente.telefono, mensajeTicketListo)
+                } else {
+                    Aviso.advertencia(this, "Sin teléfono", "${cliente.nombre}. Ingresa uno para el ticket.")
+                    solicitarNumeroParaTicket(mensajeTicketListo)
+                }
+            } else {
+                solicitarNumeroParaTicket(mensajeTicketListo)
+            }
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(ticketView)
             .setPositiveButton("Confirmar", null)
             .setNeutralButton("Fiado") { _, _ -> mostrarDialogoFiado() }
@@ -388,27 +405,37 @@ class VentaActivity : AppCompatActivity() {
         val btnCancelar  = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
 
         btnConfirmar.setOnClickListener {
-            ejecutarVenta()
-
-            btnWhatsApp.isEnabled = true
-            btnWhatsApp.text = "ENVIAR POR WHATSAPP"
-
             btnConfirmar.isEnabled = false
-            btnFiado.visibility = View.GONE
-            btnCancelar.text = "Cerrar"
+            if (ejecutarVenta()) {
+                btnWhatsApp.isEnabled = true
+                btnWhatsApp.text = "Enviar por WhatsApp"
+                btnFiado.visibility = View.GONE
+                btnCancelar.text = "Cerrar"
+            } else {
+                btnConfirmar.isEnabled = true
+            }
         }
     }
 
-    private fun ejecutarVenta() {
+    private fun ejecutarVenta(): Boolean {
+        if (registrandoVenta) return false
+        registrandoVenta = true
         val idVenta = vm.db.registrarVenta(itemsVenta)
-        if (idVenta > 0) {
-            Toast.makeText(this, "✓ Venta registrada #$idVenta", Toast.LENGTH_LONG).show()
+        registrandoVenta = false
+        return if (idVenta > 0) {
+            val totalVenta = Math.round(itemsVenta.sumOf { it.subtotal } * 100) / 100.0
+            Aviso.exito(this, "Venta registrada", "Venta #$idVenta · ${"$%.2f".format(totalVenta)}")
             itemsVenta.clear()
             etRecibido.text.clear()
             adapter.notifyDataSetChanged()
             actualizarTotal()
+            true
+        } else if (idVenta == -2L) {
+            Aviso.error(this, "Sin stock suficiente", "No hay existencias para completar la venta. Revisa el inventario.")
+            false
         } else {
-            Toast.makeText(this, "Error al registrar la venta", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "No se registró la venta", "Intenta de nuevo.")
+            false
         }
     }
 
@@ -430,7 +457,7 @@ class VentaActivity : AppCompatActivity() {
 
         val arregloClientes = clientes.toTypedArray()
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Seleccionar Cliente (Fiado)")
             .setItems(arregloClientes) { _, which ->
                 // Si el usuario selecciona un cliente de la lista, registramos el fiado
@@ -447,13 +474,13 @@ class VentaActivity : AppCompatActivity() {
 
     private fun mostrarDialogoNuevoCliente() {
         val input = EditText(this).apply { hint = "Nombre del cliente" }
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Nuevo cliente a fiado")
             .setView(input)
             .setPositiveButton("Guardar") { _, _ ->
                 val nombre = input.text.toString().trim()
                 if (nombre.isEmpty()) {
-                    Toast.makeText(this, "Escribe el nombre del cliente", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this, "Falta el nombre", "Escribe el nombre del cliente.")
                     return@setPositiveButton
                 }
                 registrarFiado(nombre)
@@ -476,12 +503,16 @@ class VentaActivity : AppCompatActivity() {
         cursorCliente.close()
 
         val idVenta = vm.db.registrarVenta(itemsVenta)
+        if (idVenta == -2L) {
+            Aviso.error(this, "Sin stock suficiente", "No hay existencias para completar el fiado.")
+            return
+        }
         if (idVenta < 0) {
-            Toast.makeText(this, "Error en la venta", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "No se registró el fiado", "La venta no se completó.")
             return
         }
 
-        val total = itemsVenta.sumOf { it.subtotal }
+        val total = Math.round(itemsVenta.sumOf { it.subtotal } * 100) / 100.0
         val cvFiado = android.content.ContentValues().apply {
             put("id_cliente", idCliente)
             put("id_venta", idVenta)
@@ -489,7 +520,7 @@ class VentaActivity : AppCompatActivity() {
         }
         db.insert("fiado", null, cvFiado)
 
-        Toast.makeText(this, "✓ Fiado guardado para $nombreCliente", Toast.LENGTH_LONG).show()
+        Aviso.exito(this, "Fiado guardado", "$nombreCliente · ${"$%.2f".format(total)}")
         itemsVenta.clear()
         etRecibido.text.clear()
         adapter.notifyDataSetChanged()
@@ -514,14 +545,14 @@ class VentaActivity : AppCompatActivity() {
         contenedorDialogo.setPadding(margen, margen, margen, margen)
         contenedorDialogo.addView(campoTelefono)
 
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
             .setTitle("Enviar Ticket por WhatsApp")
             .setMessage("Ingresa el número celular de 10 dígitos:")
             .setView(contenedorDialogo)
             .setPositiveButton("Enviar") { _, _ ->
                 val telefonoIngresado = campoTelefono.text.toString().trim()
                 if (telefonoIngresado.isEmpty()) {
-                    Toast.makeText(this, "Por favor ingresa un número", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this, "Falta el número", "Escribe el celular de 10 dígitos.")
                 } else {
                     enviarTicketPorWhatsAppTexto(telefonoIngresado, mensajeTicket)
                 }
@@ -589,7 +620,7 @@ Vuelva pronto a Abarrotes Pérez.
         val telefonoLimpio = telefono10Digitos.replace(Regex("[^\\d]"), "")
 
         if (telefonoLimpio.length != 10) {
-            Toast.makeText(this, "Ingresa un número celular válido de 10 dígitos", Toast.LENGTH_SHORT).show()
+            Aviso.error(this, "Número inválido", "Recibidos ${telefonoLimpio.length} dígitos; se necesitan 10.")
             return
         }
 
@@ -613,7 +644,7 @@ Vuelva pronto a Abarrotes Pérez.
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Error al abrir WhatsApp: ${e.message}", Toast.LENGTH_LONG).show()
+            Aviso.error(this, "No se abrió WhatsApp", "Revisa que WhatsApp esté instalado.")
         }
     }
 
@@ -661,9 +692,9 @@ Vuelva pronto a Abarrotes Pérez.
             val tvPrecio: TextView    = view.findViewById(R.id.tvPrecioUnitario)
             val tvCantidad: TextView  = view.findViewById(R.id.tvCantidad)
             val tvSubtotal: TextView  = view.findViewById(R.id.tvSubtotal)
-            val btnMas: ImageButton   = view.findViewById(R.id.btnMas)
+            val btnMas: Button        = view.findViewById(R.id.btnMas)
             val btnMenos: Button      = view.findViewById(R.id.btnMenos)
-            val btnEliminar: ImageButton = view.findViewById(R.id.btnEliminar)
+            val btnEliminar: Button      = view.findViewById(R.id.btnEliminar)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
@@ -684,7 +715,7 @@ Vuelva pronto a Abarrotes Pérez.
                     notifyItemChanged(position)
                     onChange()
                 } else {
-                    Toast.makeText(holder.itemView.context, "Stock máximo", Toast.LENGTH_SHORT).show()
+                    Aviso.advertencia(this@VentaActivity, "Stock máximo", item.producto.nombre)
                 }
             }
             holder.btnMenos.setOnClickListener {

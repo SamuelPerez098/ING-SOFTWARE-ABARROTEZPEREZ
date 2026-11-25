@@ -1,5 +1,7 @@
 package com.example.ing_software_abarrotezperez.ui
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+
 import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
@@ -8,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -94,10 +95,12 @@ class FiadoActivity : AppCompatActivity() {
 
     private fun actualizarVisibilidad(isEmpty: Boolean, rv: RecyclerView, tv: TextView) {
         if (isEmpty) {
-            tv.visibility = View.VISIBLE
+            if (tv.visibility != View.VISIBLE) {
+                Motion.fadeInUp(tv, 6f * tv.resources.displayMetrics.density)
+            }
             rv.visibility = View.GONE
         } else {
-            tv.visibility = View.GONE
+            if (tv.visibility == View.VISIBLE) Motion.fadeOut(tv)
             rv.visibility = View.VISIBLE
         }
     }
@@ -134,14 +137,16 @@ class FiadoActivity : AppCompatActivity() {
         val btnCancelar = dialogView.findViewById<Button>(R.id.btnCancelarCliente)
         val btnGuardar  = dialogView.findViewById<Button>(R.id.btnGuardarCliente)
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val nombre = etNombre.text.toString().trim()
             val telefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL TEXTO
 
@@ -158,15 +163,18 @@ class FiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // ASUMIENDO QUE TU FUNCIÓN SE LLAMA ASÍ (si se llama registrarCliente, cámbialo abajo)
+            registrando = true
+            btnGuardar.isEnabled = false
             val resultado = db.registrarClienteConTelefono(nombre, telefono)
+            registrando = false
 
             if (resultado != -1L) {
-                Toast.makeText(this, "Cliente '$nombre' registrado ✅", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Cliente registrado", if (telefono.isNotEmpty()) "$nombre · $telefono" else nombre)
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
                 etNombre.error = "Error al guardar, intenta de nuevo"
+                btnGuardar.isEnabled = true
             }
         }
         dialog.show()
@@ -192,14 +200,16 @@ class FiadoActivity : AppCompatActivity() {
 
         btnGuardar.text = "Actualizar"
 
-        val dialog = AlertDialog.Builder(this)
+        val dialog = MaterialAlertDialogBuilder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
         btnCancelar.setOnClickListener { dialog.dismiss() }
 
+        var registrando = false
         btnGuardar.setOnClickListener {
+            if (registrando) return@setOnClickListener
             val nuevoNombre = etNombre.text.toString().trim()
             val nuevoTelefono = etTelefono?.text?.toString()?.trim() ?: "" // <- EXTRAEMOS EL NUEVO TELÉFONO
 
@@ -217,14 +227,17 @@ class FiadoActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // GUARDAMOS AMBOS DATOS
+            registrando = true
+            btnGuardar.isEnabled = false
             val resultado = db.actualizarCliente(cliente.idCliente, nuevoNombre, nuevoTelefono)
+            registrando = false
             if (resultado > 0) {
-                Toast.makeText(this, "Cliente actualizado ✅", Toast.LENGTH_SHORT).show()
+                Aviso.exito(this, "Cliente actualizado", nuevoNombre)
                 cargarClientes(rvClientes, tvVacio)
                 dialog.dismiss()
             } else {
-                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show()
+                Aviso.error(this, "No se actualizó el cliente", nuevoNombre)
+                btnGuardar.isEnabled = true
             }
         }
         dialog.show()

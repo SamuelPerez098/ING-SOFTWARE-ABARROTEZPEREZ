@@ -1,8 +1,9 @@
 package com.example.ing_software_abarrotezperez
 
+import com.example.ing_software_abarrotezperez.ui.Aviso
+
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.work.*
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(this, FiadoActivity::class.java))
             } catch (e: Exception) {
-                Toast.makeText(this, "Error al abrir Clientes: ${e.message}", Toast.LENGTH_LONG).show()
+                Aviso.error(this, "No se abrió Clientes", e.message ?: "Intenta de nuevo.")
             }
         }
 
@@ -40,6 +41,12 @@ class MainActivity : AppCompatActivity() {
         findViewById<CardView>(R.id.btnConfiguracionExtra).setOnClickListener {
             startActivity(Intent(this, ConfiguracionActivity::class.java))
         }
+
+        // Feedback de presión en las tarjetas del menú
+        listOf(
+            R.id.btnIrVentas, R.id.btnVerReportes, R.id.btnIrInventario,
+            R.id.btnClientesExtra, R.id.btnIrFiados, R.id.btnConfiguracionExtra
+        ).forEach { id -> Motion.pressFeedback(findViewById(id)) }
 
         // ──────────────────────────────────────────
         // 2. BOTÓN ASISTENTE (Pérez AI)

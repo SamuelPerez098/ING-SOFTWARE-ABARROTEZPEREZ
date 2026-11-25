@@ -24,7 +24,48 @@
         <item name="colorError">#BA1A1A</item>
         <item name="colorOnError">#FFFFFF</item>
 
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Abarrotes.Dialogo</item>
+
     </style>
 
     <style name="Theme.INGSOFTWAREABARROTEZPEREZ" parent="Base.Theme.INGSOFTWAREABARROTEZPEREZ" />
+
+    <!-- Diálogos: esquinas de 24dp según DESIGN.md, tipografía y botones del tema. -->
+    <style name="ThemeOverlay.Abarrotes.Dialogo" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.Abarrotes.Dialogo</item>
+    </style>
+
+    <style name="ShapeAppearanceOverlay.Abarrotes.Dialogo" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <!-- Icono de acción en fichas: MaterialButton IconButton (sigue siendo Button). -->
+    <style name="Widget.Abarrotes.IconAccion" parent="Widget.Material3.Button.IconButton">
+        <item name="iconSize">20dp</item>
+        <item name="iconTint">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <!-- Etiqueta de estado (chip) con variantes. -->
+    <style name="Widget.Abarrotes.Estado" parent="android:Widget.TextView">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingHorizontal">10dp</item>
+        <item name="android:paddingVertical">3dp</item>
+    </style>
+
+    <style name="Widget.Abarrotes.Estado.Peligro" parent="Widget.Abarrotes.Estado">
+        <item name="android:background">@drawable/bg_estado_peligro</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="Widget.Abarrotes.Estado.Advertencia" parent="Widget.Abarrotes.Estado">
+        <item name="android:background">@drawable/bg_estado_advertencia</item>
+        <item name="android:textColor">@color/estado_advertencia_texto</item>
+    </style>
+
+    <style name="Widget.Abarrotes.Estado.Neutro" parent="Widget.Abarrotes.Estado">
+        <item name="android:background">@drawable/bg_estado_neutro</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
 </resources>
