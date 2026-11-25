@@ -307,6 +307,9 @@ class ReportesActivity : AppCompatActivity() {
             holder.severidad.setTextColor(color)
             holder.itemView.contentDescription = "$etiqueta: ${i.titulo}. ${i.detalle}"
 
+            // Sin pregunta sugerida (y sin navegación propia) no hay botón: no prometemos una respuesta que no existe.
+            val tieneAccion = i.tipo == TipoInsight.RESPALDO || i.tipo == TipoInsight.MERMAS || i.preguntaSugerida.isNotBlank()
+            holder.preguntar.visibility = if (tieneAccion) View.VISIBLE else View.GONE
             holder.preguntar.text = textoAccion(i)
             holder.preguntar.setOnClickListener { accion(i)() }
         }

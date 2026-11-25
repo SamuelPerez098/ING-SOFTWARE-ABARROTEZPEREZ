@@ -244,7 +244,7 @@ class InsightsEngine(
                     if (negativo) "Vendido bajo el costo: ${p.nombre}" else "Sin margen: ${p.nombre}",
                     if (negativo) "Venta ${money(p.precioVenta)} < compra ${money(p.precioCompra)} (¿promoción?)."
                     else "Venta ${money(p.precioVenta)} = compra ${money(p.precioCompra)}.",
-                    "¿Qué productos me dejan pérdida?"
+                    "" // sin consulta de margen en el asistente: la ficha no muestra botón de chat
                 )
             }
 
@@ -253,7 +253,7 @@ class InsightsEngine(
                 id("perdida_margen", hoy.plusDays(0).toString()), TipoInsight.GANANCIA, Severidad.CRITICA,
                 "Pérdida por vender bajo el costo",
                 "En los últimos 7 días perdiste ${money(perdida7d)} vendiendo bajo el costo.",
-                "¿Qué productos vendí bajo el costo?"
+                "" // ídem
             )
         }
     }
