@@ -14,3 +14,6 @@
 .cxx
 local.properties
 .impeccable/config.local.json
+.agents/
+.opencode/skills/
+skills-lock.json
