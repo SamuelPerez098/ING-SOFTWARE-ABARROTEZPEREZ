@@ -176,7 +176,7 @@ class InsightsEngine(
                 id("ticket_promedio"), TipoInsight.VENTAS, Severidad.INFO,
                 "Ticket promedio (30 días)",
                 "${money(treinta.total / treinta.tickets)} por venta (${treinta.tickets} ventas).",
-                "¿Cuánto he vendido en los últimos 30 días?"
+                "¿Cuál es mi ticket promedio de los últimos 30 días?"
             )
         }
     }
